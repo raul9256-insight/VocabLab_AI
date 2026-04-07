@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import re
 import sqlite3
 from collections import defaultdict
 from pathlib import Path
@@ -153,6 +154,24 @@ def band_accuracy_rows(conn: sqlite3.Connection, session_id: int) -> list[dict]:
             }
         )
     return result
+
+
+def decorate_band_rows(rows: list[sqlite3.Row]) -> list[dict]:
+    decorated = []
+    for row in rows:
+        label = row["best_band_label"]
+        match = re.search(r"\((\d+)\)", label)
+        workbook_total = int(match.group(1)) if match else row["total"]
+        decorated.append(
+            {
+                "best_band_rank": row["best_band_rank"],
+                "best_band_label": label,
+                "total": row["total"],
+                "workbook_total": workbook_total,
+                "range_label": label.split(" (")[0],
+            }
+        )
+    return decorated
 
 
 def latest_test_result(conn: sqlite3.Connection) -> sqlite3.Row | None:
@@ -702,11 +721,12 @@ def home(request: Request) -> HTMLResponse:
     latest_test = latest_test_result(conn)
     latest_learning = latest_learning_result(conn)
     recommended_band = latest_test["estimated_band_label"] if latest_test else "50~99 (3924)"
+    bands = decorate_band_rows(band_summary(conn))
     return render(
         request,
         "home.html",
         stats=stats,
-        bands=band_summary(conn),
+        bands=bands,
         latest_test=latest_test,
         latest_learning=latest_learning,
         recommended_band=recommended_band,
@@ -717,7 +737,7 @@ def home(request: Request) -> HTMLResponse:
 @app.get("/test", response_class=HTMLResponse)
 def test_intro(request: Request) -> HTMLResponse:
     conn = db_conn()
-    return render(request, "test_intro.html", bands=band_summary(conn), question_count=TEST_QUESTION_COUNT)
+    return render(request, "test_intro.html", bands=decorate_band_rows(band_summary(conn)), question_count=TEST_QUESTION_COUNT)
 
 
 @app.post("/test/start")
@@ -980,7 +1000,7 @@ def learning_result(request: Request, session_id: int) -> HTMLResponse:
 @app.get("/dictionary", response_class=HTMLResponse)
 def dictionary_home(request: Request) -> HTMLResponse:
     conn = db_conn()
-    return render(request, "dictionary_home.html", bands=band_summary(conn), missed_count=len(missed_words(conn, limit=10)))
+    return render(request, "dictionary_home.html", bands=decorate_band_rows(band_summary(conn)), missed_count=len(missed_words(conn, limit=10)))
 
 
 @app.get("/dictionary/band/{band_rank}", response_class=HTMLResponse)
@@ -1053,7 +1073,7 @@ def dictionary_search(
         "dictionary_search.html",
         query=q,
         results=rows,
-        bands=band_summary(conn),
+        bands=decorate_band_rows(band_summary(conn)),
         selected_band=selected_band,
         has_english=has_english,
         has_example=has_example,
