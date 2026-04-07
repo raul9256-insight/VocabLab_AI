@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Test Result | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <p class="eyebrow">Result</p>
+  <h1>{{ level_name }}: {{ session.estimated_band_label or "Getting Started" }}</h1>
+  <p>You answered {{ session.score }} correctly in this placement test.</p>
+  <div class="stat-grid compact">
+    <article class="stat-card">
+      <span>Accuracy</span>
+      <strong>{{ summary.accuracy_percent }}%</strong>
+    </article>
+    <article class="stat-card">
+      <span>Weighted Strength</span>
+      <strong>{{ summary.weighted_percent }}%</strong>
+    </article>
+  </div>
+  <div class="callout">
+    <strong>What to do next:</strong> {{ recommendation }}
+  </div>
+  <table class="result-table">
+    <thead>
+      <tr><th>Band</th><th>Correct</th><th>Total</th><th>Accuracy</th></tr>
+    </thead>
+    <tbody>
+      {% for row in band_results %}
+      <tr>
+        <td>{{ row.band_label }}</td>
+        <td>{{ row.correct }}</td>
+        <td>{{ row.total }}</td>
+        <td>{{ row.accuracy }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="action-row">
+    <a class="button secondary" href="/test">Try Again</a>
+    <a class="button" href="/learning">Go To Learning</a>
+  </div>
+</section>
+{% endblock %}

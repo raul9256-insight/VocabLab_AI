@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Dictionary | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Step 3</p>
+  <h1>Dictionary</h1>
+  <p>Browse by frequency band first, then choose a letter. This keeps the list aligned with how you want to study: easier and more frequent words first, then alphabetical lookup inside each band.</p>
+  <form class="search-form" method="get" action="/dictionary/search">
+    <input type="search" name="q" placeholder="Search any word, e.g. aback" required>
+    <button class="button" type="submit">Search</button>
+  </form>
+  <div class="action-row">
+    <a class="button secondary" href="/review/missed">Missed Words{% if missed_count %} ({{ missed_count }}){% endif %}</a>
+  </div>
+  <div class="panel-grid">
+    {% for band in bands %}
+    <article class="panel inset">
+      <h2>{{ band.best_band_label }}</h2>
+      <p>{{ band.total }} words</p>
+      <a class="button" href="/dictionary/band/{{ band.best_band_rank }}">Open Band</a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

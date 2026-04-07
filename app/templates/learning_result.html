@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Learning Result | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <p class="eyebrow">Session Complete</p>
+  <h1>You answered {{ session.score }} correctly.</h1>
+  <div class="stat-grid compact">
+    <article class="stat-card">
+      <span>Accuracy</span>
+      <strong>{{ percent }}%</strong>
+    </article>
+    <article class="stat-card">
+      <span>Session Score</span>
+      <strong>{{ session.score }}</strong>
+    </article>
+  </div>
+  <div class="callout">
+    <strong>Next focus:</strong> {{ recommendation }}
+  </div>
+  <table class="result-table">
+    <thead>
+      <tr><th>Question Type</th><th>Correct</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      {% for row in question_results %}
+      <tr>
+        <td>{{ row.question_type }}</td>
+        <td>{{ row.correct }}</td>
+        <td>{{ row.total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="action-row">
+    <a class="button secondary" href="/learning">Start Another Session</a>
+    <a class="button" href="/dictionary">Open Dictionary</a>
+  </div>
+</section>
+{% endblock %}

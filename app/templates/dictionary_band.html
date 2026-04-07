@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ band.best_band_label }} | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Frequency Band</p>
+  <h1>{{ band.best_band_label }}</h1>
+  <p>{{ band.total }} words in this band.</p>
+  <form class="filter-form" method="get" action="/dictionary/band/{{ band.best_band_rank }}">
+    <input type="hidden" name="letter" value="{{ active_letter }}">
+    <label class="checkbox-row"><input type="checkbox" name="has_english" value="1" {% if has_english %}checked{% endif %}> English definition only</label>
+    <label class="checkbox-row"><input type="checkbox" name="has_example" value="1" {% if has_example %}checked{% endif %}> Example sentence only</label>
+    <button class="button secondary" type="submit">Apply Filters</button>
+  </form>
+  <div class="letter-grid">
+    {% for letter in letters %}
+    <a class="letter-pill {% if letter == active_letter %}active{% endif %}" href="/dictionary/band/{{ band.best_band_rank }}?letter={{ letter }}{% if has_english %}&has_english=1{% endif %}{% if has_example %}&has_example=1{% endif %}">{{ letter }}</a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <h2>{{ active_letter }}</h2>
+  <div class="word-list">
+    {% for word in words %}
+    <a class="word-row" href="/word/{{ word.id }}">
+      <strong>{{ word.lemma }}</strong>
+      {% if word.english_definition %}
+      <span>{{ word.english_definition }}</span>
+      {% elif word.example_sentence %}
+      <span>{{ word.example_sentence }}</span>
+      {% endif %}
+    </a>
+    {% else %}
+    <p>No words found for this letter.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

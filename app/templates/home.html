@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Home | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Personal vocabulary system</p>
+    <h1>Turn 10 years of Economist vocabulary into a study workflow.</h1>
+    <p class="lede">Use a placement test to find your level, train with guided multiple-choice practice, and browse the dictionary by frequency band and letter.</p>
+    <div class="callout">
+      <strong>Recommended next step:</strong>
+      {% if latest_test %}
+      Start learning around {{ recommended_band }} and enrich the words you miss most often.
+      {% else %}
+      Take the level test first so the app can recommend the right starting band.
+      {% endif %}
+    </div>
+  </div>
+  <div class="stat-grid">
+    <article class="stat-card">
+      <span>Total Words</span>
+      <strong>{{ stats.total_words }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Tests Taken</span>
+      <strong>{{ stats.tests_taken }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Learning Runs</span>
+      <strong>{{ stats.learning_runs }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Synonym Ready</span>
+      <strong>{{ stats.words_with_synonyms }}</strong>
+    </article>
+  </div>
+</section>
+
+<section class="panel-grid">
+  <article class="panel inset">
+    <p class="eyebrow">Review Queue</p>
+    <h2>{{ missed_words_count }} recent misses</h2>
+    <p>Turn wrong answers from test and learning into a focused review list.</p>
+    <a class="button secondary" href="/review/missed">Open Missed Words</a>
+  </article>
+</section>
+
+<section class="panel-grid">
+  <article class="panel inset">
+    <p class="eyebrow">Latest Test</p>
+    {% if latest_test %}
+    <h2>{{ latest_test.estimated_band_label or "Getting Started" }}</h2>
+    <p>Last placement test score: {{ latest_test.score }} correct answers.</p>
+    <a class="text-link" href="/test/{{ latest_test.id }}/result">Review result</a>
+    {% else %}
+    <h2>No test yet</h2>
+    <p>Take one placement test to estimate your working frequency band.</p>
+    {% endif %}
+  </article>
+  <article class="panel inset">
+    <p class="eyebrow">Latest Learning</p>
+    {% if latest_learning %}
+    <h2>{{ latest_learning.score }} points</h2>
+    <p>Your most recent learning session is saved, so you can compare progress over time.</p>
+    <a class="text-link" href="/learning/{{ latest_learning.id }}/result">Review session</a>
+    {% else %}
+    <h2>No learning session yet</h2>
+    <p>Start with definitions now, then add synonyms and example sentences gradually.</p>
+    {% endif %}
+  </article>
+</section>
+
+<section class="panel-grid">
+  <article class="panel">
+    <h2>1. Level Test</h2>
+    <p>Sample words from different frequency bands and estimate your current vocabulary range.</p>
+    <a class="button" href="/test">Start Test</a>
+  </article>
+  <article class="panel">
+    <h2>2. Learning</h2>
+    <p>Practice definitions now, then gradually enrich words with synonyms and example sentences for deeper training.</p>
+    <a class="button" href="/learning">Open Learning</a>
+  </article>
+  <article class="panel">
+    <h2>3. Dictionary</h2>
+    <p>Browse by frequency first, then drill into A-Z to see meanings, sources, notes, and custom learning content.</p>
+    <a class="button" href="/dictionary">Browse Dictionary</a>
+  </article>
+</section>
+
+<section class="panel">
+  <h2>Frequency Bands</h2>
+  <div class="band-list">
+    {% for band in bands %}
+    <a class="band-pill" href="/dictionary/band/{{ band.best_band_rank }}">{{ band.best_band_label }} <span>{{ band.total }}</span></a>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Bulk Import | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Bulk Enrichment</p>
+  <h1>Import English Definitions And Example Sentences In Batches</h1>
+  <p>Export a spreadsheet template, fill it in with English definitions and example sentences in Excel, then upload it back here to update many words at once.</p>
+  <div class="callout">
+    <strong>OpenAI API status:</strong>
+    {% if api_key_ready %}
+    API key detected. You can use automatic AI generation below.
+    {% else %}
+    No API key detected yet. Add <code>OPENAI_API_KEY</code> to <code>/Users/lawrencecheng/Documents/New project/.env</code> first.
+    {% endif %}
+  </div>
+  {% if request.query_params.get('exported') %}
+  <div class="callout">
+    <strong>Template exported.</strong> Check the <code>{{ export_dir }}</code> folder for the new Excel file.
+  </div>
+  {% endif %}
+  {% if request.query_params.get('imported') %}
+  <div class="callout">
+    <strong>Import complete.</strong> Updated {{ request.query_params.get('updated') or 0 }} words. Missing words: {{ request.query_params.get('missing') or 0 }}.
+  </div>
+  {% endif %}
+  {% if request.query_params.get('generated') %}
+  <div class="callout">
+    <strong>AI generation complete.</strong> Selected {{ request.query_params.get('selected') or 0 }} words and updated {{ request.query_params.get('updated') or 0 }} words.
+  </div>
+  {% endif %}
+  {% if request.query_params.get('error') %}
+  <div class="callout">
+    <strong>AI generation error:</strong> {{ request.query_params.get('error') }}
+  </div>
+  {% endif %}
+</section>
+
+<section class="panel-grid">
+  <article class="panel">
+    <h2>0. Generate With AI</h2>
+    <p>Use the OpenAI API to generate English definitions, example sentences, and synonyms for missing words automatically.</p>
+    <form method="post" action="/bulk-import/generate-ai" class="stack-form">
+      <label>
+        <span>Frequency Band</span>
+        <select name="band_rank">
+          <option value="">All bands</option>
+          {% for band in bands %}
+          <option value="{{ band.best_band_rank }}">{{ band.best_band_label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        <span>How many words per run</span>
+        <input type="number" name="limit" value="20" min="1" max="200">
+      </label>
+      <button class="button" type="submit">Generate With OpenAI</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>1. Export Template</h2>
+    <p>Generate an Excel file with word, frequency band, word type, and Chinese definitions already filled in. You only need to complete the English definition and example fields.</p>
+    <form method="post" action="/bulk-import/export" class="stack-form">
+      <label>
+        <span>Frequency Band</span>
+        <select name="band_rank">
+          <option value="">All bands</option>
+          {% for band in bands %}
+          <option value="{{ band.best_band_rank }}">{{ band.best_band_label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        <span>How many words</span>
+        <input type="number" name="limit" value="300" min="1" max="{{ stats.total_words }}">
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" name="missing_only" value="1" checked>
+        Export only words still missing English definition or example sentence
+      </label>
+      <button class="button" type="submit">Export Excel Template</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>2. Fill In The File</h2>
+    <p>Recommended columns to edit:</p>
+    <ul>
+      <li><strong>english_definition</strong>: short English meaning</li>
+      <li><strong>example_sentence</strong>: one natural sentence using the word</li>
+      <li><strong>synonyms</strong>: optional, one per line or separated by semicolons</li>
+      <li><strong>sentence_distractors</strong>: optional wrong example options</li>
+      <li><strong>notes</strong>: optional personal memory notes</li>
+    </ul>
+  </article>
+
+  <article class="panel">
+    <h2>3. Upload The File</h2>
+    <p>Supported formats: <code>.xlsx</code> and <code>.csv</code>.</p>
+    <form method="post" action="/bulk-import/upload" enctype="multipart/form-data" class="stack-form">
+      <label>
+        <span>Completed file</span>
+        <input type="file" name="file" accept=".xlsx,.csv" required>
+      </label>
+      <button class="button" type="submit">Import Enrichment</button>
+    </form>
+  </article>
+</section>
+{% endblock %}

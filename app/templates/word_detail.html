@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ word.lemma }} | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel-grid word-layout">
+  <article class="panel">
+    <p class="eyebrow">{{ word.best_band_label }}</p>
+    <h1>{{ word.lemma }}</h1>
+    <p><strong>Word Type:</strong> {{ parts_of_speech|join(", ") if parts_of_speech else "Unknown" }}</p>
+    <p><strong>Study status:</strong> {{ word.status }}</p>
+    <p><strong>Correct:</strong> {{ word.correct_count }} | <strong>Wrong:</strong> {{ word.wrong_count }}</p>
+    <h2>English Definition</h2>
+    <p>{{ english_definition or "Not added yet." }}</p>
+    <h2>Chinese Definitions</h2>
+    <ul>
+      {% for item in definitions %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <h2>Example Sentence</h2>
+    <p>{{ example_sentence or "Not added yet." }}</p>
+    {% if synonyms %}
+    <h2>Synonyms</h2>
+    <p>{{ synonyms|join(", ") }}</p>
+    {% endif %}
+    <h2>Sources</h2>
+    <ul>
+      {% for source in sources %}
+      <li>{{ source.workbook_name }} / {{ source.sheet_name }}{{ source.row_number }}{% if source.pos %} / {{ source.pos }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </article>
+
+  <article class="panel">
+    <h2>Learning Enrichment</h2>
+    <form method="post" action="/word/{{ word.id }}/update" class="stack-form">
+      <label>
+        <span>Notes</span>
+        <textarea name="notes" rows="4">{{ word.notes }}</textarea>
+      </label>
+      <label>
+        <span>English Definition</span>
+        <textarea name="english_definition" rows="4" placeholder="Add a concise English definition">{{ english_definition }}</textarea>
+      </label>
+      <label>
+        <span>Synonyms</span>
+        <textarea name="synonyms" rows="5" placeholder="One synonym per line">{{ synonyms|join('\n') }}</textarea>
+      </label>
+      <label>
+        <span>Correct Example Sentence</span>
+        <textarea name="example_sentence" rows="4" placeholder="Add one natural sentence using the word">{{ example_sentence }}</textarea>
+      </label>
+      <label>
+        <span>Wrong Sentence Options</span>
+        <textarea name="sentence_distractors" rows="6" placeholder="One distractor sentence per line">{{ sentence_distractors|join('\n') }}</textarea>
+      </label>
+      <button class="button" type="submit">Save Enrichment</button>
+    </form>
+  </article>
+</section>
+{% endblock %}

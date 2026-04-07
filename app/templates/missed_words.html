@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Missed Words | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Review Queue</p>
+  <h1>Missed Words</h1>
+  <p>This page collects the words you answered incorrectly in tests and learning sessions, so your review is guided by real mistakes instead of random guesses.</p>
+  <div class="word-list">
+    {% for row in rows %}
+    <a class="word-row" href="/word/{{ row.id }}">
+      <strong>{{ row.lemma }}</strong>
+      <small>{{ row.best_band_label }} · missed {{ row.miss_count }} times</small>
+      {% if row.english_definition %}
+      <span>{{ row.english_definition }}</span>
+      {% elif row.example_sentence %}
+      <span>{{ row.example_sentence }}</span>
+      {% else %}
+      <span>Open this word to add English definition and example sentence.</span>
+      {% endif %}
+    </a>
+    {% else %}
+    <p>You have no missed words yet. After a test or learning session, your review queue will appear here.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

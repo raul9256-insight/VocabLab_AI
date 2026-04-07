@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Learning Review | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="question-shell">
+  <div class="question-meta">
+    <span>Learning</span>
+    <span>{{ progress.answered }}/{{ progress.total }} answered</span>
+    <span>{{ question.question_type|title }}</span>
+  </div>
+  <article class="panel">
+    <p class="eyebrow">{% if question.is_correct %}Correct{% else %}Review{% endif %}</p>
+    <h1>{{ question.prompt_text }}</h1>
+    <div class="feedback-card {% if question.is_correct %}feedback-good{% else %}feedback-bad{% endif %}">
+      <p><strong>Your answer:</strong> {{ question.user_answer }}</p>
+      <p><strong>Correct answer:</strong> {{ question.correct_option }}</p>
+      {% if question.is_correct %}
+      <p>Nice work. This word is moving in the right direction.</p>
+      {% else %}
+      <p>Take a moment to read the word details below before moving on.</p>
+      {% endif %}
+    </div>
+
+    <h2>Definitions</h2>
+    <ul>
+      {% for item in definitions[:4] %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <p><strong>Word type:</strong> {{ parts_of_speech|join(", ") if parts_of_speech else "Unknown" }}</p>
+    <p><strong>English definition:</strong> {{ english_definition or "Not added yet." }}</p>
+    {% if synonyms %}
+    <p><strong>Synonyms:</strong> {{ synonyms|join(", ") }}</p>
+    {% endif %}
+    {% if example_sentence %}
+    <p><strong>Example:</strong> {{ example_sentence }}</p>
+    {% endif %}
+
+    <div class="action-row">
+      {% if is_last %}
+      <a class="button" href="/learning/{{ session.id }}/result">See Session Result</a>
+      {% else %}
+      <a class="button" href="/learning/{{ session.id }}">Next Question</a>
+      {% endif %}
+      <a class="button secondary" href="/word/{{ word.id }}">Open Word Page</a>
+    </div>
+  </article>
+</section>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Test Review | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="question-shell">
+  <div class="question-meta">
+    <span>Level Test</span>
+    <span>{{ progress.answered }}/{{ progress.total }} answered</span>
+    <span>{{ question.band_label }}</span>
+  </div>
+  <article class="panel">
+    <p class="eyebrow">{% if question.is_correct %}Correct{% else %}Review{% endif %}</p>
+    <h1>{{ question.prompt_text }}</h1>
+    <div class="feedback-card {% if question.is_correct %}feedback-good{% else %}feedback-bad{% endif %}">
+      <p><strong>Your answer:</strong> {{ question.user_answer }}</p>
+      <p><strong>Correct answer:</strong> {{ question.correct_option }}</p>
+      {% if question.is_correct %}
+      <p>You recognized this word correctly.</p>
+      {% else %}
+      <p>This is a useful word to revisit in learning mode later.</p>
+      {% endif %}
+    </div>
+    <h2>Definition Snapshot</h2>
+    <p><strong>Word type:</strong> {{ parts_of_speech|join(", ") if parts_of_speech else "Unknown" }}</p>
+    <p><strong>English definition:</strong> {{ english_definition or "Not added yet." }}</p>
+    <ul>
+      {% for item in definitions[:4] %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <div class="action-row">
+      {% if is_last %}
+      <a class="button" href="/test/{{ session.id }}/result">See Test Result</a>
+      {% else %}
+      <a class="button" href="/test/{{ session.id }}">Next Question</a>
+      {% endif %}
+      <a class="button secondary" href="/word/{{ word.id }}">Open Word Page</a>
+    </div>
+  </article>
+</section>
+{% endblock %}

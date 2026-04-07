@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Learning Question | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="question-shell">
+  <div class="question-meta">
+    <span>Learning</span>
+    <span>Question {{ progress.current }} / {{ progress.total }}</span>
+    <span>{{ progress.percent }}% complete</span>
+    <span>{{ question.question_type|title }}</span>
+  </div>
+  <article class="panel">
+    <p class="eyebrow">{{ word.best_band_label }}</p>
+    <h1>{{ question.prompt_text }}</h1>
+    <p>{{ question.explanation }}</p>
+    <form method="post" action="/learning/{{ session.id }}/answer" class="options-form">
+      {% for option in options %}
+      <label class="option-card">
+        <input type="radio" name="answer" value="{{ option }}" required>
+        <span>{{ option }}</span>
+      </label>
+      {% endfor %}
+      <button class="button" type="submit">Submit</button>
+    </form>
+  </article>
+  <aside class="panel support-panel">
+    <h2>Word Snapshot</h2>
+    <p><strong>Word type:</strong> {{ parts_of_speech|join(", ") if parts_of_speech else "Unknown" }}</p>
+    <p><strong>English definition:</strong> {{ english_definition or "Not added yet." }}</p>
+    <p><strong>Notes:</strong> {{ word.notes or "No notes yet." }}</p>
+    <p><strong>Definitions:</strong></p>
+    <ul>
+      {% for item in definitions[:4] %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <p><strong>Synonyms:</strong> {{ synonyms|join(", ") if synonyms else "Not added yet." }}</p>
+    <p><strong>Example:</strong> {{ example_sentence or "Not added yet." }}</p>
+    <a class="text-link" href="/word/{{ word.id }}">Edit this word</a>
+  </aside>
+</section>
+{% endblock %}

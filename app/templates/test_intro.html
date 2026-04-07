@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Level Test | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <p class="eyebrow">Step 1</p>
+  <h1>Level Test</h1>
+  <p>This test uses {{ question_count }} multiple-choice questions sampled from all frequency bands. It currently focuses on definition recognition so we can estimate your foundation reliably from the source data you already have.</p>
+  <div class="band-list">
+    {% for band in bands %}
+    <span class="band-pill muted">{{ band.best_band_label }} <span>{{ band.total }}</span></span>
+    {% endfor %}
+  </div>
+  <form method="post" action="/test/start">
+    <button class="button" type="submit">Begin Test</button>
+  </form>
+</section>
+{% endblock %}

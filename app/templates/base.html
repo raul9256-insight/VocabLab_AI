@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Economist Vocabulary Lab{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">Economist Vocabulary Lab</a>
+    <nav class="main-nav">
+      <a href="/test">Level Test</a>
+      <a href="/learning">Learning</a>
+      <a href="/dictionary">Dictionary</a>
+      <a href="/bulk-import">Bulk Import</a>
+      <a href="/review/missed">Missed Words</a>
+    </nav>
+  </header>
+  <main class="page-shell">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

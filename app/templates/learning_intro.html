@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Learning | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <p class="eyebrow">Step 2</p>
+  <h1>Learning Mode</h1>
+  <p>Each session starts with words from your database and builds multiple-choice practice. Definitions are ready right away. Synonym and sentence questions become available as you add enrichment on each word page.</p>
+  {% if latest_learning %}
+  <div class="callout">
+    <strong>Latest session:</strong> You scored {{ latest_learning.score }} points in your most recent learning run.
+  </div>
+  {% endif %}
+  <div class="stat-grid compact">
+    <article class="stat-card">
+      <span>Total Words</span>
+      <strong>{{ stats.total_words }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Enriched Words</span>
+      <strong>{{ enrichment.enriched_words or 0 }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Synonym Ready</span>
+      <strong>{{ enrichment.synonym_ready or 0 }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Sentence Ready</span>
+      <strong>{{ enrichment.sentence_ready or 0 }}</strong>
+    </article>
+  </div>
+  <form method="post" action="/learning/start">
+    <button class="button" type="submit">Start Learning Session</button>
+  </form>
+</section>
+{% endblock %}

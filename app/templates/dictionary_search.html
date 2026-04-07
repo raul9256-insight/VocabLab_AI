@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Dictionary Search | Economist Vocabulary Lab{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Dictionary Search</p>
+  <h1>Find Words Fast</h1>
+  <form class="search-form stacked" method="get" action="/dictionary/search">
+    <input type="search" name="q" placeholder="Search any word" value="{{ query }}" required>
+    <select name="band_rank">
+      <option value="">All bands</option>
+      {% for band in bands %}
+      <option value="{{ band.best_band_rank }}" {% if selected_band == band.best_band_rank %}selected{% endif %}>{{ band.best_band_label }}</option>
+      {% endfor %}
+    </select>
+    <label class="checkbox-row"><input type="checkbox" name="has_english" value="1" {% if has_english %}checked{% endif %}> English definition only</label>
+    <label class="checkbox-row"><input type="checkbox" name="has_example" value="1" {% if has_example %}checked{% endif %}> Example sentence only</label>
+    <button class="button" type="submit">Search</button>
+  </form>
+</section>
+
+{% if query %}
+<section class="panel">
+  <h2>Results for "{{ query }}"</h2>
+  <div class="word-list">
+    {% for word in results %}
+    <a class="word-row" href="/word/{{ word.id }}">
+      <strong>{{ word.lemma }}</strong>
+      <small>{{ word.best_band_label }}</small>
+      {% if word.english_definition %}
+      <span>{{ word.english_definition }}</span>
+      {% elif word.example_sentence %}
+      <span>{{ word.example_sentence }}</span>
+      {% endif %}
+    </a>
+    {% else %}
+    <p>No words matched this search.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
