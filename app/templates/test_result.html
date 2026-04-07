@@ -5,6 +5,22 @@
   <p class="eyebrow">Result</p>
   <h1>{{ level_name }}: {{ session.estimated_band_label or "Getting Started" }}</h1>
   <p>You answered {{ session.score }} correctly in this placement test.</p>
+  <div class="result-hero">
+    <div class="result-ring">
+      <div>
+        <strong>{{ summary.accuracy_percent }}%</strong>
+        <span>accuracy</span>
+      </div>
+    </div>
+    <div class="result-summary">
+      <div class="info-badges">
+        <span class="info-chip">Estimated band: {{ session.estimated_band_label or "Getting Started" }}</span>
+        <span class="info-chip">Correct: {{ session.score }}</span>
+        <span class="info-chip">Weighted: {{ summary.weighted_percent }}%</span>
+      </div>
+      <p class="section-note">This result combines your total accuracy and how well you handled harder frequency bands.</p>
+    </div>
+  </div>
   <div class="stat-grid compact">
     <article class="stat-card">
       <span>Accuracy</span>
@@ -18,21 +34,20 @@
   <div class="callout">
     <strong>What to do next:</strong> {{ recommendation }}
   </div>
-  <table class="result-table">
-    <thead>
-      <tr><th>Band</th><th>Correct</th><th>Total</th><th>Accuracy</th></tr>
-    </thead>
-    <tbody>
-      {% for row in band_results %}
-      <tr>
-        <td>{{ row.band_label }}</td>
-        <td>{{ row.correct }}</td>
-        <td>{{ row.total }}</td>
-        <td>{{ row.accuracy }}%</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="band-result-stack">
+    {% for row in band_results %}
+    <article class="band-result-card">
+      <div class="band-result-head">
+        <h3>{{ row.band_label }}</h3>
+        <span>{{ row.correct }} / {{ row.total }}</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width: {{ row.accuracy }}%;"></div>
+      </div>
+      <p class="section-note">{{ row.accuracy }}% accuracy in this band.</p>
+    </article>
+    {% endfor %}
+  </div>
   <div class="action-row">
     <a class="button secondary" href="/test">Try Again</a>
     <a class="button" href="/learning">Go To Learning</a>

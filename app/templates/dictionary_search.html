@@ -20,20 +20,33 @@
 
 {% if query %}
 <section class="panel">
-  <h2>Results for "{{ query }}"</h2>
-  <div class="word-list">
+  <div class="search-header">
+    <div>
+      <h2>Results for "{{ query }}"</h2>
+      <p class="section-note">{{ result_count }} word{% if result_count != 1 %}s{% endif %} matched your current filters.</p>
+    </div>
+  </div>
+  <div class="search-results-grid">
     {% for word in results %}
-    <a class="word-row" href="/word/{{ word.id }}">
-      <strong>{{ word.lemma }}</strong>
-      <small>{{ word.best_band_label }}</small>
-      {% if word.english_definition %}
-      <span>{{ word.english_definition }}</span>
-      {% elif word.example_sentence %}
-      <span>{{ word.example_sentence }}</span>
-      {% endif %}
+    <a class="search-card" href="/word/{{ word.id }}">
+      <div class="search-card-top">
+        <strong>{{ word.lemma }}</strong>
+        <span class="info-chip">{{ word.best_band_label }}</span>
+      </div>
+      <div class="search-meta">
+        <span>{{ word.parts_of_speech|join(", ") if word.parts_of_speech else "Unknown type" }}</span>
+      </div>
+      <div class="search-content">
+        <p><strong>English:</strong> {{ word.english_definition or "Not added yet." }}</p>
+        <p><strong>Chinese:</strong> {{ word.chinese_preview|join(" / ") if word.chinese_preview else "Not available." }}</p>
+        <p><strong>Example:</strong> {{ word.example_sentence or "Not added yet." }}</p>
+      </div>
     </a>
     {% else %}
-    <p>No words matched this search.</p>
+    <div class="empty-card">
+      <h3>No words matched this search.</h3>
+      <p>Try a shorter keyword, remove one filter, or search from a different frequency band.</p>
+    </div>
     {% endfor %}
   </div>
 </section>

@@ -209,6 +209,39 @@ def search_words(
     return conn.execute(sql, params).fetchall()
 
 
+def search_result_cards(
+    conn: sqlite3.Connection,
+    query: str,
+    *,
+    band_rank: int | None = None,
+    require_english: bool = False,
+    require_example: bool = False,
+) -> list[dict]:
+    rows = search_words(
+        conn,
+        query,
+        band_rank=band_rank,
+        require_english=require_english,
+        require_example=require_example,
+    )
+    cards: list[dict] = []
+    for row in rows:
+        definitions = definitions_for_word(conn, row["id"])
+        parts = parts_of_speech_for_word(conn, row["id"])
+        cards.append(
+            {
+                "id": row["id"],
+                "lemma": row["lemma"],
+                "best_band_label": row["best_band_label"],
+                "english_definition": row["english_definition"],
+                "example_sentence": row["example_sentence"],
+                "parts_of_speech": parts,
+                "chinese_preview": definitions[:2],
+            }
+        )
+    return cards
+
+
 def missed_words(conn: sqlite3.Connection, limit: int = 100) -> list[sqlite3.Row]:
     return conn.execute(
         """
@@ -1008,7 +1041,7 @@ def dictionary_search(
 ) -> HTMLResponse:
     conn = db_conn()
     selected_band = int(band_rank) if band_rank and band_rank.strip() else None
-    rows = search_words(
+    rows = search_result_cards(
         conn,
         q,
         band_rank=selected_band,
@@ -1024,6 +1057,7 @@ def dictionary_search(
         selected_band=selected_band,
         has_english=has_english,
         has_example=has_example,
+        result_count=len(rows),
     )
 
 
