@@ -93,6 +93,11 @@
 
 <section class="panel">
   <h2>Frequency Bands</h2>
+  <p class="section-note">These groups organize words by how often they appeared in your Economist source lists. The label on the left is the original band name, and the bold number on the right is how many unique words from that band are currently stored in the database.</p>
+  <div class="band-legend">
+    <span><strong>Band label</strong>: the original frequency range from your spreadsheet files</span>
+    <span><strong>Bold number</strong>: unique words currently available in this app for that band</span>
+  </div>
   <div class="band-list">
     {% for band in bands %}
     <a class="band-pill" href="/dictionary/band/{{ band.best_band_rank }}">{{ band.best_band_label }} <span>{{ band.total }}</span></a>
