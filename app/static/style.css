@@ -117,6 +117,13 @@ a {
   margin-bottom: 1.5rem;
 }
 
+.starter-grid,
+.visual-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
 .panel,
 .stat-card,
 .option-card {
@@ -183,6 +190,48 @@ h1 {
   gap: 0.4rem;
   margin: 1rem 0 1.1rem;
   color: var(--muted);
+}
+
+.starter-card,
+.visual-card {
+  position: relative;
+  padding: 1.2rem;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 253, 249, 0.98), rgba(245, 239, 229, 0.9));
+  border: 1px solid var(--line);
+}
+
+.starter-card h3,
+.visual-card h3 {
+  margin: 0.35rem 0 0.55rem;
+}
+
+.starter-card p,
+.visual-card p {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.starter-number {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+}
+
+.visual-dot {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-warm), var(--accent));
+  box-shadow: 0 0 0 8px rgba(31, 92, 77, 0.08);
+  margin-bottom: 1rem;
 }
 
 .stat-grid {
