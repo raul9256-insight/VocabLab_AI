@@ -118,7 +118,8 @@ a {
 }
 
 .starter-grid,
-.visual-grid {
+.visual-grid,
+.empty-grid {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -193,7 +194,9 @@ h1 {
 }
 
 .starter-card,
-.visual-card {
+.visual-card,
+.empty-card,
+.detail-card {
   position: relative;
   padding: 1.2rem;
   border-radius: 20px;
@@ -202,12 +205,14 @@ h1 {
 }
 
 .starter-card h3,
-.visual-card h3 {
+.visual-card h3,
+.empty-card h3 {
   margin: 0.35rem 0 0.55rem;
 }
 
 .starter-card p,
-.visual-card p {
+.visual-card p,
+.empty-card p {
   margin: 0 0 0.75rem;
   color: var(--muted);
   line-height: 1.45;
@@ -296,6 +301,32 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.info-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 0 0 1rem;
+}
+
+.info-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.detail-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.detail-card h2 {
+  margin-bottom: 0.7rem;
 }
 
 .band-pill,

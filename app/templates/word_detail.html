@@ -5,33 +5,52 @@
   <article class="panel">
     <p class="eyebrow">{{ word.best_band_label }}</p>
     <h1>{{ word.lemma }}</h1>
-    <p><strong>Word Type:</strong> {{ parts_of_speech|join(", ") if parts_of_speech else "Unknown" }}</p>
-    <p><strong>Study status:</strong> {{ word.status }}</p>
-    <p><strong>Correct:</strong> {{ word.correct_count }} | <strong>Wrong:</strong> {{ word.wrong_count }}</p>
-    <h2>English Definition</h2>
-    <p>{{ english_definition or "Not added yet." }}</p>
-    <h2>Chinese Definitions</h2>
-    <ul>
-      {% for item in definitions %}
-      <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-    <h2>Example Sentence</h2>
-    <p>{{ example_sentence or "Not added yet." }}</p>
-    {% if synonyms %}
-    <h2>Synonyms</h2>
-    <p>{{ synonyms|join(", ") }}</p>
-    {% endif %}
-    <h2>Sources</h2>
-    <ul>
-      {% for source in sources %}
-      <li>{{ source.workbook_name }} / {{ source.sheet_name }}{{ source.row_number }}{% if source.pos %} / {{ source.pos }}{% endif %}</li>
-      {% endfor %}
-    </ul>
+    <div class="info-badges">
+      <span class="info-chip">{{ parts_of_speech|join(", ") if parts_of_speech else "Unknown type" }}</span>
+      <span class="info-chip">Status: {{ word.status }}</span>
+      <span class="info-chip">Correct {{ word.correct_count }}</span>
+      <span class="info-chip">Wrong {{ word.wrong_count }}</span>
+    </div>
+
+    <div class="detail-stack">
+      <section class="detail-card">
+        <h2>English Definition</h2>
+        <p>{{ english_definition or "Not added yet." }}</p>
+      </section>
+
+      <section class="detail-card">
+        <h2>Example Sentence</h2>
+        <p>{{ example_sentence or "Not added yet." }}</p>
+      </section>
+
+      <section class="detail-card">
+        <h2>Chinese Definitions</h2>
+        <ul>
+          {% for item in definitions %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section class="detail-card">
+        <h2>Synonyms</h2>
+        <p>{{ synonyms|join(", ") if synonyms else "Not added yet." }}</p>
+      </section>
+
+      <section class="detail-card">
+        <h2>Source References</h2>
+        <ul>
+          {% for source in sources %}
+          <li>{{ source.workbook_name }} / {{ source.sheet_name }}{{ source.row_number }}{% if source.pos %} / {{ source.pos }}{% endif %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
   </article>
 
   <article class="panel">
     <h2>Learning Enrichment</h2>
+    <p class="section-note">Use this form to make the word page and future learning sessions richer and easier to review.</p>
     <form method="post" action="/word/{{ word.id }}/update" class="stack-form">
       <label>
         <span>Notes</span>

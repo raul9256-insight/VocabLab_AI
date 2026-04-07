@@ -14,22 +14,48 @@
     <article class="stat-card">
       <span>Total Words</span>
       <strong>{{ stats.total_words }}</strong>
+      <small>All words that can already appear in study sessions.</small>
     </article>
     <article class="stat-card">
       <span>Enriched Words</span>
       <strong>{{ enrichment.enriched_words or 0 }}</strong>
+      <small>Words that already have extra learning content saved.</small>
     </article>
     <article class="stat-card">
       <span>Synonym Ready</span>
       <strong>{{ enrichment.synonym_ready or 0 }}</strong>
+      <small>These words can support synonym-style practice.</small>
     </article>
     <article class="stat-card">
       <span>Sentence Ready</span>
       <strong>{{ enrichment.sentence_ready or 0 }}</strong>
+      <small>These words already have example sentences prepared.</small>
     </article>
   </div>
   <form method="post" action="/learning/start">
     <button class="button" type="submit">Start Learning Session</button>
   </form>
 </section>
+
+{% if (enrichment.enriched_words or 0) == 0 %}
+<section class="panel">
+  <p class="eyebrow">Before You Go Deeper</p>
+  <h2>Your learning mode is ready, but still mostly definition-based.</h2>
+  <div class="empty-grid">
+    <article class="empty-card">
+      <h3>What works now</h3>
+      <p>You can already start definition practice immediately from your imported Economist vocabulary database.</p>
+    </article>
+    <article class="empty-card">
+      <h3>What makes it richer</h3>
+      <p>Add English definitions, synonyms, and example sentences to more words so later sessions feel less repetitive.</p>
+    </article>
+    <article class="empty-card">
+      <h3>Best next step</h3>
+      <p>Open the dictionary, choose one frequency band, and enrich a few important words first.</p>
+      <a class="text-link" href="/dictionary">Open Dictionary</a>
+    </article>
+  </div>
+</section>
+{% endif %}
 {% endblock %}
