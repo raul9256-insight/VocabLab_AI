@@ -43,6 +43,7 @@ a {
   position: sticky;
   top: 0;
   background: rgba(244, 239, 230, 0.88);
+  z-index: 20;
 }
 
 .brand {
@@ -104,7 +105,7 @@ a {
 
 .page-shell {
   width: min(1120px, calc(100% - 2rem));
-  margin: 2rem auto 4rem;
+  margin: 3.5rem auto 4rem;
 }
 
 .hero,
@@ -635,6 +636,6 @@ input[type="file"] {
 
   .page-shell {
     width: min(100% - 1rem, 1120px);
-    margin-top: 1rem;
+    margin-top: 1.5rem;
   }
 }
