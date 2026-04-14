@@ -1,44 +1,62 @@
 {% extends "base.html" %}
 {% block title %}{{ word.lemma }} | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="panel-grid word-layout">
-  <article class="panel">
+<section class="word-hero">
+  <article class="word-main-card">
     <p class="eyebrow">{{ word.best_band_label }}</p>
-    <h1>{{ word.lemma }}</h1>
-    <div class="info-badges">
-      <span class="info-chip">{{ parts_of_speech|join(", ") if parts_of_speech else "Unknown type" }}</span>
-      <span class="info-chip">Status: {{ word.status }}</span>
-      <span class="info-chip">Correct {{ word.correct_count }}</span>
-      <span class="info-chip">Wrong {{ word.wrong_count }}</span>
+    <div class="word-main-top">
+      <div>
+        <h1>{{ word.lemma }}</h1>
+        <div class="info-badges">
+          <span class="info-chip">{{ parts_of_speech|join(", ") if parts_of_speech else "Unknown type" }}</span>
+          <span class="info-chip">Status: {{ word.status }}</span>
+          <span class="info-chip">Correct {{ word.correct_count }}</span>
+          <span class="info-chip">Wrong {{ word.wrong_count }}</span>
+        </div>
+      </div>
+      <a class="button secondary" href="/dictionary">Back To Dictionary</a>
     </div>
 
-    <div class="detail-stack">
-      <section class="detail-card">
-        <h2>English Definition</h2>
+    <div class="word-focus-grid">
+      <section class="focus-card primary">
+        <span class="focus-label">English Definition</span>
         <p>{{ english_definition or "Not added yet." }}</p>
       </section>
-
-      <section class="detail-card">
-        <h2>Example Sentence</h2>
+      <section class="focus-card">
+        <span class="focus-label">Example Sentence</span>
         <p>{{ example_sentence or "Not added yet." }}</p>
       </section>
+      <section class="focus-card">
+        <span class="focus-label">Synonyms</span>
+        <p>{{ synonyms|join(", ") if synonyms else "Not added yet." }}</p>
+      </section>
+      <section class="focus-card">
+        <span class="focus-label">Personal Notes</span>
+        <p>{{ word.notes or "No notes yet." }}</p>
+      </section>
+    </div>
+  </article>
+</section>
 
+<section class="dashboard-columns word-columns">
+  <article class="panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Word Details</p>
+        <h2>Chinese Meaning & Source</h2>
+      </div>
+    </div>
+    <div class="detail-stack">
       <section class="detail-card">
-        <h2>Chinese Definitions</h2>
+        <h3>Chinese Definitions</h3>
         <ul>
           {% for item in definitions %}
           <li>{{ item }}</li>
           {% endfor %}
         </ul>
       </section>
-
       <section class="detail-card">
-        <h2>Synonyms</h2>
-        <p>{{ synonyms|join(", ") if synonyms else "Not added yet." }}</p>
-      </section>
-
-      <section class="detail-card">
-        <h2>Source References</h2>
+        <h3>Source References</h3>
         <ul>
           {% for source in sources %}
           <li>{{ source.workbook_name }} / {{ source.sheet_name }}{{ source.row_number }}{% if source.pos %} / {{ source.pos }}{% endif %}</li>
@@ -49,8 +67,13 @@
   </article>
 
   <article class="panel">
-    <h2>Learning Enrichment</h2>
-    <p class="section-note">Use this form to make the word page and future learning sessions richer and easier to review.</p>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Edit</p>
+        <h2>Improve This Word</h2>
+      </div>
+    </div>
+    <p class="section-note">Save better definitions, examples, synonyms, and notes so the learning mode becomes more useful over time.</p>
     <form method="post" action="/word/{{ word.id }}/update" class="stack-form">
       <label>
         <span>Notes</span>
@@ -72,7 +95,7 @@
         <span>Wrong Sentence Options</span>
         <textarea name="sentence_distractors" rows="6" placeholder="One distractor sentence per line">{{ sentence_distractors|join('\n') }}</textarea>
       </label>
-      <button class="button" type="submit">Save Enrichment</button>
+      <button class="button" type="submit">Save Changes</button>
     </form>
   </article>
 </section>

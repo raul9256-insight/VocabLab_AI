@@ -100,7 +100,7 @@ def word_payload(conn: sqlite3.Connection, word_id: int) -> dict:
     row = word_row(conn, word_id)
     source_rows = conn.execute(
         """
-        SELECT workbook_name, sheet_name, row_number, pos, meanings_json
+        SELECT workbook_name, sheet_name, row_number, pos, meanings_json, extra_json
         FROM source_entries
         WHERE word_id = ?
         ORDER BY band_rank, workbook_name, row_number
@@ -115,14 +115,23 @@ def word_payload(conn: sqlite3.Connection, word_id: int) -> dict:
         """,
         (word_id,),
     ).fetchone()
+    source_english_definition = ""
+    source_example_sentence = ""
+    for source in source_rows:
+        extra = json.loads(source["extra_json"]) if source["extra_json"] else {}
+        if isinstance(extra, dict):
+            if not source_english_definition and extra.get("english_definition"):
+                source_english_definition = extra["english_definition"]
+            if not source_example_sentence and extra.get("example_sentence"):
+                source_example_sentence = extra["example_sentence"]
     return {
         "word": row,
         "definitions": definitions_for_word(conn, word_id),
         "parts_of_speech": parts_of_speech_for_word(conn, word_id),
         "sources": source_rows,
-        "english_definition": enrichment["english_definition"] if enrichment else "",
+        "english_definition": (enrichment["english_definition"] if enrichment and enrichment["english_definition"] else source_english_definition),
         "synonyms": json_loads(enrichment["synonyms_json"]) if enrichment else [],
-        "example_sentence": enrichment["example_sentence"] if enrichment else "",
+        "example_sentence": (enrichment["example_sentence"] if enrichment and enrichment["example_sentence"] else source_example_sentence),
         "sentence_distractors": json_loads(enrichment["sentence_distractors_json"]) if enrichment else [],
     }
 
@@ -172,6 +181,37 @@ def decorate_band_rows(rows: list[sqlite3.Row]) -> list[dict]:
             }
         )
     return decorated
+
+
+def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT words.id, words.lemma, words.best_band_label,
+               COALESCE(word_enrichment.english_definition, '') AS english_definition,
+               COALESCE(word_enrichment.example_sentence, '') AS example_sentence
+        FROM words
+        LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
+        ORDER BY words.best_band_rank DESC, words.lemma
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    items: list[dict] = []
+    for row in rows:
+        defs = definitions_for_word(conn, row["id"])
+        pos = parts_of_speech_for_word(conn, row["id"])
+        items.append(
+            {
+                "id": row["id"],
+                "lemma": row["lemma"],
+                "best_band_label": row["best_band_label"],
+                "english_definition": row["english_definition"],
+                "example_sentence": row["example_sentence"],
+                "parts_of_speech": pos,
+                "chinese_preview": defs[:1],
+            }
+        )
+    return items
 
 
 def latest_test_result(conn: sqlite3.Connection) -> sqlite3.Row | None:
@@ -731,6 +771,7 @@ def home(request: Request) -> HTMLResponse:
         latest_learning=latest_learning,
         recommended_band=recommended_band,
         missed_words_count=len(missed_words(conn, limit=10)),
+        spotlight_words=dashboard_spotlight_words(conn),
     )
 
 

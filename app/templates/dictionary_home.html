@@ -1,39 +1,63 @@
 {% extends "base.html" %}
 {% block title %}Dictionary | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="panel">
-  <p class="eyebrow">Step 3</p>
-  <h1>Dictionary</h1>
-  <p>Browse by frequency band first, then choose a letter. This keeps the list aligned with how you want to study: easier and more frequent words first, then alphabetical lookup inside each band.</p>
-  <form class="search-form" method="get" action="/dictionary/search">
-    <input type="search" name="q" placeholder="Search any word, e.g. aback" required>
-    <button class="button" type="submit">Search</button>
-  </form>
-  <div class="action-row">
-    <a class="button secondary" href="/review/missed">Missed Words{% if missed_count %} ({{ missed_count }}){% endif %}</a>
-  </div>
-  <div class="empty-grid">
-    <article class="empty-card">
-      <h3>If you know the word</h3>
-      <p>Use search to jump directly to a word page and check meanings, notes, and learning content.</p>
-    </article>
-    <article class="empty-card">
-      <h3>If you want to explore</h3>
-      <p>Start from an easier frequency band, then move letter by letter through unfamiliar vocabulary.</p>
-    </article>
-    <article class="empty-card">
-      <h3>If you missed words in practice</h3>
-      <p>Open the missed-word queue and use it as your review shortlist.</p>
-    </article>
-  </div>
-  <div class="panel-grid">
-    {% for band in bands %}
-    <article class="panel inset">
-      <h2>{{ band.best_band_label }}</h2>
-      <p>{{ band.total }} words</p>
-      <a class="button" href="/dictionary/band/{{ band.best_band_rank }}">Open Band</a>
-    </article>
-    {% endfor %}
-  </div>
+<section class="dictionary-hero">
+  <article class="panel">
+    <p class="eyebrow">Dictionary</p>
+    <h1>Search fast or browse by frequency.</h1>
+    <p class="lede">Use search when you know the word. Use frequency bands when you want to explore the vocabulary landscape.</p>
+    <form class="search-form" method="get" action="/dictionary/search">
+      <input type="search" name="q" placeholder="Search any word, e.g. analyze" required>
+      <button class="button" type="submit">Search</button>
+    </form>
+    <div class="action-row">
+      <a class="button secondary" href="/review/missed">Missed Words{% if missed_count %} ({{ missed_count }}){% endif %}</a>
+    </div>
+  </article>
+</section>
+
+<section class="dashboard-columns">
+  <article class="panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Quick Start</p>
+        <h2>Choose your path</h2>
+      </div>
+    </div>
+    <div class="task-grid">
+      <article class="task-card static">
+        <div class="task-badge">A</div>
+        <h3>Search directly</h3>
+        <p>Best when you already know the word and want a fast answer.</p>
+      </article>
+      <article class="task-card static">
+        <div class="task-badge">B</div>
+        <h3>Browse by band</h3>
+        <p>Best when you want to discover more frequent or less frequent words.</p>
+      </article>
+      <article class="task-card static">
+        <div class="task-badge">C</div>
+        <h3>Review missed words</h3>
+        <p>Best when you want a shortlist based on your actual mistakes.</p>
+      </article>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Frequency Bands</p>
+        <h2>Browse all bands</h2>
+      </div>
+    </div>
+    <div class="band-grid-compact">
+      {% for band in bands %}
+      <a class="band-compact-card" href="/dictionary/band/{{ band.best_band_rank }}">
+        <strong>{{ band.range_label }}</strong>
+        <small>{{ band.workbook_total }} words</small>
+      </a>
+      {% endfor %}
+    </div>
+  </article>
 </section>
 {% endblock %}

@@ -1,34 +1,36 @@
 {% extends "base.html" %}
 {% block title %}Dictionary Search | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="panel">
-  <p class="eyebrow">Dictionary Search</p>
-  <h1>Find Words Fast</h1>
-  <form class="search-form stacked" method="get" action="/dictionary/search">
-    <input type="search" name="q" placeholder="Search any word" value="{{ query }}" required>
-    <select name="band_rank">
-      <option value="">All bands</option>
-      {% for band in bands %}
-      <option value="{{ band.best_band_rank }}" {% if selected_band == band.best_band_rank %}selected{% endif %}>{{ band.best_band_label }}</option>
-      {% endfor %}
-    </select>
-    <label class="checkbox-row"><input type="checkbox" name="has_english" value="1" {% if has_english %}checked{% endif %}> English definition only</label>
-    <label class="checkbox-row"><input type="checkbox" name="has_example" value="1" {% if has_example %}checked{% endif %}> Example sentence only</label>
-    <button class="button" type="submit">Search</button>
-  </form>
+<section class="dictionary-hero">
+  <article class="panel">
+    <p class="eyebrow">Dictionary Search</p>
+    <h1>Find words fast.</h1>
+    <form class="search-form stacked" method="get" action="/dictionary/search">
+      <input type="search" name="q" placeholder="Search any word" value="{{ query }}" required>
+      <select name="band_rank">
+        <option value="">All bands</option>
+        {% for band in bands %}
+        <option value="{{ band.best_band_rank }}" {% if selected_band == band.best_band_rank %}selected{% endif %}>{{ band.best_band_label }}</option>
+        {% endfor %}
+      </select>
+      <label class="checkbox-row"><input type="checkbox" name="has_english" value="1" {% if has_english %}checked{% endif %}> English definition only</label>
+      <label class="checkbox-row"><input type="checkbox" name="has_example" value="1" {% if has_example %}checked{% endif %}> Example sentence only</label>
+      <button class="button" type="submit">Search</button>
+    </form>
+  </article>
 </section>
 
 {% if query %}
 <section class="panel">
-  <div class="search-header">
+  <div class="section-head">
     <div>
-      <h2>Results for "{{ query }}"</h2>
-      <p class="section-note">{{ result_count }} word{% if result_count != 1 %}s{% endif %} matched your current filters.</p>
+      <p class="eyebrow">Results</p>
+      <h2>{{ result_count }} match{% if result_count != 1 %}es{% endif %} for "{{ query }}"</h2>
     </div>
   </div>
   <div class="search-results-grid">
     {% for word in results %}
-    <a class="search-card" href="/word/{{ word.id }}">
+    <a class="search-card rich" href="/word/{{ word.id }}">
       <div class="search-card-top">
         <strong>{{ word.lemma }}</strong>
         <span class="info-chip">{{ word.best_band_label }}</span>
@@ -36,16 +38,25 @@
       <div class="search-meta">
         <span>{{ word.parts_of_speech|join(", ") if word.parts_of_speech else "Unknown type" }}</span>
       </div>
-      <div class="search-content">
-        <p><strong>English:</strong> {{ word.english_definition or "Not added yet." }}</p>
-        <p><strong>Chinese:</strong> {{ word.chinese_preview|join(" / ") if word.chinese_preview else "Not available." }}</p>
-        <p><strong>Example:</strong> {{ word.example_sentence or "Not added yet." }}</p>
+      <div class="search-preview-grid">
+        <div class="preview-box">
+          <span class="preview-label">English</span>
+          <p>{{ word.english_definition or "Not added yet." }}</p>
+        </div>
+        <div class="preview-box">
+          <span class="preview-label">Chinese</span>
+          <p>{{ word.chinese_preview|join(" / ") if word.chinese_preview else "Not available." }}</p>
+        </div>
+      </div>
+      <div class="preview-box subtle">
+        <span class="preview-label">Example</span>
+        <p>{{ word.example_sentence or "Not added yet." }}</p>
       </div>
     </a>
     {% else %}
     <div class="empty-card">
       <h3>No words matched this search.</h3>
-      <p>Try a shorter keyword, remove one filter, or search from a different frequency band.</p>
+      <p>Try a shorter keyword, remove one filter, or browse by frequency band instead.</p>
     </div>
     {% endfor %}
   </div>
