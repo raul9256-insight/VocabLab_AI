@@ -1,63 +1,61 @@
 {% extends "base.html" %}
 {% block title %}Dictionary | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="dictionary-hero">
-  <article class="panel">
-    <p class="eyebrow">Dictionary</p>
-    <h1>Search fast or browse by frequency.</h1>
-    <p class="lede">Use search when you know the word. Use frequency bands when you want to explore the vocabulary landscape.</p>
-    <form class="search-form" method="get" action="/dictionary/search">
-      <input type="search" name="q" placeholder="Search any word, e.g. analyze" required>
+<section class="dictionary-refined-shell">
+  <article class="panel dashboard-v2-card dictionary-refined-hero">
+    <div class="dictionary-refined-head">
+      <div>
+        <p class="eyebrow">Dictionary</p>
+        <h1>Search, browse, and explore your word bank.</h1>
+        <p class="lede">Search when you know the word. Browse bands when you want to discover vocabulary by frequency.</p>
+      </div>
+      <div class="dictionary-hero-note">
+        <span class="dictionary-note-label">Review queue</span>
+        <strong>{{ missed_count }}</strong>
+        <small>missed words ready to revisit</small>
+      </div>
+    </div>
+
+    <form class="dictionary-search-bar" method="get" action="/dictionary/search">
+      <input type="search" name="q" placeholder="Search a word, for example analyze" required>
       <button class="button" type="submit">Search</button>
     </form>
-    <div class="action-row">
-      <a class="button secondary" href="/review/missed">Missed Words{% if missed_count %} ({{ missed_count }}){% endif %}</a>
-    </div>
-  </article>
-</section>
-
-<section class="dashboard-columns">
-  <article class="panel">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">Quick Start</p>
-        <h2>Choose your path</h2>
-      </div>
-    </div>
-    <div class="task-grid">
-      <article class="task-card static">
-        <div class="task-badge">A</div>
-        <h3>Search directly</h3>
-        <p>Best when you already know the word and want a fast answer.</p>
-      </article>
-      <article class="task-card static">
-        <div class="task-badge">B</div>
-        <h3>Browse by band</h3>
-        <p>Best when you want to discover more frequent or less frequent words.</p>
-      </article>
-      <article class="task-card static">
-        <div class="task-badge">C</div>
-        <h3>Review missed words</h3>
-        <p>Best when you want a shortlist based on your actual mistakes.</p>
-      </article>
-    </div>
   </article>
 
-  <article class="panel">
-    <div class="section-head">
+  <section class="dictionary-refined-actions">
+    <a class="dictionary-action-card" href="/dictionary/search?q=analyze">
+      <span class="dictionary-action-tag">Search</span>
+      <strong>Find a specific word</strong>
+      <p>Best when you already know what you want to look up.</p>
+    </a>
+    <a class="dictionary-action-card" href="/dictionary/band/{{ bands[0].best_band_rank if bands else 50 }}">
+      <span class="dictionary-action-tag">Browse</span>
+      <strong>Open a frequency band</strong>
+      <p>Best when you want to study words by appearance count.</p>
+    </a>
+    <a class="dictionary-action-card" href="/review/missed">
+      <span class="dictionary-action-tag">Review</span>
+      <strong>Go to missed words</strong>
+      <p>Best when you want a list based on your actual mistakes.</p>
+    </a>
+  </section>
+
+  <section class="panel dashboard-v2-card dictionary-band-panel">
+    <div class="card-head tight">
       <div>
         <p class="eyebrow">Frequency Bands</p>
-        <h2>Browse all bands</h2>
+        <h2>Choose a band to browse</h2>
       </div>
     </div>
-    <div class="band-grid-compact">
+    <p class="section-note">Higher numbers mean the word appeared more often in your Economist source data over the last 10 years.</p>
+    <div class="dictionary-band-grid">
       {% for band in bands %}
-      <a class="band-compact-card" href="/dictionary/band/{{ band.best_band_rank }}">
+      <a class="dictionary-band-card" href="/dictionary/band/{{ band.best_band_rank }}">
         <strong>{{ band.range_label }}</strong>
         <small>{{ band.workbook_total }} words</small>
       </a>
       {% endfor %}
     </div>
-  </article>
+  </section>
 </section>
 {% endblock %}

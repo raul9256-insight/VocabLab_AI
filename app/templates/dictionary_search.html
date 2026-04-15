@@ -1,11 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Dictionary Search | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="dictionary-hero">
-  <article class="panel">
-    <p class="eyebrow">Dictionary Search</p>
-    <h1>Find words fast.</h1>
-    <form class="search-form stacked" method="get" action="/dictionary/search">
+<section class="dictionary-refined-shell">
+  <article class="panel dashboard-v2-card dictionary-refined-hero">
+    <div class="card-head tight">
+      <div>
+        <p class="eyebrow">Dictionary Search</p>
+        <h1>Find words fast.</h1>
+      </div>
+      <a class="text-link" href="/dictionary">Back to dictionary</a>
+    </div>
+
+    <form class="dictionary-search-form" method="get" action="/dictionary/search">
       <input type="search" name="q" placeholder="Search any word" value="{{ query }}" required>
       <select name="band_rank">
         <option value="">All bands</option>
@@ -13,53 +19,53 @@
         <option value="{{ band.best_band_rank }}" {% if selected_band == band.best_band_rank %}selected{% endif %}>{{ band.best_band_label }}</option>
         {% endfor %}
       </select>
-      <label class="checkbox-row"><input type="checkbox" name="has_english" value="1" {% if has_english %}checked{% endif %}> English definition only</label>
-      <label class="checkbox-row"><input type="checkbox" name="has_example" value="1" {% if has_example %}checked{% endif %}> Example sentence only</label>
+      <label class="checkbox-row"><input type="checkbox" name="has_english" value="1" {% if has_english %}checked{% endif %}> English only</label>
+      <label class="checkbox-row"><input type="checkbox" name="has_example" value="1" {% if has_example %}checked{% endif %}> Example only</label>
       <button class="button" type="submit">Search</button>
     </form>
   </article>
-</section>
 
-{% if query %}
-<section class="panel">
-  <div class="section-head">
-    <div>
-      <p class="eyebrow">Results</p>
-      <h2>{{ result_count }} match{% if result_count != 1 %}es{% endif %} for "{{ query }}"</h2>
+  {% if query %}
+  <section class="panel dashboard-v2-card dictionary-results-panel">
+    <div class="card-head tight">
+      <div>
+        <p class="eyebrow">Results</p>
+        <h2>{{ result_count }} match{% if result_count != 1 %}es{% endif %} for "{{ query }}"</h2>
+      </div>
     </div>
-  </div>
-  <div class="search-results-grid">
-    {% for word in results %}
-    <a class="search-card rich" href="/word/{{ word.id }}">
-      <div class="search-card-top">
-        <strong>{{ word.lemma }}</strong>
-        <span class="info-chip">{{ word.best_band_label }}</span>
-      </div>
-      <div class="search-meta">
-        <span>{{ word.parts_of_speech|join(", ") if word.parts_of_speech else "Unknown type" }}</span>
-      </div>
-      <div class="search-preview-grid">
-        <div class="preview-box">
-          <span class="preview-label">English</span>
-          <p>{{ word.english_definition or "Not added yet." }}</p>
+    <div class="dictionary-results-grid">
+      {% for word in results %}
+      <a class="dictionary-result-card" href="/word/{{ word.id }}">
+        <div class="dictionary-result-top">
+          <div>
+            <strong>{{ word.lemma }}</strong>
+            <span class="dictionary-result-meta">{{ word.parts_of_speech|join(", ") if word.parts_of_speech else "Unknown type" }}</span>
+          </div>
+          <span class="word-band-pill">{{ word.best_band_label }}</span>
         </div>
-        <div class="preview-box">
-          <span class="preview-label">Chinese</span>
-          <p>{{ word.chinese_preview|join(" / ") if word.chinese_preview else "Not available." }}</p>
+        <div class="dictionary-result-body">
+          <div class="dictionary-result-box">
+            <span class="focus-label">English</span>
+            <p>{{ word.english_definition or "Not added yet." }}</p>
+          </div>
+          <div class="dictionary-result-box">
+            <span class="focus-label">Chinese</span>
+            <p>{{ word.chinese_preview|join(" / ") if word.chinese_preview else "Not available." }}</p>
+          </div>
         </div>
+        <div class="dictionary-result-box subtle">
+          <span class="focus-label">Example</span>
+          <p>{{ word.example_sentence or "Not added yet." }}</p>
+        </div>
+      </a>
+      {% else %}
+      <div class="empty-card dictionary-empty-card">
+        <h3>No words matched this search.</h3>
+        <p>Try a shorter keyword, remove one filter, or browse by frequency band instead.</p>
       </div>
-      <div class="preview-box subtle">
-        <span class="preview-label">Example</span>
-        <p>{{ word.example_sentence or "Not added yet." }}</p>
-      </div>
-    </a>
-    {% else %}
-    <div class="empty-card">
-      <h3>No words matched this search.</h3>
-      <p>Try a shorter keyword, remove one filter, or browse by frequency band instead.</p>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
+  </section>
+  {% endif %}
 </section>
-{% endif %}
 {% endblock %}

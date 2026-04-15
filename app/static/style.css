@@ -1900,11 +1900,197 @@ input[type="file"] {
   width: 100%;
 }
 
+.dictionary-refined-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.dictionary-refined-hero,
+.dictionary-results-panel,
+.dictionary-band-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 248, 255, 0.94));
+}
+
+.dictionary-refined-head,
+.dictionary-refined-actions,
+.dictionary-band-grid,
+.dictionary-results-grid,
+.dictionary-result-body,
+.dictionary-band-results,
+.dictionary-letter-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.dictionary-refined-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.dictionary-hero-note {
+  min-width: 180px;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(247, 249, 255, 0.88);
+  border: 1px solid rgba(112, 125, 184, 0.12);
+}
+
+.dictionary-note-label,
+.dictionary-hero-note small,
+.dictionary-result-meta {
+  display: block;
+  color: #6f7890;
+}
+
+.dictionary-hero-note strong {
+  display: block;
+  margin: 0.2rem 0;
+  font-size: 1.8rem;
+}
+
+.dictionary-search-bar,
+.dictionary-search-form,
+.dictionary-band-filters {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dictionary-search-bar input,
+.dictionary-search-form input,
+.dictionary-search-form select {
+  min-width: 220px;
+  padding: 1rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(112, 125, 184, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  font: inherit;
+}
+
+.dictionary-search-bar input {
+  flex: 1;
+}
+
+.dictionary-refined-actions,
+.dictionary-band-grid,
+.refined-band-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dictionary-action-card,
+.dictionary-band-card,
+.dictionary-result-card,
+.dictionary-band-word {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(112, 125, 184, 0.14);
+  background: rgba(255, 255, 255, 0.82);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.dictionary-action-card:hover,
+.dictionary-band-card:hover,
+.dictionary-result-card:hover,
+.dictionary-band-word:hover {
+  transform: translateY(-2px);
+  border-color: rgba(95, 115, 255, 0.24);
+  box-shadow: 0 14px 28px rgba(95, 115, 255, 0.08);
+}
+
+.dictionary-action-tag {
+  color: #6f7890;
+  font-size: 0.85rem;
+}
+
+.dictionary-action-card p,
+.dictionary-band-word p,
+.dictionary-result-box p {
+  margin: 0;
+  color: #687086;
+  line-height: 1.45;
+}
+
+.dictionary-band-grid,
+.refined-band-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dictionary-results-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dictionary-result-card {
+  gap: 0.85rem;
+}
+
+.dictionary-result-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.dictionary-result-meta {
+  margin-top: 0.25rem;
+}
+
+.dictionary-result-body {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dictionary-result-box {
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  background: rgba(247, 249, 255, 0.9);
+  border: 1px solid rgba(112, 125, 184, 0.12);
+}
+
+.dictionary-result-box.subtle {
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.dictionary-empty-card {
+  grid-column: 1 / -1;
+}
+
+.dictionary-letter-grid {
+  grid-template-columns: repeat(auto-fit, minmax(48px, max-content));
+  margin-top: 1rem;
+}
+
+.dictionary-letter-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 0.7rem 0.8rem;
+  border-radius: 14px;
+  background: rgba(247, 249, 255, 0.9);
+  border: 1px solid rgba(112, 125, 184, 0.12);
+  color: #6f7890;
+  font-weight: 600;
+}
+
+.dictionary-letter-pill.active {
+  background: rgba(95, 115, 255, 0.12);
+  color: #5666f1;
+}
+
+.dictionary-band-results {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 @media (max-width: 1120px) {
   .app-shell {
     grid-template-columns: 220px minmax(0, 1fr);
   }
 
+  .dictionary-refined-head,
+  .dictionary-result-body,
   .word-detail-grid,
   .word-definition-grid,
   .dashboard-refined-top,
@@ -1914,10 +2100,14 @@ input[type="file"] {
   .band-grid-v2,
   .band-grid-v2.compact,
   .summary-grid,
-  .refined-band-grid {
+  .refined-band-grid,
+  .dictionary-band-grid {
     grid-template-columns: 1fr;
   }
 
+  .dictionary-refined-actions,
+  .dictionary-results-grid,
+  .dictionary-band-results,
   .refined-words-grid,
   .refined-recommend-grid,
   .hero-actions-grid,
@@ -1945,6 +2135,7 @@ input[type="file"] {
   .dashboard-refined-head,
   .dashboard-v2-intro,
   .dashboard-v2-stats,
+  .dictionary-refined-head,
   .word-detail-main,
   .word-detail-stats,
   .dashboard-simple-hero,
@@ -1978,6 +2169,11 @@ input[type="file"] {
 
   .band-grid-v2.compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dictionary-band-results,
+  .dictionary-results-grid {
+    grid-template-columns: 1fr;
   }
 
   .word-detail-tabs {

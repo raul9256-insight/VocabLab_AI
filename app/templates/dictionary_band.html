@@ -1,38 +1,57 @@
 {% extends "base.html" %}
 {% block title %}{{ band.best_band_label }} | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="panel">
-  <p class="eyebrow">Frequency Band</p>
-  <h1>{{ band.best_band_label }}</h1>
-  <p>{{ band.total }} words in this band.</p>
-  <form class="filter-form" method="get" action="/dictionary/band/{{ band.best_band_rank }}">
-    <input type="hidden" name="letter" value="{{ active_letter }}">
-    <label class="checkbox-row"><input type="checkbox" name="has_english" value="1" {% if has_english %}checked{% endif %}> English definition only</label>
-    <label class="checkbox-row"><input type="checkbox" name="has_example" value="1" {% if has_example %}checked{% endif %}> Example sentence only</label>
-    <button class="button secondary" type="submit">Apply Filters</button>
-  </form>
-  <div class="letter-grid">
-    {% for letter in letters %}
-    <a class="letter-pill {% if letter == active_letter %}active{% endif %}" href="/dictionary/band/{{ band.best_band_rank }}?letter={{ letter }}{% if has_english %}&has_english=1{% endif %}{% if has_example %}&has_example=1{% endif %}">{{ letter }}</a>
-    {% endfor %}
-  </div>
-</section>
+<section class="dictionary-refined-shell">
+  <article class="panel dashboard-v2-card dictionary-refined-hero">
+    <div class="card-head tight">
+      <div>
+        <p class="eyebrow">Frequency Band</p>
+        <h1>{{ band.best_band_label }}</h1>
+        <p class="lede">{{ band.total }} words in this band.</p>
+      </div>
+      <a class="text-link" href="/dictionary">Back to dictionary</a>
+    </div>
 
-<section class="panel">
-  <h2>{{ active_letter }}</h2>
-  <div class="word-list">
-    {% for word in words %}
-    <a class="word-row" href="/word/{{ word.id }}">
-      <strong>{{ word.lemma }}</strong>
-      {% if word.english_definition %}
-      <span>{{ word.english_definition }}</span>
-      {% elif word.example_sentence %}
-      <span>{{ word.example_sentence }}</span>
-      {% endif %}
-    </a>
-    {% else %}
-    <p>No words found for this letter.</p>
-    {% endfor %}
-  </div>
+    <form class="dictionary-band-filters" method="get" action="/dictionary/band/{{ band.best_band_rank }}">
+      <input type="hidden" name="letter" value="{{ active_letter }}">
+      <label class="checkbox-row"><input type="checkbox" name="has_english" value="1" {% if has_english %}checked{% endif %}> English only</label>
+      <label class="checkbox-row"><input type="checkbox" name="has_example" value="1" {% if has_example %}checked{% endif %}> Example only</label>
+      <button class="button secondary" type="submit">Apply filters</button>
+    </form>
+
+    <div class="dictionary-letter-grid">
+      {% for letter in letters %}
+      <a class="dictionary-letter-pill {% if letter == active_letter %}active{% endif %}" href="/dictionary/band/{{ band.best_band_rank }}?letter={{ letter }}{% if has_english %}&has_english=1{% endif %}{% if has_example %}&has_example=1{% endif %}">{{ letter }}</a>
+      {% endfor %}
+    </div>
+  </article>
+
+  <section class="panel dashboard-v2-card dictionary-results-panel">
+    <div class="card-head tight">
+      <div>
+        <p class="eyebrow">Words</p>
+        <h2>{{ active_letter }}</h2>
+      </div>
+    </div>
+    <div class="dictionary-band-results">
+      {% for word in words %}
+      <a class="dictionary-band-word" href="/word/{{ word.id }}">
+        <strong>{{ word.lemma }}</strong>
+        {% if word.english_definition %}
+        <p>{{ word.english_definition }}</p>
+        {% elif word.example_sentence %}
+        <p>{{ word.example_sentence }}</p>
+        {% else %}
+        <p>Open this word to add richer details.</p>
+        {% endif %}
+      </a>
+      {% else %}
+      <div class="empty-card dictionary-empty-card">
+        <h3>No words found for this letter.</h3>
+        <p>Try another letter or remove one of the filters.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
 </section>
 {% endblock %}
