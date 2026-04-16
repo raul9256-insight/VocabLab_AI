@@ -36,7 +36,12 @@
     <div class="dictionary-band-results">
       {% for word in words %}
       <a class="dictionary-band-word" href="/word/{{ word.id }}">
-        <strong>{{ word.lemma }}</strong>
+        <div class="bilingual-word-pair">
+          <strong>{{ word.lemma }}</strong>
+          {% if word.chinese_headword %}
+          <strong>{{ word.chinese_headword }}</strong>
+          {% endif %}
+        </div>
         {% if word.english_definition %}
         <p>{{ word.english_definition }}</p>
         {% elif word.example_sentence %}

@@ -39,7 +39,12 @@
         <div class="dictionary-result-top">
           <div>
             <div class="word-heading-row compact">
-              <strong>{{ word.lemma }}</strong>
+              <div class="bilingual-word-pair inline">
+                <strong>{{ word.lemma }}</strong>
+                {% if word.chinese_preview %}
+                <strong>{{ word.chinese_preview[0] }}</strong>
+                {% endif %}
+              </div>
               <button class="pronounce-button small" type="button" data-pronounce="{{ word.lemma }}" aria-label="Pronounce {{ word.lemma }}">🔊</button>
             </div>
             <span class="dictionary-result-meta">{{ word.parts_of_speech|join(", ") if word.parts_of_speech else "Unknown type" }}</span>

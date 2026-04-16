@@ -11,10 +11,18 @@
     <div class="word-detail-main">
       <div class="word-detail-heading">
         <div class="word-heading-row">
-          <h1>{{ word.lemma }}</h1>
+          <div class="bilingual-word-pair detail">
+            <h1>{{ word.lemma }}</h1>
+            {% if chinese_headword %}
+            <h1>{{ chinese_headword }}</h1>
+            {% endif %}
+          </div>
           <button class="pronounce-button" type="button" data-pronounce="{{ word.lemma }}" aria-label="Pronounce {{ word.lemma }}">🔊</button>
         </div>
-        <p class="word-pronunciation">{{ parts_of_speech|join(", ") if parts_of_speech else "Unknown type" }}</p>
+        <p class="word-pronunciation">
+          {% if pronunciation %}<span>{{ pronunciation }}</span>{% endif %}
+          <span>{{ parts_of_speech|join(", ") if parts_of_speech else "Unknown type" }}</span>
+        </p>
       </div>
 
       <div class="word-detail-stats">
@@ -143,6 +151,10 @@
           <label>
             <span>English Definition</span>
             <textarea name="english_definition" rows="4" placeholder="Add a concise English definition">{{ english_definition }}</textarea>
+          </label>
+          <label>
+            <span>Pronunciation</span>
+            <input type="text" name="pronunciation" value="{{ pronunciation }}" placeholder="Add IPA, e.g. /əˈbɪləti/">
           </label>
           <label>
             <span>Synonyms</span>

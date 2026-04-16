@@ -92,7 +92,12 @@
       {% for word in spotlight_words[:3] %}
       <a class="refined-word-card" href="/word/{{ word.id }}">
         <div class="refined-word-head">
-          <strong>{{ word.lemma }}</strong>
+          <div class="bilingual-word-pair inline">
+            <strong>{{ word.lemma }}</strong>
+            {% if word.chinese_headword %}
+            <strong>{{ word.chinese_headword }}</strong>
+            {% endif %}
+          </div>
           <span class="word-type-pill">{{ word.parts_of_speech|join(", ") if word.parts_of_speech else "type" }}</span>
         </div>
         <span class="refined-word-band">{{ word.best_band_label }}</span>

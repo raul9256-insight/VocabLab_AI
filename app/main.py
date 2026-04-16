@@ -99,6 +99,7 @@ def word_row(conn: sqlite3.Connection, word_id: int) -> sqlite3.Row:
 
 def word_payload(conn: sqlite3.Connection, word_id: int) -> dict:
     row = word_row(conn, word_id)
+    definitions = definitions_for_word(conn, word_id)
     source_rows = conn.execute(
         """
         SELECT workbook_name, sheet_name, row_number, pos, meanings_json, extra_json
@@ -127,7 +128,8 @@ def word_payload(conn: sqlite3.Connection, word_id: int) -> dict:
                 source_example_sentence = extra["example_sentence"]
     return {
         "word": row,
-        "definitions": definitions_for_word(conn, word_id),
+        "definitions": definitions,
+        "chinese_headword": definitions[0] if definitions else "",
         "parts_of_speech": parts_of_speech_for_word(conn, word_id),
         "sources": source_rows,
         "english_definition": (enrichment["english_definition"] if enrichment and enrichment["english_definition"] else source_english_definition),
@@ -211,6 +213,7 @@ def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4) -> list[
                 "example_sentence": row["example_sentence"],
                 "parts_of_speech": pos,
                 "chinese_preview": defs[:1],
+                "chinese_headword": defs[0] if defs else "",
             }
         )
     return items
@@ -1070,7 +1073,7 @@ def dictionary_band(
     if band is None:
         raise HTTPException(status_code=404, detail="Band not found")
     active_letter = (letter or "A").upper()
-    words = conn.execute(
+    rows = conn.execute(
         """
         SELECT words.id, words.lemma, words.best_band_label,
                COALESCE(word_enrichment.english_definition, '') AS english_definition,
@@ -1085,6 +1088,20 @@ def dictionary_band(
         """,
         (band_rank, active_letter, has_english, has_example),
     ).fetchall()
+    words = []
+    for row in rows:
+        definitions = definitions_for_word(conn, row["id"])
+        words.append(
+            {
+                "id": row["id"],
+                "lemma": row["lemma"],
+                "best_band_label": row["best_band_label"],
+                "english_definition": row["english_definition"],
+                "example_sentence": row["example_sentence"],
+                "chinese_preview": definitions[:2],
+                "chinese_headword": definitions[0] if definitions else "",
+            }
+        )
     return render(
         request,
         "dictionary_band.html",

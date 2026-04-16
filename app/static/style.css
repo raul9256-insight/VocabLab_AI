@@ -1762,6 +1762,23 @@ input[type="file"] {
   font-size: 1.02rem;
 }
 
+.bilingual-word-pair {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.bilingual-word-pair.inline {
+  display: inline-flex;
+}
+
+.bilingual-word-pair strong {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
 .refined-word-head {
   display: flex;
   justify-content: space-between;
@@ -1859,6 +1876,15 @@ input[type="file"] {
 
 .word-detail-heading h1 {
   margin-bottom: 0.3rem;
+}
+
+.bilingual-word-pair.detail {
+  align-items: baseline;
+  gap: 0.8rem;
+}
+
+.bilingual-word-pair.detail h1 {
+  margin: 0 0 0.3rem;
 }
 
 .word-pronunciation {
@@ -2151,6 +2177,10 @@ input[type="file"] {
   margin: 0;
   color: #687086;
   line-height: 1.45;
+}
+
+.dictionary-band-word > strong {
+  font-size: 1.02rem;
 }
 
 .dictionary-band-grid,
