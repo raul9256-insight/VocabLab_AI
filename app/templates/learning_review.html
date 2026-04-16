@@ -68,7 +68,10 @@
       <div class="card-head tight">
         <div>
           <p class="eyebrow">Word Snapshot</p>
-          <h2>{{ word.lemma }}</h2>
+          <div class="word-heading-row compact">
+            <h2>{{ word.lemma }}</h2>
+            <button class="pronounce-button small" type="button" data-pronounce="{{ word.lemma }}" aria-label="Pronounce {{ word.lemma }}">🔊</button>
+          </div>
         </div>
       </div>
       <div class="learning-side-stack">

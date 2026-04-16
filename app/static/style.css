@@ -1867,6 +1867,44 @@ input[type="file"] {
   font-size: 1rem;
 }
 
+.word-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.word-heading-row.compact {
+  gap: 0.45rem;
+}
+
+.pronounce-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid rgba(112, 125, 184, 0.16);
+  border-radius: 999px;
+  background: rgba(247, 249, 255, 0.95);
+  color: #5564e8;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.pronounce-button.small {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.88rem;
+}
+
+.pronounce-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(95, 115, 255, 0.28);
+  box-shadow: 0 8px 18px rgba(95, 115, 255, 0.12);
+}
+
 .word-detail-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(100px, 1fr));
