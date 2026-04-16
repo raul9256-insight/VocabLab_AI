@@ -1,48 +1,91 @@
 {% extends "base.html" %}
 {% block title %}Learning Review | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="question-shell">
-  <div class="question-meta">
-    <span>Learning</span>
-    <span>{{ progress.answered }}/{{ progress.total }} answered</span>
-    <span>{{ question.question_type|title }}</span>
+<section class="learning-session-shell">
+  <div class="learning-session-meta">
+    <span class="session-meta-pill active">Learning</span>
+    <span class="session-meta-pill">{{ progress.answered }}/{{ progress.total }} answered</span>
+    <span class="session-meta-pill">{{ question.question_type|title }}</span>
   </div>
-  <article class="panel">
-    <p class="eyebrow">{% if question.is_correct %}Correct{% else %}Review{% endif %}</p>
-    <h1>{{ question.prompt_text }}</h1>
-    <div class="feedback-card {% if question.is_correct %}feedback-good{% else %}feedback-bad{% endif %}">
-      <p><strong>Your answer:</strong> {{ question.user_answer }}</p>
-      <p><strong>Correct answer:</strong> {{ question.correct_option }}</p>
-      {% if question.is_correct %}
-      <p>Nice work. This word is moving in the right direction.</p>
-      {% else %}
-      <p>Take a moment to read the word details below before moving on.</p>
-      {% endif %}
-    </div>
 
-    <h2>Definitions</h2>
-    <ul>
-      {% for item in definitions[:4] %}
-      <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-    <p><strong>Word type:</strong> {{ parts_of_speech|join(", ") if parts_of_speech else "Unknown" }}</p>
-    <p><strong>English definition:</strong> {{ english_definition or "Not added yet." }}</p>
-    {% if synonyms %}
-    <p><strong>Synonyms:</strong> {{ synonyms|join(", ") }}</p>
-    {% endif %}
-    {% if example_sentence %}
-    <p><strong>Example:</strong> {{ example_sentence }}</p>
-    {% endif %}
+  <section class="learning-session-grid">
+    <article class="panel dashboard-v2-card learning-question-card">
+      <p class="eyebrow">{% if question.is_correct %}Correct{% else %}Review{% endif %}</p>
+      <h1>{{ question.prompt_text }}</h1>
 
-    <div class="action-row">
-      {% if is_last %}
-      <a class="button" href="/learning/{{ session.id }}/result">See Session Result</a>
-      {% else %}
-      <a class="button" href="/learning/{{ session.id }}">Next Question</a>
-      {% endif %}
-      <a class="button secondary" href="/word/{{ word.id }}">Open Word Page</a>
-    </div>
-  </article>
+      <div class="feedback-card learning-feedback {% if question.is_correct %}feedback-good{% else %}feedback-bad{% endif %}">
+        <p><strong>Your answer:</strong> {{ question.user_answer }}</p>
+        <p><strong>Correct answer:</strong> {{ question.correct_option }}</p>
+        {% if question.is_correct %}
+        <p>Nice work. This word is moving in the right direction.</p>
+        {% else %}
+        <p>Take a moment to read the details below before moving on.</p>
+        {% endif %}
+      </div>
+
+      <div class="learning-review-grid">
+        <div class="learning-info-block">
+          <span class="focus-label">Chinese Definition</span>
+          {% if definitions %}
+          <ul class="clean-list">
+            {% for item in definitions[:4] %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p>Not added yet.</p>
+          {% endif %}
+        </div>
+        <div class="learning-info-block">
+          <span class="focus-label">English Definition</span>
+          <p>{{ english_definition or "Not added yet." }}</p>
+        </div>
+        {% if synonyms %}
+        <div class="learning-info-block">
+          <span class="focus-label">Synonyms</span>
+          <p>{{ synonyms|join(", ") }}</p>
+        </div>
+        {% endif %}
+        {% if example_sentence %}
+        <div class="learning-info-block">
+          <span class="focus-label">Example</span>
+          <p>{{ example_sentence }}</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="action-row">
+        {% if is_last %}
+        <a class="button" href="/learning/{{ session.id }}/result">See Session Result</a>
+        {% else %}
+        <a class="button" href="/learning/{{ session.id }}">Next Question</a>
+        {% endif %}
+        <a class="button secondary" href="/word/{{ word.id }}">Open Word Page</a>
+      </div>
+    </article>
+
+    <aside class="panel dashboard-v2-card learning-side-card">
+      <div class="card-head tight">
+        <div>
+          <p class="eyebrow">Word Snapshot</p>
+          <h2>{{ word.lemma }}</h2>
+        </div>
+      </div>
+      <div class="learning-side-stack">
+        <div class="learning-info-block">
+          <span class="focus-label">Word Type</span>
+          <p>{{ parts_of_speech|join(", ") if parts_of_speech else "Unknown" }}</p>
+        </div>
+        <div class="learning-info-block">
+          <span class="focus-label">Status</span>
+          <p>{{ word.status }}</p>
+        </div>
+        <div class="learning-info-block">
+          <span class="focus-label">Correct / Wrong</span>
+          <p>{{ word.correct_count }} / {{ word.wrong_count }}</p>
+        </div>
+      </div>
+    </aside>
+  </section>
 </section>
 {% endblock %}

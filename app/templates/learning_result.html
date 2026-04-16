@@ -1,39 +1,53 @@
 {% extends "base.html" %}
 {% block title %}Learning Result | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="panel narrow">
-  <p class="eyebrow">Session Complete</p>
-  <h1>You answered {{ session.score }} correctly.</h1>
-  <div class="stat-grid compact">
-    <article class="stat-card">
-      <span>Accuracy</span>
-      <strong>{{ percent }}%</strong>
-    </article>
-    <article class="stat-card">
-      <span>Session Score</span>
-      <strong>{{ session.score }}</strong>
-    </article>
-  </div>
-  <div class="callout">
-    <strong>Next focus:</strong> {{ recommendation }}
-  </div>
-  <table class="result-table">
-    <thead>
-      <tr><th>Question Type</th><th>Correct</th><th>Total</th></tr>
-    </thead>
-    <tbody>
+<section class="learning-shell">
+  <article class="panel dashboard-v2-card learning-result-hero">
+    <p class="eyebrow">Session Complete</p>
+    <h1>You answered {{ session.score }} correctly.</h1>
+    <p class="lede">Your learning round is saved. Use the result below to decide whether to continue, review, or enrich more words.</p>
+
+    <div class="learning-result-grid">
+      <div class="learning-result-card">
+        <span>Accuracy</span>
+        <strong>{{ percent }}%</strong>
+      </div>
+      <div class="learning-result-card">
+        <span>Session Score</span>
+        <strong>{{ session.score }}</strong>
+      </div>
+    </div>
+
+    <div class="callout learning-result-callout">
+      <strong>Next focus:</strong> {{ recommendation }}
+    </div>
+  </article>
+
+  <article class="panel dashboard-v2-card learning-breakdown-card">
+    <div class="card-head tight">
+      <div>
+        <p class="eyebrow">Breakdown</p>
+        <h2>Question types</h2>
+      </div>
+    </div>
+    <div class="learning-breakdown-table">
+      <div class="learning-breakdown-head">
+        <span>Question Type</span>
+        <span>Correct</span>
+        <span>Total</span>
+      </div>
       {% for row in question_results %}
-      <tr>
-        <td>{{ row.question_type }}</td>
-        <td>{{ row.correct }}</td>
-        <td>{{ row.total }}</td>
-      </tr>
+      <div class="learning-breakdown-row">
+        <span>{{ row.question_type }}</span>
+        <strong>{{ row.correct }}</strong>
+        <span>{{ row.total }}</span>
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
-  <div class="action-row">
-    <a class="button secondary" href="/learning">Start Another Session</a>
-    <a class="button" href="/dictionary">Open Dictionary</a>
-  </div>
+    </div>
+    <div class="action-row">
+      <a class="button secondary" href="/learning">Start Another Session</a>
+      <a class="button" href="/dictionary">Open Dictionary</a>
+    </div>
+  </article>
 </section>
 {% endblock %}

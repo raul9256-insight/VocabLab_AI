@@ -1,61 +1,107 @@
 {% extends "base.html" %}
 {% block title %}Learning | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="panel narrow">
-  <p class="eyebrow">Step 2</p>
-  <h1>Learning Mode</h1>
-  <p>Each session starts with words from your database and builds multiple-choice practice. Definitions are ready right away. Synonym and sentence questions become available as you add enrichment on each word page.</p>
-  {% if latest_learning %}
-  <div class="callout">
-    <strong>Latest session:</strong> You scored {{ latest_learning.score }} points in your most recent learning run.
-  </div>
-  {% endif %}
-  <div class="stat-grid compact">
-    <article class="stat-card">
-      <span>Total Words</span>
-      <strong>{{ stats.total_words }}</strong>
-      <small>All words that can already appear in study sessions.</small>
-    </article>
-    <article class="stat-card">
-      <span>Enriched Words</span>
-      <strong>{{ enrichment.enriched_words or 0 }}</strong>
-      <small>Words that already have extra learning content saved.</small>
-    </article>
-    <article class="stat-card">
-      <span>Synonym Ready</span>
-      <strong>{{ enrichment.synonym_ready or 0 }}</strong>
-      <small>These words can support synonym-style practice.</small>
-    </article>
-    <article class="stat-card">
-      <span>Sentence Ready</span>
-      <strong>{{ enrichment.sentence_ready or 0 }}</strong>
-      <small>These words already have example sentences prepared.</small>
-    </article>
-  </div>
-  <form method="post" action="/learning/start">
-    <button class="button" type="submit">Start Learning Session</button>
-  </form>
-</section>
+<section class="learning-shell">
+  <article class="panel dashboard-v2-card learning-hero">
+    <div class="learning-hero-top">
+      <div>
+        <p class="eyebrow">Learning</p>
+        <h1>Train in short, focused loops.</h1>
+        <p class="lede">Each session gives you multiple-choice practice from your Economist vocabulary database. As you enrich more words, learning becomes deeper and less repetitive.</p>
+      </div>
+      <div class="learning-hero-badge">
+        <span>Latest</span>
+        <strong>{% if latest_learning %}{{ latest_learning.score }} pts{% else %}Ready{% endif %}</strong>
+        <small>{% if latest_learning %}most recent session{% else %}start a new session{% endif %}</small>
+      </div>
+    </div>
 
-{% if (enrichment.enriched_words or 0) == 0 %}
-<section class="panel">
-  <p class="eyebrow">Before You Go Deeper</p>
-  <h2>Your learning mode is ready, but still mostly definition-based.</h2>
-  <div class="empty-grid">
-    <article class="empty-card">
-      <h3>What works now</h3>
-      <p>You can already start definition practice immediately from your imported Economist vocabulary database.</p>
+    <div class="learning-hero-grid">
+      <article class="learning-focus-card">
+        <div class="card-head tight">
+          <div>
+            <p class="eyebrow">Session Goal</p>
+            <h2>Build consistency first</h2>
+          </div>
+        </div>
+        <div class="mini-kicker-row">
+          <span class="mini-kicker active">Definition</span>
+          <span class="mini-kicker">Synonym</span>
+          <span class="mini-kicker">Sentence</span>
+        </div>
+        <p class="goal-note">Definitions are available immediately. Synonym and sentence questions appear as more words gain enrichment.</p>
+        <form method="post" action="/learning/start">
+          <button class="button learning-start-button" type="submit">Start Learning Session</button>
+        </form>
+      </article>
+
+      <article class="learning-progress-card">
+        <div class="card-head tight">
+          <div>
+            <p class="eyebrow">Coverage</p>
+            <h2>Your learning bank</h2>
+          </div>
+        </div>
+        <div class="learning-stats-grid">
+          <div class="learning-stat-card">
+            <span>Total Words</span>
+            <strong>{{ stats.total_words }}</strong>
+          </div>
+          <div class="learning-stat-card">
+            <span>Enriched</span>
+            <strong>{{ enrichment.enriched_words or 0 }}</strong>
+          </div>
+          <div class="learning-stat-card">
+            <span>Synonym Ready</span>
+            <strong>{{ enrichment.synonym_ready or 0 }}</strong>
+          </div>
+          <div class="learning-stat-card">
+            <span>Sentence Ready</span>
+            <strong>{{ enrichment.sentence_ready or 0 }}</strong>
+          </div>
+        </div>
+      </article>
+    </div>
+  </article>
+
+  <section class="learning-support-grid">
+    <article class="panel dashboard-v2-card learning-support-card">
+      <p class="eyebrow">How It Works</p>
+      <h2>What this mode gives you</h2>
+      <p class="section-subtle">Short study rounds help you keep momentum without overloading yourself.</p>
+      <div class="learning-mini-list">
+        <div class="learning-mini-item">
+          <strong>Definition first</strong>
+          <p>Start with meaning-based questions even if enrichment is still limited.</p>
+        </div>
+        <div class="learning-mini-item">
+          <strong>Review after every answer</strong>
+          <p>See the explanation and reopen the full word page when needed.</p>
+        </div>
+        <div class="learning-mini-item">
+          <strong>Smarter over time</strong>
+          <p>As you add notes, synonyms, and examples, practice becomes richer automatically.</p>
+        </div>
+      </div>
     </article>
-    <article class="empty-card">
-      <h3>What makes it richer</h3>
-      <p>Add English definitions, synonyms, and example sentences to more words so later sessions feel less repetitive.</p>
+
+    {% if (enrichment.enriched_words or 0) == 0 %}
+    <article class="panel dashboard-v2-card learning-support-card accent">
+      <p class="eyebrow">Best Next Step</p>
+      <h2>Enrich a few words first</h2>
+      <p class="section-subtle">You can already start learning, but adding some English definitions, synonyms, and example sentences will make sessions much stronger.</p>
+      <a class="button secondary" href="/dictionary">Open Dictionary</a>
     </article>
-    <article class="empty-card">
-      <h3>Best next step</h3>
-      <p>Open the dictionary, choose one frequency band, and enrich a few important words first.</p>
-      <a class="text-link" href="/dictionary">Open Dictionary</a>
+    {% elif latest_learning %}
+    <article class="panel dashboard-v2-card learning-support-card accent">
+      <p class="eyebrow">Latest Session</p>
+      <h2>{{ latest_learning.score }} points</h2>
+      <p class="section-subtle">Your most recent learning session is saved. Start another round to keep building recall.</p>
+      <form method="post" action="/learning/start">
+        <button class="button" type="submit">Start Another Session</button>
+      </form>
     </article>
-  </div>
+    {% endif %}
+  </section>
 </section>
-{% endif %}
 {% endblock %}
