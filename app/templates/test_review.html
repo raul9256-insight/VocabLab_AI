@@ -25,6 +25,10 @@
 
       <div class="learning-review-grid">
         <div class="learning-info-block">
+          <span class="focus-label">Pronunciation</span>
+          <p>{{ pronunciation or "Not added yet." }}</p>
+        </div>
+        <div class="learning-info-block">
           <span class="focus-label">Chinese Definition</span>
           {% if definitions %}
           <ul class="clean-list">
@@ -55,7 +59,7 @@
     <aside class="panel dashboard-v2-card learning-side-card">
       <div class="card-head tight">
         <div>
-          <p class="eyebrow">Word Snapshot</p>
+          <p class="eyebrow">After Answering</p>
           <div class="word-heading-row compact">
             <h2>{{ word.lemma }}</h2>
             <button class="pronounce-button small" type="button" data-pronounce="{{ word.lemma }}" aria-label="Pronounce {{ word.lemma }}">🔊</button>
@@ -64,8 +68,24 @@
       </div>
       <div class="learning-side-stack">
         <div class="learning-info-block">
+          <span class="focus-label">Now unlocked</span>
+          <p>This review step shows the meaning after your choice so you can confirm the word without affecting the test fairness.</p>
+        </div>
+        <div class="learning-info-block">
+          <span class="focus-label">Pronunciation</span>
+          <p>{{ pronunciation or "Not added yet." }}</p>
+        </div>
+        <div class="learning-info-block">
           <span class="focus-label">Word Type</span>
           <p>{{ parts_of_speech|join(", ") if parts_of_speech else "Unknown" }}</p>
+        </div>
+        <div class="learning-info-block">
+          <span class="focus-label">English Definition</span>
+          <p>{{ english_definition or "Not added yet." }}</p>
+        </div>
+        <div class="learning-info-block">
+          <span class="focus-label">Chinese Definition</span>
+          <p>{{ definitions[:2]|join(" / ") if definitions else "Not added yet." }}</p>
         </div>
         <div class="learning-info-block">
           <span class="focus-label">Band</span>
