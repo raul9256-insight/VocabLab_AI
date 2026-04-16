@@ -1,26 +1,58 @@
 {% extends "base.html" %}
 {% block title %}Missed Words | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-<section class="panel">
-  <p class="eyebrow">Review Queue</p>
-  <h1>Missed Words</h1>
-  <p>This page collects the words you answered incorrectly in tests and learning sessions, so your review is guided by real mistakes instead of random guesses.</p>
-  <div class="word-list">
+<section class="review-shell">
+  <article class="panel dashboard-v2-card review-hero">
+    <div class="review-hero-top">
+      <div>
+        <p class="eyebrow">Review Queue</p>
+        <h1>Missed words</h1>
+        <p class="lede">This list collects words you answered incorrectly in tests and learning sessions, so your revision is guided by real mistakes instead of random guesses.</p>
+      </div>
+      <div class="review-hero-badge">
+        <span>Total to review</span>
+        <strong>{{ rows|length }}</strong>
+        <small>words in the queue</small>
+      </div>
+    </div>
+
+    <div class="review-hero-actions">
+      <a class="button" href="/learning">Open Learning</a>
+      <a class="button secondary" href="/dictionary">Open Dictionary</a>
+    </div>
+  </article>
+
+  {% if rows %}
+  <section class="review-grid">
     {% for row in rows %}
-    <a class="word-row" href="/word/{{ row.id }}">
-      <strong>{{ row.lemma }}</strong>
-      <small>{{ row.best_band_label }} · missed {{ row.miss_count }} times</small>
+    <a class="review-word-card" href="/word/{{ row.id }}">
+      <div class="review-word-top">
+        <strong>{{ row.lemma }}</strong>
+        <span class="word-band-pill">{{ row.best_band_label }}</span>
+      </div>
+      <div class="review-word-meta">
+        <span class="review-miss-pill">missed {{ row.miss_count }} time{% if row.miss_count != 1 %}s{% endif %}</span>
+      </div>
       {% if row.english_definition %}
-      <span>{{ row.english_definition }}</span>
+      <p>{{ row.english_definition }}</p>
       {% elif row.example_sentence %}
-      <span>{{ row.example_sentence }}</span>
+      <p>{{ row.example_sentence }}</p>
       {% else %}
-      <span>Open this word to add English definition and example sentence.</span>
+      <p>Open this word to add an English definition and example sentence.</p>
       {% endif %}
     </a>
-    {% else %}
-    <p>You have no missed words yet. After a test or learning session, your review queue will appear here.</p>
     {% endfor %}
-  </div>
+  </section>
+  {% else %}
+  <article class="panel dashboard-v2-card review-empty-card">
+    <p class="eyebrow">All Clear</p>
+    <h2>No missed words yet.</h2>
+    <p class="section-subtle">After a test or learning session, your review queue will appear here automatically.</p>
+    <div class="action-row">
+      <a class="button" href="/test">Start Level Test</a>
+      <a class="button secondary" href="/learning">Start Learning</a>
+    </div>
+  </article>
+  {% endif %}
 </section>
 {% endblock %}

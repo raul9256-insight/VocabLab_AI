@@ -2185,6 +2185,103 @@ input[type="file"] {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.review-shell,
+.review-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.review-hero,
+.review-empty-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 248, 255, 0.94));
+}
+
+.review-hero-top,
+.review-hero-actions {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.review-hero-top {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.review-hero-badge {
+  min-width: 160px;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(247, 249, 255, 0.9);
+  border: 1px solid rgba(112, 125, 184, 0.12);
+}
+
+.review-hero-badge span,
+.review-hero-badge small {
+  display: block;
+  color: #6f7890;
+}
+
+.review-hero-badge strong {
+  display: block;
+  margin: 0.2rem 0;
+  font-size: 1.7rem;
+}
+
+.review-hero-actions {
+  grid-template-columns: repeat(2, max-content);
+}
+
+.review-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.review-word-card {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(112, 125, 184, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 251, 255, 0.86));
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.review-word-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(95, 115, 255, 0.24);
+  box-shadow: 0 14px 28px rgba(95, 115, 255, 0.08);
+}
+
+.review-word-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.review-word-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.review-miss-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.38rem 0.68rem;
+  border-radius: 999px;
+  background: rgba(255, 238, 243, 0.92);
+  color: #b54f73;
+  font-size: 0.83rem;
+  font-weight: 600;
+}
+
+.review-word-card p {
+  margin: 0;
+  color: #687086;
+  line-height: 1.45;
+}
+
 .learning-shell,
 .learning-session-shell {
   display: grid;
@@ -2505,6 +2602,7 @@ input[type="file"] {
   .learning-session-grid,
   .learning-review-grid,
   .learning-result-grid,
+  .review-hero-top,
   .dictionary-refined-head,
   .dictionary-result-body,
   .dashboard-hero-v3-main,
@@ -2526,6 +2624,7 @@ input[type="file"] {
   .dictionary-refined-actions,
   .dictionary-results-grid,
   .dictionary-band-results,
+  .review-grid,
   .test-band-breakdown-grid,
   .learning-stats-grid,
   .refined-words-grid,
@@ -2591,6 +2690,10 @@ input[type="file"] {
 
   .band-grid-v2.compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .review-hero-actions {
+    grid-template-columns: 1fr;
   }
 
   .learning-breakdown-head,
