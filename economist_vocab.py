@@ -111,9 +111,25 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
         if sheet_name.lower().startswith("total"):
             continue
         ws = wb[sheet_name]
+        header_mode = False
+        header_layout = None
         for row_number, row in enumerate(ws.iter_rows(values_only=True), start=1):
             if not row:
                 continue
+            if row_number == 1:
+                first = str(row[0]).strip().lower() if row and row[0] is not None else ""
+                second = str(row[1]).strip().lower() if len(row) > 1 and row[1] is not None else ""
+                third = str(row[2]).strip().lower() if len(row) > 2 and row[2] is not None else ""
+                fourth = str(row[3]).strip().lower() if len(row) > 3 and row[3] is not None else ""
+                if first == "vocabulary" and second == "type of word":
+                    header_mode = True
+                    if third == "english definition" and fourth == "chinese definition":
+                        header_layout = "english_first"
+                    elif third == "chinese definition" and fourth == "english definition":
+                        header_layout = "chinese_first"
+                    else:
+                        header_layout = "english_first"
+                    continue
             raw_word = row[0]
             if raw_word is None or not isinstance(raw_word, str):
                 continue
@@ -121,14 +137,28 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
             if not lemma:
                 continue
             pos = row[1] if len(row) > 1 and isinstance(row[1], str) else None
-            extras = []
-            for cell in row[2:]:
-                if cell is None:
-                    continue
-                text = str(cell).strip()
-                if text:
-                    extras.append(text)
-            meanings = extras[:]
+            english_definition = ""
+            example_sentence = ""
+            if header_mode:
+                if header_layout == "chinese_first":
+                    chinese_definition = str(row[2]).strip() if len(row) > 2 and row[2] is not None else ""
+                    english_definition = str(row[3]).strip() if len(row) > 3 and row[3] is not None else ""
+                else:
+                    english_definition = str(row[2]).strip() if len(row) > 2 and row[2] is not None else ""
+                    chinese_definition = str(row[3]).strip() if len(row) > 3 and row[3] is not None else ""
+                example_sentence = str(row[4]).strip() if len(row) > 4 and row[4] is not None else ""
+                meanings = [item.strip() for item in chinese_definition.splitlines() if item and item.strip()]
+                if not meanings and chinese_definition:
+                    meanings = [chinese_definition]
+            else:
+                extras = []
+                for cell in row[2:]:
+                    if cell is None:
+                        continue
+                    text = str(cell).strip()
+                    if text:
+                        extras.append(text)
+                meanings = extras[:]
             signature = f"{path.name}|{sheet_name}|{row_number}|{normalize_word(lemma)}"
             yield {
                 "lemma": lemma,
@@ -140,7 +170,15 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
                 "row_number": row_number,
                 "pos": pos,
                 "meanings_json": json.dumps(meanings, ensure_ascii=False),
-                "extra_json": json.dumps({"raw_cells": [None if c is None else str(c) for c in row[2:]]}, ensure_ascii=False),
+                "extra_json": json.dumps(
+                    {
+                        "raw_cells": [None if c is None else str(c) for c in row[2:]],
+                        "english_definition": english_definition,
+                        "example_sentence": example_sentence,
+                        "header_mode": header_mode,
+                    },
+                    ensure_ascii=False,
+                ),
                 "source_signature": signature,
             }
 
@@ -208,7 +246,16 @@ def import_workbooks(conn: sqlite3.Connection, workbook_paths: list[Path], reset
                     pos, meanings_json, extra_json, source_signature
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(source_signature) DO NOTHING
+                ON CONFLICT(source_signature) DO UPDATE SET
+                    word_id = excluded.word_id,
+                    workbook_name = excluded.workbook_name,
+                    sheet_name = excluded.sheet_name,
+                    row_number = excluded.row_number,
+                    band_label = excluded.band_label,
+                    band_rank = excluded.band_rank,
+                    pos = excluded.pos,
+                    meanings_json = excluded.meanings_json,
+                    extra_json = excluded.extra_json
                 """,
                 (
                     word_id,
@@ -224,6 +271,74 @@ def import_workbooks(conn: sqlite3.Connection, workbook_paths: list[Path], reset
                 ),
             )
             stats["inserted_entries"] += cursor.rowcount
+    conn.commit()
+    return stats
+
+
+def refresh_workbooks(conn: sqlite3.Connection, workbook_paths: list[Path]) -> dict:
+    stats = {
+        "deleted_entries": 0,
+        "inserted_words": 0,
+        "inserted_entries": 0,
+        "updated_best_band": 0,
+        "deleted_orphan_words": 0,
+    }
+    workbook_names = [path.name for path in workbook_paths]
+    placeholder = ", ".join("?" for _ in workbook_names)
+
+    deleted_entries = conn.execute(
+        f"DELETE FROM source_entries WHERE workbook_name IN ({placeholder})",
+        workbook_names,
+    ).rowcount
+    stats["deleted_entries"] = deleted_entries
+
+    import_stats = import_workbooks(conn, workbook_paths, reset=False)
+    stats["inserted_words"] = import_stats["inserted_words"]
+    stats["inserted_entries"] = import_stats["inserted_entries"]
+    stats["updated_best_band"] = import_stats["updated_best_band"]
+
+    conn.execute(
+        """
+        UPDATE words
+        SET best_band_label = (
+                SELECT band_label
+                FROM source_entries
+                WHERE source_entries.word_id = words.id
+                ORDER BY band_rank, workbook_name, row_number
+                LIMIT 1
+            ),
+            best_band_rank = (
+                SELECT band_rank
+                FROM source_entries
+                WHERE source_entries.word_id = words.id
+                ORDER BY band_rank, workbook_name, row_number
+                LIMIT 1
+            )
+        WHERE EXISTS (
+            SELECT 1
+            FROM source_entries
+            WHERE source_entries.word_id = words.id
+        )
+        """
+    )
+
+    orphan_rows = conn.execute(
+        """
+        SELECT id
+        FROM words
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM source_entries
+            WHERE source_entries.word_id = words.id
+        )
+        """
+    ).fetchall()
+    if orphan_rows:
+        orphan_ids = [row["id"] for row in orphan_rows]
+        orphan_placeholder = ", ".join("?" for _ in orphan_ids)
+        conn.execute(f"DELETE FROM words WHERE id IN ({orphan_placeholder})", orphan_ids)
+        stats["deleted_orphan_words"] = len(orphan_ids)
+
     conn.commit()
     return stats
 
@@ -494,6 +609,9 @@ def build_parser() -> argparse.ArgumentParser:
     import_parser.add_argument("--reset", action="store_true", help="Clear imported words and review history first")
     import_parser.add_argument("workbooks", nargs="*", help="Workbook paths (defaults to the five Economist files)")
 
+    refresh_parser = subparsers.add_parser("refresh-source", help="Refresh workbook source data without rebuilding word ids")
+    refresh_parser.add_argument("workbooks", nargs="*", help="Workbook paths (defaults to the five Economist files)")
+
     subparsers.add_parser("stats", help="Show database stats")
 
     search_parser = subparsers.add_parser("search", help="Show one word with all source entries")
@@ -549,6 +667,22 @@ def main() -> int:
         print(f"New words: {stats['inserted_words']}")
         print(f"New source entries: {stats['inserted_entries']}")
         print(f"Updated to better band: {stats['updated_best_band']}")
+        return 0
+    if args.command == "refresh-source":
+        workbook_paths = [Path(p) for p in (args.workbooks or DEFAULT_WORKBOOKS)]
+        missing = [str(path) for path in workbook_paths if not path.exists()]
+        if missing:
+            print("Missing workbook(s):")
+            for item in missing:
+                print(f"  {item}")
+            return 1
+        stats = refresh_workbooks(conn, workbook_paths)
+        print(f"Refreshed source data in {db_path}")
+        print(f"Deleted old source entries: {stats['deleted_entries']}")
+        print(f"Inserted words: {stats['inserted_words']}")
+        print(f"Inserted source entries: {stats['inserted_entries']}")
+        print(f"Updated to better band: {stats['updated_best_band']}")
+        print(f"Deleted orphan words: {stats['deleted_orphan_words']}")
         return 0
     if args.command == "stats":
         print_stats(conn)
