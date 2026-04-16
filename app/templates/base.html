@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,45 +11,48 @@
   <div class="app-shell">
     <aside class="app-sidebar">
       <a class="sidebar-brand" href="/">
-        <span class="brand-mark">EL</span>
+        <span class="brand-mark brand-mark-word">
+          <span class="brand-mark-main">Aa</span>
+          <span class="brand-mark-sub">詞</span>
+        </span>
         <span class="brand-stack">
-          <strong>Economist Lab</strong>
-          <small>Personal vocabulary system</small>
+          <strong>{{ t("brand_title") }}</strong>
+          <small>{{ t("brand_subtitle") }}</small>
         </span>
       </a>
 
       <nav class="sidebar-nav" aria-label="Primary">
         <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">
-          <span class="nav-icon">▣</span>
-          <span>Dashboard</span>
+          <span class="nav-icon">◫</span>
+          <span>{{ t("nav_dashboard") }}</span>
         </a>
         <a href="/test" class="{% if request.url.path.startswith('/test') %}active{% endif %}">
-          <span class="nav-icon">◔</span>
-          <span>Level Test</span>
+          <span class="nav-icon">◌</span>
+          <span>{{ t("nav_test") }}</span>
         </a>
         <a href="/learning" class="{% if request.url.path.startswith('/learning') %}active{% endif %}">
-          <span class="nav-icon">✦</span>
-          <span>Learning</span>
+          <span class="nav-icon">✎</span>
+          <span>{{ t("nav_learning") }}</span>
         </a>
         <a href="/dictionary" class="{% if request.url.path.startswith('/dictionary') or request.url.path.startswith('/word') %}active{% endif %}">
-          <span class="nav-icon">⌕</span>
-          <span>Dictionary</span>
+          <span class="nav-icon">字</span>
+          <span>{{ t("nav_dictionary") }}</span>
         </a>
         <a href="/review/missed" class="{% if request.url.path.startswith('/review') %}active{% endif %}">
           <span class="nav-icon">↺</span>
-          <span>Missed Words</span>
+          <span>{{ t("nav_missed") }}</span>
         </a>
         <a href="/bulk-import" class="{% if request.url.path.startswith('/bulk-import') %}active{% endif %}">
-          <span class="nav-icon">↥</span>
-          <span>Bulk Import</span>
+          <span class="nav-icon">⇪</span>
+          <span>{{ t("nav_bulk") }}</span>
         </a>
       </nav>
 
       <div class="sidebar-card">
-        <p class="sidebar-card-label">Study Flow</p>
-        <strong>Test, learn, review.</strong>
-        <span>Use the level test to find your band, then build richer word cards over time.</span>
-        <a class="sidebar-card-link" href="/learning">Open learning</a>
+        <p class="sidebar-card-label">{{ t("sidebar_flow_label") }}</p>
+        <strong>{{ t("sidebar_flow_title") }}</strong>
+        <span>{{ t("sidebar_flow_text") }}</span>
+        <a class="sidebar-card-link" href="/learning">{{ t("sidebar_flow_link") }}</a>
       </div>
     </aside>
 
@@ -57,16 +60,20 @@
       <header class="app-topbar">
         <a class="topbar-search interactive" href="/dictionary">
           <span class="topbar-search-icon">⌕</span>
-          <span>Search for words, bands, or definitions...</span>
+          <span>{{ t("topbar_search") }}</span>
         </a>
         <div class="topbar-actions">
+          <div class="lang-switch" aria-label="Language switch">
+            <a class="lang-switch-link {% if lang == 'en' %}active{% endif %}" href="{{ lang_url('en') }}">EN</a>
+            <a class="lang-switch-link {% if lang == 'zh-Hant' %}active{% endif %}" href="{{ lang_url('zh-Hant') }}">繁</a>
+          </div>
           <a class="topbar-action" href="/test" aria-label="Open level test">◔</a>
           <a class="topbar-action" href="/review/missed" aria-label="Open missed words">↺</a>
           <div class="topbar-user">
             <span class="user-badge">LC</span>
             <div>
               <strong>Lawrence</strong>
-              <small>The Economist vocabulary project</small>
+              <small>{{ t("topbar_project") }}</small>
             </div>
           </div>
         </div>

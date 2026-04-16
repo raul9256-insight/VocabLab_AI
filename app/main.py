@@ -7,6 +7,7 @@ import re
 import sqlite3
 from collections import defaultdict
 from pathlib import Path
+from urllib.parse import urlencode
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -36,14 +37,163 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 USER_ID = 1
 TEST_QUESTION_COUNT = 15
 LEARNING_WORD_COUNT = 5
+SUPPORTED_LANGS = {"en", "zh-Hant"}
+
+TRANSLATIONS = {
+    "en": {
+        "brand_title": "Economist Lab",
+        "brand_subtitle": "Personal vocabulary system",
+        "nav_dashboard": "Dashboard",
+        "nav_test": "Level Test",
+        "nav_learning": "Learning",
+        "nav_dictionary": "Dictionary",
+        "nav_missed": "Missed Words",
+        "nav_bulk": "Bulk Import",
+        "sidebar_flow_label": "Study Flow",
+        "sidebar_flow_title": "Test, learn, review.",
+        "sidebar_flow_text": "Use the level test to find your band, then build richer word cards over time.",
+        "sidebar_flow_link": "Open learning",
+        "topbar_search": "Search for words, bands, or definitions...",
+        "topbar_project": "The Economist vocabulary project",
+        "home_eyebrow": "Dashboard",
+        "home_title": "Hello, Lawrence.",
+        "home_lede": "Build your Economist vocabulary with a clear daily flow: test, learn, and review.",
+        "motto_label": "Motto",
+        "motto_quote": "Without grammar very little can be conveyed, without vocabulary nothing can be conveyed.",
+        "motto_cite": "Wilkins, 1972, p. 111",
+        "tests_taken": "tests taken",
+        "current_band": "current band",
+        "today_goal": "Today's Goal",
+        "keep_moving": "Keep your study moving",
+        "placement": "Placement",
+        "practice": "Practice",
+        "review": "Review",
+        "study_flow": "Study flow",
+        "goal_note": "Start with your level test, then work the recommended band, then check missed words or the dictionary.",
+        "start_test": "Start Level Test",
+        "continue_learning": "Continue Learning",
+        "your_progress": "Your Progress",
+        "at_a_glance": "At a glance",
+        "total_words": "Total Words",
+        "learning_runs": "Learning Runs",
+        "missed_words": "Missed Words",
+        "synonym_ready": "Synonym Ready",
+        "today_words": "Today's Words",
+        "start_with_few": "Start with a few words",
+        "today_words_note": "Open one word card and enrich it with clearer definitions, examples, and synonyms.",
+        "view_all": "View all",
+        "recommended_for_you": "Recommended For You",
+        "choose_next": "Choose your next step",
+        "choose_next_note": "Three fast ways to keep momentum without overthinking what to do next.",
+        "learning_session": "Learning Session",
+        "frequency_bands": "Frequency Bands",
+        "browse_count": "Browse by appearance count",
+        "open_dictionary": "Open dictionary",
+        "bands_note": "Higher bands mean the word appeared more often in your Economist source data over the last 10 years.",
+    },
+    "zh-Hant": {
+        "brand_title": "經濟學人詞彙實驗室",
+        "brand_subtitle": "個人詞彙學習系統",
+        "nav_dashboard": "首頁總覽",
+        "nav_test": "程度測驗",
+        "nav_learning": "學習練習",
+        "nav_dictionary": "詞典查詢",
+        "nav_missed": "錯題複習",
+        "nav_bulk": "批次匯入",
+        "sidebar_flow_label": "學習流程",
+        "sidebar_flow_title": "先測驗，再學習，再複習。",
+        "sidebar_flow_text": "先用程度測驗找出適合的頻率帶，再逐步補齊每個單字卡的內容。",
+        "sidebar_flow_link": "前往學習",
+        "topbar_search": "搜尋單字、頻率帶或定義...",
+        "topbar_project": "經濟學人詞彙專案",
+        "home_eyebrow": "首頁總覽",
+        "home_title": "Lawrence，你好。",
+        "home_lede": "把《經濟學人》詞彙整理成清楚的每日學習流程：測驗、練習、複習。",
+        "motto_label": "學習信念",
+        "motto_quote": "Without grammar very little can be conveyed, without vocabulary nothing can be conveyed.",
+        "motto_cite": "Wilkins, 1972, p. 111",
+        "tests_taken": "已完成測驗",
+        "current_band": "目前建議頻率帶",
+        "today_goal": "今日目標",
+        "keep_moving": "讓今天的學習持續前進",
+        "placement": "測驗",
+        "practice": "練習",
+        "review": "複習",
+        "study_flow": "學習流程",
+        "goal_note": "先做程度測驗，再練習建議頻率帶，最後查看錯題或進入詞典補充內容。",
+        "start_test": "開始程度測驗",
+        "continue_learning": "繼續學習",
+        "your_progress": "你的進度",
+        "at_a_glance": "快速總覽",
+        "total_words": "總單字數",
+        "learning_runs": "學習次數",
+        "missed_words": "待複習錯題",
+        "synonym_ready": "已補同義詞",
+        "today_words": "今日單字",
+        "start_with_few": "先從幾個單字開始",
+        "today_words_note": "先打開幾張單字卡，補齊更清楚的定義、例句與同義詞。",
+        "view_all": "查看全部",
+        "recommended_for_you": "下一步建議",
+        "choose_next": "選擇你現在最適合的下一步",
+        "choose_next_note": "用三個最快的入口保持學習節奏，不需要每次重新想要做什麼。",
+        "learning_session": "學習練習",
+        "frequency_bands": "頻率帶",
+        "browse_count": "依出現次數瀏覽",
+        "open_dictionary": "打開詞典",
+        "bands_note": "頻率帶數字越高，表示該字在你近十年的《經濟學人》資料中出現得越多。",
+    },
+}
 
 
 def db_conn() -> sqlite3.Connection:
     return get_connection(DEFAULT_DB_PATH)
 
 
+def get_lang(request: Request) -> str:
+    query_lang = request.query_params.get("lang")
+    if query_lang in SUPPORTED_LANGS:
+        return query_lang
+    cookie_lang = request.cookies.get("lang")
+    if cookie_lang in SUPPORTED_LANGS:
+        return cookie_lang
+    return "en"
+
+
+def translate(lang: str, key: str, **kwargs) -> str:
+    text = TRANSLATIONS.get(lang, {}).get(key) or TRANSLATIONS["en"].get(key) or key
+    return text.format(**kwargs)
+
+
+def build_lang_url(request: Request, lang: str) -> str:
+    params = list(request.query_params.multi_items())
+    filtered = [(key, value) for key, value in params if key != "lang"]
+    filtered.append(("lang", lang))
+    query = urlencode(filtered)
+    return f"{request.url.path}?{query}" if query else request.url.path
+
+
 def render(request: Request, template_name: str, **context) -> HTMLResponse:
-    return templates.TemplateResponse(name=template_name, request=request, context=context)
+    lang = getattr(request.state, "lang", get_lang(request))
+    context.update(
+        {
+            "lang": lang,
+            "t": lambda key, **kwargs: translate(lang, key, **kwargs),
+            "lang_url": lambda target_lang: build_lang_url(request, target_lang),
+        }
+    )
+    response = templates.TemplateResponse(name=template_name, request=request, context=context)
+    response.set_cookie("lang", lang, max_age=60 * 60 * 24 * 365)
+    return response
+
+
+@app.middleware("http")
+async def language_middleware(request: Request, call_next):
+    request.state.lang = get_lang(request)
+    response = await call_next(request)
+    query_lang = request.query_params.get("lang")
+    if query_lang in SUPPORTED_LANGS:
+        response.set_cookie("lang", query_lang, max_age=60 * 60 * 24 * 365)
+    return response
 
 
 def json_loads(raw: str) -> list[str]:

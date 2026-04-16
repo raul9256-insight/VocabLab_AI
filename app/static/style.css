@@ -950,11 +950,37 @@ input[type="file"] {
 }
 
 .sidebar-brand .brand-mark {
-  width: 2.45rem;
-  height: 2.45rem;
-  border-radius: 16px;
+  width: 3.35rem;
+  height: 3.35rem;
+  border-radius: 18px;
   background: linear-gradient(135deg, #8a92ff, #5c6eff);
-  box-shadow: 0 10px 30px rgba(95, 115, 255, 0.34);
+  box-shadow: 0 14px 34px rgba(95, 115, 255, 0.34);
+}
+
+.brand-mark-word {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.brand-mark-main,
+.brand-mark-sub {
+  position: absolute;
+  color: white;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.brand-mark-main {
+  left: 0.56rem;
+  top: 0.68rem;
+  font-size: 1.18rem;
+  letter-spacing: -0.04em;
+}
+
+.brand-mark-sub {
+  right: 0.48rem;
+  bottom: 0.5rem;
+  font-size: 1rem;
 }
 
 .brand-stack {
@@ -963,7 +989,7 @@ input[type="file"] {
 }
 
 .brand-stack strong {
-  font-size: 1rem;
+  font-size: 1.08rem;
 }
 
 .brand-stack small {
@@ -995,10 +1021,11 @@ input[type="file"] {
 }
 
 .nav-icon {
-  width: 1.1rem;
+  width: 1.35rem;
   text-align: center;
   color: rgba(255, 255, 255, 0.88);
-  font-size: 0.9rem;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .sidebar-card {
@@ -2540,6 +2567,56 @@ input[type="file"] {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 250, 255, 0.92));
   border: 1px solid rgba(112, 125, 184, 0.14);
   border-radius: 18px;
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(112, 125, 184, 0.12);
+}
+
+.lang-switch-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  padding: 0.48rem 0.7rem;
+  border-radius: 12px;
+  color: #6f7890;
+  font-weight: 700;
+}
+
+.lang-switch-link.active {
+  background: linear-gradient(180deg, rgba(95, 115, 255, 0.98), rgba(87, 101, 241, 0.96));
+  color: white;
+}
+
+.motto-hero {
+  display: grid;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  background:
+    radial-gradient(circle at top left, rgba(95, 115, 255, 0.12), transparent 25%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 239, 229, 0.94));
+}
+
+.motto-quote {
+  margin: 0;
+  max-width: 19ch;
+  font-size: clamp(2rem, 4.8vw, 3.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+}
+
+.motto-citation {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
 }
 
 .learning-option-card:hover {
