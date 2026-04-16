@@ -1563,6 +1563,48 @@ input[type="file"] {
   background: linear-gradient(180deg, rgba(232, 238, 255, 0.96), rgba(255, 255, 255, 0.94));
 }
 
+.dashboard-hero-v3 {
+  margin-bottom: 1rem;
+  padding: 1.65rem;
+  background:
+    radial-gradient(circle at top right, rgba(95, 115, 255, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 248, 255, 0.96));
+}
+
+.dashboard-hero-v3-main,
+.dashboard-hero-v3-grid,
+.dashboard-home-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-hero-v3-main {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.dashboard-hero-v3-main h1 {
+  margin-bottom: 0.35rem;
+}
+
+.dashboard-hero-v3-grid {
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  align-items: stretch;
+}
+
+.dashboard-hero-v3-focus,
+.dashboard-hero-v3-summary {
+  padding: 1.25rem;
+  border-radius: 22px;
+  border: 1px solid rgba(112, 125, 184, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.dashboard-home-stack {
+  margin-bottom: 1rem;
+}
+
 .dashboard-refined-top {
   grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
 }
@@ -1607,6 +1649,7 @@ input[type="file"] {
   margin: 0 0 1rem;
   color: #687086;
   line-height: 1.45;
+  max-width: 58ch;
 }
 
 .refined-stats-grid {
@@ -1660,6 +1703,10 @@ input[type="file"] {
   transform: translateY(-2px);
   border-color: rgba(95, 115, 255, 0.24);
   box-shadow: 0 14px 28px rgba(95, 115, 255, 0.08);
+}
+
+.refined-word-card {
+  min-height: 132px;
 }
 
 .refined-word-head {
@@ -2091,6 +2138,8 @@ input[type="file"] {
 
   .dictionary-refined-head,
   .dictionary-result-body,
+  .dashboard-hero-v3-main,
+  .dashboard-hero-v3-grid,
   .word-detail-grid,
   .word-definition-grid,
   .dashboard-refined-top,
@@ -2135,6 +2184,8 @@ input[type="file"] {
   .dashboard-refined-head,
   .dashboard-v2-intro,
   .dashboard-v2-stats,
+  .dashboard-hero-v3-main,
+  .dashboard-hero-v3-grid,
   .dictionary-refined-head,
   .word-detail-main,
   .word-detail-stats,
