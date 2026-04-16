@@ -9,7 +9,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -23,6 +23,7 @@ from app.db import (
 )
 from app.enrichment_io import export_template, import_enrichment_rows, iter_import_rows
 from app.openai_enrichment import generate_enrichment_batch, load_env_file
+from app.openai_speech import speech_api_ready, synthesize_pronunciation_audio
 from economist_vocab import DEFAULT_DB_PATH
 
 
@@ -109,7 +110,7 @@ def word_payload(conn: sqlite3.Connection, word_id: int) -> dict:
     ).fetchall()
     enrichment = conn.execute(
         """
-        SELECT english_definition, synonyms_json, example_sentence, sentence_distractors_json
+        SELECT english_definition, pronunciation, synonyms_json, example_sentence, sentence_distractors_json
         FROM word_enrichment
         WHERE word_id = ?
         """,
@@ -130,6 +131,7 @@ def word_payload(conn: sqlite3.Connection, word_id: int) -> dict:
         "parts_of_speech": parts_of_speech_for_word(conn, word_id),
         "sources": source_rows,
         "english_definition": (enrichment["english_definition"] if enrichment and enrichment["english_definition"] else source_english_definition),
+        "pronunciation": (enrichment["pronunciation"] if enrichment and enrichment["pronunciation"] else ""),
         "synonyms": json_loads(enrichment["synonyms_json"]) if enrichment else [],
         "example_sentence": (enrichment["example_sentence"] if enrichment and enrichment["example_sentence"] else source_example_sentence),
         "sentence_distractors": json_loads(enrichment["sentence_distractors_json"]) if enrichment else [],
@@ -857,6 +859,7 @@ def test_review(request: Request, session_id: int) -> HTMLResponse:
         definitions=payload["definitions"],
         parts_of_speech=payload["parts_of_speech"],
         english_definition=payload["english_definition"],
+        pronunciation=payload["pronunciation"],
         options=json_loads(question["options_json"]),
         is_last=is_last,
         progress=test_progress(session),
@@ -934,6 +937,7 @@ def learning_question(request: Request, session_id: int) -> HTMLResponse:
         definitions=payload["definitions"],
         parts_of_speech=payload["parts_of_speech"],
         english_definition=payload["english_definition"],
+        pronunciation=payload["pronunciation"],
         synonyms=payload["synonyms"],
         example_sentence=payload["example_sentence"],
         progress=learning_progress(conn, session),
@@ -1001,6 +1005,7 @@ def learning_review(request: Request, session_id: int) -> HTMLResponse:
         definitions=payload["definitions"],
         parts_of_speech=payload["parts_of_speech"],
         english_definition=payload["english_definition"],
+        pronunciation=payload["pronunciation"],
         synonyms=payload["synonyms"],
         example_sentence=payload["example_sentence"],
         progress=progress,
@@ -1202,11 +1207,26 @@ def word_detail(request: Request, word_id: int) -> HTMLResponse:
     return render(request, "word_detail.html", **payload)
 
 
+@app.get("/api/pronounce")
+def pronounce_word_audio(text: str = Query(..., min_length=1, max_length=80)) -> Response:
+    cleaned = text.strip()
+    if not cleaned:
+        raise HTTPException(status_code=400, detail="Missing pronunciation text")
+    if not speech_api_ready():
+        raise HTTPException(status_code=503, detail="Speech API not configured")
+    try:
+        audio_bytes = synthesize_pronunciation_audio(cleaned)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Speech generation failed: {exc}") from exc
+    return Response(content=audio_bytes, media_type="audio/mpeg")
+
+
 @app.post("/word/{word_id}/update")
 def update_word(
     word_id: int,
     notes: str = Form(""),
     english_definition: str = Form(""),
+    pronunciation: str = Form(""),
     synonyms: str = Form(""),
     example_sentence: str = Form(""),
     sentence_distractors: str = Form(""),
@@ -1225,10 +1245,11 @@ def update_word(
     )
     conn.execute(
         """
-        INSERT INTO word_enrichment (word_id, english_definition, synonyms_json, example_sentence, sentence_distractors_json)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO word_enrichment (word_id, english_definition, pronunciation, synonyms_json, example_sentence, sentence_distractors_json)
+        VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT(word_id) DO UPDATE SET
             english_definition = excluded.english_definition,
+            pronunciation = excluded.pronunciation,
             synonyms_json = excluded.synonyms_json,
             example_sentence = excluded.example_sentence,
             sentence_distractors_json = excluded.sentence_distractors_json,
@@ -1237,6 +1258,7 @@ def update_word(
         (
             word_id,
             english_definition.strip(),
+            pronunciation.strip(),
             json.dumps(synonym_items, ensure_ascii=False),
             example_sentence.strip(),
             json.dumps(distractor_items, ensure_ascii=False),

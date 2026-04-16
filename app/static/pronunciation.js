@@ -1,4 +1,18 @@
-function speakText(text) {
+let currentAudio = null;
+let currentAudioUrl = null;
+
+function cleanupCurrentAudio() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  if (currentAudioUrl) {
+    URL.revokeObjectURL(currentAudioUrl);
+    currentAudioUrl = null;
+  }
+}
+
+function fallbackSpeakText(text) {
   if (!("speechSynthesis" in window) || !text) {
     return;
   }
@@ -8,24 +22,45 @@ function speakText(text) {
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
-  utterance.rate = 0.95;
-  utterance.pitch = 1;
+  utterance.rate = 0.82;
+  utterance.pitch = 0.88;
+  utterance.volume = 0.9;
+  synth.speak(utterance);
+}
 
-  const voices = synth.getVoices();
-  const preferredVoice = voices.find((voice) => voice.lang && voice.lang.toLowerCase().startsWith("en"));
-  if (preferredVoice) {
-    utterance.voice = preferredVoice;
+async function playGeneratedAudio(text) {
+  const response = await fetch(`/api/pronounce?text=${encodeURIComponent(text)}`);
+  if (!response.ok) {
+    throw new Error(`Pronunciation request failed with ${response.status}`);
   }
 
-  synth.speak(utterance);
+  const blob = await response.blob();
+  cleanupCurrentAudio();
+  currentAudioUrl = URL.createObjectURL(blob);
+  currentAudio = new Audio(currentAudioUrl);
+  currentAudio.addEventListener("ended", cleanupCurrentAudio, { once: true });
+  currentAudio.addEventListener("error", cleanupCurrentAudio, { once: true });
+  await currentAudio.play();
+}
+
+async function speakText(text) {
+  if (!text) {
+    return;
+  }
+
+  try {
+    await playGeneratedAudio(text);
+  } catch (_error) {
+    fallbackSpeakText(text);
+  }
 }
 
 function bindPronunciationButtons() {
   document.querySelectorAll("[data-pronounce]").forEach((button) => {
-    button.addEventListener("click", (event) => {
+    button.addEventListener("click", async (event) => {
       event.preventDefault();
       const text = button.getAttribute("data-pronounce");
-      speakText(text);
+      await speakText(text);
     });
   });
 }
