@@ -50,6 +50,37 @@ def json_loads(raw: str) -> list[str]:
     return json.loads(raw) if raw else []
 
 
+def completeness_summary(
+    *,
+    parts_of_speech: list[str],
+    definitions: list[str],
+    english_definition: str,
+    example_sentence: str,
+    synonyms: list[str],
+) -> dict:
+    checks = [
+        ("Type", bool(parts_of_speech)),
+        ("Chinese", bool(definitions)),
+        ("English", bool((english_definition or "").strip())),
+        ("Example", bool((example_sentence or "").strip())),
+        ("Synonyms", bool(synonyms)),
+    ]
+    complete_count = sum(1 for _, ok in checks if ok)
+    missing_labels = [label for label, ok in checks if not ok]
+    if complete_count == len(checks):
+        label = "Complete"
+    elif complete_count >= 3:
+        label = "Almost complete"
+    else:
+        label = "Needs work"
+    return {
+        "label": label,
+        "complete_count": complete_count,
+        "total_count": len(checks),
+        "missing_labels": missing_labels,
+    }
+
+
 def progress_label(percent: float) -> str:
     if percent >= 0.85:
         return "Advanced"
@@ -100,6 +131,7 @@ def word_row(conn: sqlite3.Connection, word_id: int) -> sqlite3.Row:
 def word_payload(conn: sqlite3.Connection, word_id: int) -> dict:
     row = word_row(conn, word_id)
     definitions = definitions_for_word(conn, word_id)
+    parts_of_speech = parts_of_speech_for_word(conn, word_id)
     source_rows = conn.execute(
         """
         SELECT workbook_name, sheet_name, row_number, pos, meanings_json, extra_json
@@ -126,17 +158,27 @@ def word_payload(conn: sqlite3.Connection, word_id: int) -> dict:
                 source_english_definition = extra["english_definition"]
             if not source_example_sentence and extra.get("example_sentence"):
                 source_example_sentence = extra["example_sentence"]
+    english_definition = (enrichment["english_definition"] if enrichment and enrichment["english_definition"] else source_english_definition)
+    synonyms = json_loads(enrichment["synonyms_json"]) if enrichment else []
+    example_sentence = (enrichment["example_sentence"] if enrichment and enrichment["example_sentence"] else source_example_sentence)
     return {
         "word": row,
         "definitions": definitions,
         "chinese_headword": definitions[0] if definitions else "",
-        "parts_of_speech": parts_of_speech_for_word(conn, word_id),
+        "parts_of_speech": parts_of_speech,
         "sources": source_rows,
-        "english_definition": (enrichment["english_definition"] if enrichment and enrichment["english_definition"] else source_english_definition),
+        "english_definition": english_definition,
         "pronunciation": (enrichment["pronunciation"] if enrichment and enrichment["pronunciation"] else ""),
-        "synonyms": json_loads(enrichment["synonyms_json"]) if enrichment else [],
-        "example_sentence": (enrichment["example_sentence"] if enrichment and enrichment["example_sentence"] else source_example_sentence),
+        "synonyms": synonyms,
+        "example_sentence": example_sentence,
         "sentence_distractors": json_loads(enrichment["sentence_distractors_json"]) if enrichment else [],
+        "completeness": completeness_summary(
+            parts_of_speech=parts_of_speech,
+            definitions=definitions,
+            english_definition=english_definition,
+            example_sentence=example_sentence,
+            synonyms=synonyms,
+        ),
     }
 
 
@@ -204,16 +246,25 @@ def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4) -> list[
     for row in rows:
         defs = definitions_for_word(conn, row["id"])
         pos = parts_of_speech_for_word(conn, row["id"])
+        english_definition = row["english_definition"]
+        example_sentence = row["example_sentence"]
         items.append(
             {
                 "id": row["id"],
                 "lemma": row["lemma"],
                 "best_band_label": row["best_band_label"],
-                "english_definition": row["english_definition"],
-                "example_sentence": row["example_sentence"],
+                "english_definition": english_definition,
+                "example_sentence": example_sentence,
                 "parts_of_speech": pos,
                 "chinese_preview": defs[:1],
                 "chinese_headword": defs[0] if defs else "",
+                "completeness": completeness_summary(
+                    parts_of_speech=pos,
+                    definitions=defs,
+                    english_definition=english_definition,
+                    example_sentence=example_sentence,
+                    synonyms=[],
+                ),
             }
         )
     return items
@@ -292,15 +343,29 @@ def search_result_cards(
     for row in rows:
         definitions = definitions_for_word(conn, row["id"])
         parts = parts_of_speech_for_word(conn, row["id"])
+        english_definition = row["english_definition"]
+        example_sentence = row["example_sentence"]
+        enrichment = conn.execute(
+            "SELECT synonyms_json FROM word_enrichment WHERE word_id = ?",
+            (row["id"],),
+        ).fetchone()
+        synonyms = json_loads(enrichment["synonyms_json"]) if enrichment else []
         cards.append(
             {
                 "id": row["id"],
                 "lemma": row["lemma"],
                 "best_band_label": row["best_band_label"],
-                "english_definition": row["english_definition"],
-                "example_sentence": row["example_sentence"],
+                "english_definition": english_definition,
+                "example_sentence": example_sentence,
                 "parts_of_speech": parts,
                 "chinese_preview": definitions[:2],
+                "completeness": completeness_summary(
+                    parts_of_speech=parts,
+                    definitions=definitions,
+                    english_definition=english_definition,
+                    example_sentence=example_sentence,
+                    synonyms=synonyms,
+                ),
             }
         )
     return cards
@@ -1092,6 +1157,12 @@ def dictionary_band(
     words = []
     for row in rows:
         definitions = definitions_for_word(conn, row["id"])
+        parts_of_speech = parts_of_speech_for_word(conn, row["id"])
+        enrichment = conn.execute(
+            "SELECT synonyms_json FROM word_enrichment WHERE word_id = ?",
+            (row["id"],),
+        ).fetchone()
+        synonyms = json_loads(enrichment["synonyms_json"]) if enrichment else []
         words.append(
             {
                 "id": row["id"],
@@ -1101,6 +1172,13 @@ def dictionary_band(
                 "example_sentence": row["example_sentence"],
                 "chinese_preview": definitions[:2],
                 "chinese_headword": definitions[0] if definitions else "",
+                "completeness": completeness_summary(
+                    parts_of_speech=parts_of_speech,
+                    definitions=definitions,
+                    english_definition=row["english_definition"],
+                    example_sentence=row["example_sentence"],
+                    synonyms=synonyms,
+                ),
             }
         )
     return render(
