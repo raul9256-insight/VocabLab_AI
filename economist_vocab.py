@@ -104,6 +104,14 @@ def parse_band(path: Path) -> BandInfo:
     raise ValueError(f"Unable to infer frequency band from {path.name}")
 
 
+def normalize_header(value: object) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip().lower()
+    text = re.sub(r"\s+", " ", text)
+    return text
+
+
 def iter_workbook_entries(path: Path) -> Iterable[dict]:
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
     band = parse_band(path)
@@ -117,15 +125,19 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
             if not row:
                 continue
             if row_number == 1:
-                first = str(row[0]).strip().lower() if row and row[0] is not None else ""
-                second = str(row[1]).strip().lower() if len(row) > 1 and row[1] is not None else ""
-                third = str(row[2]).strip().lower() if len(row) > 2 and row[2] is not None else ""
-                fourth = str(row[3]).strip().lower() if len(row) > 3 and row[3] is not None else ""
-                if first == "vocabulary" and second == "type of word":
+                first = normalize_header(row[0]) if row else ""
+                second = normalize_header(row[1]) if len(row) > 1 else ""
+                third = normalize_header(row[2]) if len(row) > 2 else ""
+                fourth = normalize_header(row[3]) if len(row) > 3 else ""
+                first_ok = first in {"vocabulary", "word"}
+                second_ok = second in {"type of word", "type", "part of speech"}
+                if first_ok and second_ok:
                     header_mode = True
-                    if third == "english definition" and fourth == "chinese definition":
+                    english_headers = {"english definition", "english definitions", "definition in english"}
+                    chinese_headers = {"chinese definition", "chinese definitions", "中文定義", "中文定义", "中文释义", "中文釋義"}
+                    if third in english_headers and fourth in chinese_headers:
                         header_layout = "english_first"
-                    elif third == "chinese definition" and fourth == "english definition":
+                    elif third in chinese_headers and fourth in english_headers:
                         header_layout = "chinese_first"
                     else:
                         header_layout = "english_first"
