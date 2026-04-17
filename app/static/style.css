@@ -2066,34 +2066,6 @@ input[type="file"] {
   font-size: 0.9rem;
 }
 
-.soft-chip-ready {
-  background: rgba(31, 92, 77, 0.12);
-  color: var(--accent);
-}
-
-.completeness-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-}
-
-.completeness-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.36rem 0.72rem;
-  border-radius: 999px;
-  background: rgba(95, 115, 255, 0.12);
-  color: #5666f1;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.missing-note {
-  display: block;
-  color: #6f7890;
-  line-height: 1.4;
-}
 
 .source-reference-list {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -2278,9 +2250,6 @@ input[type="file"] {
   background: rgba(255, 255, 255, 0.74);
 }
 
-.completeness-box {
-  gap: 0.55rem;
-}
 
 .dictionary-empty-card {
   grid-column: 1 / -1;

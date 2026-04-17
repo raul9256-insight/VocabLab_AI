@@ -31,10 +31,6 @@
           <strong>{{ word.status }}</strong>
         </div>
         <div class="word-stat-card">
-          <span>Completeness</span>
-          <strong>{{ completeness.complete_count }}/{{ completeness.total_count }}</strong>
-        </div>
-        <div class="word-stat-card">
           <span>Correct</span>
           <strong>{{ word.correct_count }}</strong>
         </div>
@@ -55,29 +51,6 @@
 
   <section class="word-detail-grid">
     <div class="word-detail-content">
-      <article class="panel dashboard-v2-card word-section-card">
-        <div class="card-head tight">
-          <div>
-            <p class="eyebrow">Completion</p>
-            <h2>What this word still needs</h2>
-          </div>
-        </div>
-        <div class="word-chip-row">
-          <span class="soft-chip {% if parts_of_speech %}soft-chip-ready{% endif %}">Type</span>
-          <span class="soft-chip {% if definitions %}soft-chip-ready{% endif %}">Chinese</span>
-          <span class="soft-chip {% if english_definition %}soft-chip-ready{% endif %}">English</span>
-          <span class="soft-chip {% if example_sentence %}soft-chip-ready{% endif %}">Example</span>
-          <span class="soft-chip {% if synonyms %}soft-chip-ready{% endif %}">Synonyms</span>
-        </div>
-        <p class="section-note">
-          {% if completeness.missing_labels %}
-          Still missing: {{ completeness.missing_labels|join(", ") }}.
-          {% else %}
-          All five core fields are ready for this word.
-          {% endif %}
-        </p>
-      </article>
-
       <article class="panel dashboard-v2-card word-section-card">
         <div class="card-head tight">
           <div>

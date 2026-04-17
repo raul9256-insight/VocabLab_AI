@@ -42,19 +42,12 @@
           <strong>{{ word.chinese_headword }}</strong>
           {% endif %}
         </div>
-        <div class="completeness-inline">
-          <span class="completeness-pill">{{ word.completeness.label }}</span>
-          <small>{{ word.completeness.complete_count }}/{{ word.completeness.total_count }} ready</small>
-        </div>
         {% if word.english_definition %}
         <p>{{ word.english_definition }}</p>
         {% elif word.example_sentence %}
         <p>{{ word.example_sentence }}</p>
         {% else %}
         <p>Open this word to add richer details.</p>
-        {% endif %}
-        {% if word.completeness.missing_labels %}
-        <small class="missing-note">Missing: {{ word.completeness.missing_labels|join(", ") }}</small>
         {% endif %}
       </a>
       {% else %}
