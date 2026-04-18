@@ -1898,8 +1898,13 @@ def finish_learning_session(conn: sqlite3.Connection, session_id: int) -> None:
     conn.commit()
 
 
-@app.get("/", response_class=HTMLResponse)
-def home(request: Request) -> HTMLResponse:
+@app.get("/")
+def home() -> RedirectResponse:
+    return RedirectResponse(url="/briefing", status_code=307)
+
+
+@app.get("/briefing", response_class=HTMLResponse)
+def briefing_home(request: Request) -> HTMLResponse:
     conn = db_conn()
     section_slug = request.query_params.get("section")
     sections = briefing_sections(conn)
@@ -1916,11 +1921,6 @@ def home(request: Request) -> HTMLResponse:
         articles=articles,
         overview=overview,
     )
-
-
-@app.get("/briefing", response_class=HTMLResponse)
-def briefing_home(request: Request) -> HTMLResponse:
-    return home(request)
 
 @app.get("/test", response_class=HTMLResponse)
 def test_intro(request: Request) -> HTMLResponse:
