@@ -1047,12 +1047,6 @@ def home(request: Request) -> HTMLResponse:
         spotlight_words=dashboard_spotlight_words(conn),
     )
 
-
-@app.get("/games/monopoly-3d", response_class=HTMLResponse)
-def monopoly_3d(request: Request) -> HTMLResponse:
-    return render(request, "monopoly_3d.html")
-
-
 @app.get("/test", response_class=HTMLResponse)
 def test_intro(request: Request) -> HTMLResponse:
     conn = db_conn()
