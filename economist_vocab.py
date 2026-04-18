@@ -133,6 +133,15 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
                     header_mode = True
                     english_headers = {"english definition", "english definitions", "definition in english"}
                     chinese_headers = {"chinese definition", "chinese definitions", "中文定義", "中文定义", "中文释义", "中文釋義"}
+                    simplified_chinese_headers = {
+                        "simplified chinese definition",
+                        "simplified chinese definitions",
+                        "simplified chinese",
+                        "简体中文定义",
+                        "簡體中文定義",
+                        "简体中文释义",
+                        "簡體中文釋義",
+                    }
                     example_headers = {"example sentence", "example", "example sentences"}
                     pronunciation_headers = {"pronunciation", "ipa", "ipa pronunciation", "international phonetic alphabet"}
                     for index, cell in enumerate(row):
@@ -141,6 +150,8 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
                             header_indices["english_definition"] = index
                         elif header in chinese_headers:
                             header_indices["chinese_definition"] = index
+                        elif header in simplified_chinese_headers:
+                            header_indices["simplified_chinese_definition"] = index
                         elif header in example_headers:
                             header_indices["example_sentence"] = index
                         elif header in pronunciation_headers:
@@ -159,10 +170,12 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
             if header_mode:
                 english_index = header_indices.get("english_definition")
                 chinese_index = header_indices.get("chinese_definition")
+                simplified_chinese_index = header_indices.get("simplified_chinese_definition")
                 example_index = header_indices.get("example_sentence")
                 pronunciation_index = header_indices.get("pronunciation")
                 english_definition = str(row[english_index]).strip() if english_index is not None and english_index < len(row) and row[english_index] is not None else ""
                 chinese_definition = str(row[chinese_index]).strip() if chinese_index is not None and chinese_index < len(row) and row[chinese_index] is not None else ""
+                simplified_chinese_definition = str(row[simplified_chinese_index]).strip() if simplified_chinese_index is not None and simplified_chinese_index < len(row) and row[simplified_chinese_index] is not None else ""
                 example_sentence = str(row[example_index]).strip() if example_index is not None and example_index < len(row) and row[example_index] is not None else ""
                 pronunciation = str(row[pronunciation_index]).strip() if pronunciation_index is not None and pronunciation_index < len(row) and row[pronunciation_index] is not None else ""
                 meanings = [item.strip() for item in chinese_definition.splitlines() if item and item.strip()]
@@ -192,6 +205,7 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
                     {
                         "raw_cells": [None if c is None else str(c) for c in row[2:]],
                         "english_definition": english_definition,
+                        "simplified_chinese_definition": simplified_chinese_definition,
                         "example_sentence": example_sentence,
                         "pronunciation": pronunciation,
                         "header_mode": header_mode,
