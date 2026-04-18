@@ -2609,10 +2609,12 @@ input[type="file"] {
   display: grid;
   gap: 1rem;
   align-content: start;
-  padding: 1.1rem 1.15rem;
+  padding: 1.1rem 1.15rem 1rem;
   border-radius: 24px;
   border: 1px solid rgba(112, 125, 184, 0.12);
-  background: linear-gradient(180deg, rgba(247, 249, 255, 0.9), rgba(255, 255, 255, 0.82));
+  background:
+    radial-gradient(circle at top right, rgba(95, 115, 255, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(247, 249, 255, 0.94), rgba(255, 255, 255, 0.84));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
@@ -2642,45 +2644,55 @@ input[type="file"] {
 
 .motto-band-chart.visual {
   display: grid;
-  gap: 0.95rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.8rem;
+  align-items: end;
+  min-height: 280px;
+  padding: 0.35rem 0.1rem 0;
 }
 
-.motto-band-row {
+.motto-band-column {
   display: grid;
-  gap: 0.45rem;
+  justify-items: center;
+  align-content: end;
+  gap: 0.55rem;
+  min-height: 100%;
 }
 
-.motto-band-bars {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.motto-band-track {
-  flex: 1;
-  height: 10px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(95, 115, 255, 0.12);
-}
-
-.motto-band-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #5e70ff, #88a0ff);
-}
-
-.motto-band-bars strong {
-  min-width: 3.5rem;
-  text-align: right;
+.motto-band-count {
   font-size: 0.95rem;
   color: #2b3042;
+}
+
+.motto-band-column-track {
+  position: relative;
+  width: 100%;
+  max-width: 64px;
+  height: 200px;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(95, 115, 255, 0.06), rgba(95, 115, 255, 0.14)),
+    rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(112, 125, 184, 0.12);
+}
+
+.motto-band-column-fill {
+  width: 100%;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #9cadff, #5e70ff 58%, #4859e6);
+  box-shadow: 0 14px 22px rgba(94, 112, 255, 0.16);
 }
 
 .motto-band-label {
   color: #5e667d;
   font-size: 0.84rem;
   font-weight: 600;
+  text-align: center;
+  line-height: 1.25;
 }
 
 .learning-option-card:hover {

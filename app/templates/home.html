@@ -15,12 +15,10 @@
 
       <div class="motto-band-chart visual" aria-label="{{ t('hero_chart_bands') }}">
         {% for band in hero_band_chart %}
-        <div class="motto-band-row">
-          <div class="motto-band-bars">
-            <div class="motto-band-track">
-              <div class="motto-band-fill" style="width: {{ band.percent }}%"></div>
-            </div>
-            <strong>{{ band.count }}</strong>
+        <div class="motto-band-column">
+          <strong class="motto-band-count">{{ band.count }}</strong>
+          <div class="motto-band-column-track">
+            <div class="motto-band-column-fill" style="height: {{ band.percent }}%"></div>
           </div>
           <span class="motto-band-label">{{ band.label }}</span>
         </div>
