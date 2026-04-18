@@ -48,6 +48,9 @@
               <button class="pronounce-button small" type="button" data-pronounce="{{ word.lemma }}" aria-label="Pronounce {{ word.lemma }}">🔊</button>
             </div>
             <span class="dictionary-result-meta">{{ word.parts_of_speech|join(", ") if word.parts_of_speech else "Unknown type" }}</span>
+            {% if word.pronunciation %}
+            <span class="dictionary-result-meta ipa-line">{{ word.pronunciation }}</span>
+            {% endif %}
           </div>
           <span class="word-band-pill">{{ word.best_band_label }}</span>
         </div>

@@ -3,8 +3,8 @@
 {% block content %}
 <section class="panel">
   <p class="eyebrow">Bulk Enrichment</p>
-  <h1>Import English Definitions And Example Sentences In Batches</h1>
-  <p>Export a spreadsheet template, fill it in with English definitions and example sentences in Excel, then upload it back here to update many words at once.</p>
+  <h1>Import English Definitions, IPA, And Example Sentences In Batches</h1>
+  <p>Export a spreadsheet template, fill it in with IPA, English definitions, and example sentences in Excel, then upload it back here to update many words at once.</p>
   <div class="callout">
     <strong>OpenAI API status:</strong>
     {% if api_key_ready %}
@@ -59,7 +59,7 @@
 
   <article class="panel">
     <h2>1. Export Template</h2>
-    <p>Generate an Excel file with word, frequency band, word type, and Chinese definitions already filled in. You only need to complete the English definition and example fields.</p>
+    <p>Generate an Excel file with word, frequency band, word type, and Chinese definitions already filled in. You can then complete the IPA, English definition, and example fields.</p>
     <form method="post" action="/bulk-import/export" class="stack-form">
       <label>
         <span>Frequency Band</span>
@@ -86,6 +86,7 @@
     <h2>2. Fill In The File</h2>
     <p>Recommended columns to edit:</p>
     <ul>
+      <li><strong>pronunciation</strong>: IPA, for example <code>/əˈbɪləti/</code></li>
       <li><strong>english_definition</strong>: short English meaning</li>
       <li><strong>example_sentence</strong>: one natural sentence using the word</li>
       <li><strong>synonyms</strong>: optional, one per line or separated by semicolons</li>

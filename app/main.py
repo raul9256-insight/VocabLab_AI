@@ -271,16 +271,20 @@ def source_fallback_for_word(conn: sqlite3.Connection, word_id: int) -> dict[str
         """,
         (word_id,),
     ).fetchall()
+    pronunciation = ""
     english_definition = ""
     example_sentence = ""
     for row in rows:
         extra = json.loads(row["extra_json"]) if row["extra_json"] else {}
         if isinstance(extra, dict):
+            if not pronunciation and extra.get("pronunciation"):
+                pronunciation = extra["pronunciation"]
             if not english_definition and extra.get("english_definition"):
                 english_definition = extra["english_definition"]
             if not example_sentence and extra.get("example_sentence"):
                 example_sentence = extra["example_sentence"]
     return {
+        "pronunciation": pronunciation,
         "english_definition": english_definition,
         "example_sentence": example_sentence,
     }
@@ -299,12 +303,14 @@ def source_fallbacks_for_words(conn: sqlite3.Connection, word_ids: list[int]) ->
         """,
         word_ids,
     ).fetchall()
-    result = {word_id: {"english_definition": "", "example_sentence": ""} for word_id in word_ids}
+    result = {word_id: {"pronunciation": "", "english_definition": "", "example_sentence": ""} for word_id in word_ids}
     for row in rows:
         extra = json.loads(row["extra_json"]) if row["extra_json"] else {}
         if not isinstance(extra, dict):
             continue
         target = result[row["word_id"]]
+        if not target["pronunciation"] and extra.get("pronunciation"):
+            target["pronunciation"] = extra["pronunciation"]
         if not target["english_definition"] and extra.get("english_definition"):
             target["english_definition"] = extra["english_definition"]
         if not target["example_sentence"] and extra.get("example_sentence"):
@@ -387,7 +393,7 @@ def word_payload(conn: sqlite3.Connection, word_id: int) -> dict:
         "parts_of_speech": parts_of_speech,
         "sources": source_rows,
         "english_definition": english_definition,
-        "pronunciation": (enrichment["pronunciation"] if enrichment and enrichment["pronunciation"] else ""),
+        "pronunciation": (enrichment["pronunciation"] if enrichment and enrichment["pronunciation"] else source_fallback["pronunciation"]),
         "synonyms": synonyms,
         "example_sentence": example_sentence,
         "sentence_distractors": json_loads(enrichment["sentence_distractors_json"]) if enrichment else [],
@@ -445,6 +451,7 @@ def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4) -> list[
     rows = conn.execute(
         """
         SELECT words.id, words.lemma, words.best_band_label,
+               COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
                COALESCE(word_enrichment.english_definition, '') AS english_definition,
                COALESCE(word_enrichment.example_sentence, '') AS example_sentence
         FROM words
@@ -462,7 +469,7 @@ def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4) -> list[
     for row in rows:
         defs = definitions_map.get(row["id"], [])
         pos = parts_map.get(row["id"], [])
-        source_fallback = fallback_map.get(row["id"], {"english_definition": "", "example_sentence": ""})
+        source_fallback = fallback_map.get(row["id"], {"pronunciation": "", "english_definition": "", "example_sentence": ""})
         english_definition = row["english_definition"] or source_fallback["english_definition"]
         example_sentence = row["example_sentence"] or source_fallback["example_sentence"]
         items.append(
@@ -472,6 +479,7 @@ def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4) -> list[
                 "best_band_label": row["best_band_label"],
                 "english_definition": english_definition,
                 "example_sentence": example_sentence,
+                "pronunciation": row["pronunciation"] or source_fallback["pronunciation"],
                 "parts_of_speech": pos,
                 "chinese_preview": defs[:1],
                 "chinese_headword": defs[0] if defs else "",
@@ -523,6 +531,7 @@ def search_words(
         clauses.append("COALESCE(word_enrichment.example_sentence, '') <> ''")
     sql = f"""
         SELECT words.id, words.lemma, words.best_band_label, words.best_band_rank,
+               COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
                COALESCE(word_enrichment.english_definition, '') AS english_definition,
                COALESCE(word_enrichment.example_sentence, '') AS example_sentence
         FROM words
@@ -557,7 +566,7 @@ def search_result_cards(
     for row in rows:
         definitions = definitions_map.get(row["id"], [])
         parts = parts_map.get(row["id"], [])
-        source_fallback = fallback_map.get(row["id"], {"english_definition": "", "example_sentence": ""})
+        source_fallback = fallback_map.get(row["id"], {"pronunciation": "", "english_definition": "", "example_sentence": ""})
         english_definition = row["english_definition"] or source_fallback["english_definition"]
         example_sentence = row["example_sentence"] or source_fallback["example_sentence"]
         cards.append(
@@ -567,6 +576,7 @@ def search_result_cards(
                 "best_band_label": row["best_band_label"],
                 "english_definition": english_definition,
                 "example_sentence": example_sentence,
+                "pronunciation": row["pronunciation"] or source_fallback["pronunciation"],
                 "parts_of_speech": parts,
                 "chinese_preview": definitions[:2],
             }
@@ -575,7 +585,7 @@ def search_result_cards(
 
 
 def missed_words(conn: sqlite3.Connection, limit: int = 100) -> list[sqlite3.Row]:
-    return conn.execute(
+    rows = conn.execute(
         """
         WITH wrong_answers AS (
             SELECT word_id, answered_at AS seen_at, 'test' AS source
@@ -592,17 +602,38 @@ def missed_words(conn: sqlite3.Connection, limit: int = 100) -> list[sqlite3.Row
             words.best_band_label,
             COUNT(*) AS miss_count,
             MAX(wrong_answers.seen_at) AS last_seen,
+            COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
             COALESCE(word_enrichment.english_definition, '') AS english_definition,
             COALESCE(word_enrichment.example_sentence, '') AS example_sentence
         FROM wrong_answers
         JOIN words ON words.id = wrong_answers.word_id
         LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
-        GROUP BY words.id, words.lemma, words.best_band_label, word_enrichment.english_definition, word_enrichment.example_sentence
+        GROUP BY words.id, words.lemma, words.best_band_label, word_enrichment.pronunciation, word_enrichment.english_definition, word_enrichment.example_sentence
         ORDER BY miss_count DESC, last_seen DESC
         LIMIT ?
         """,
         (limit,),
     ).fetchall()
+    word_ids = [row["id"] for row in rows]
+    definitions_map = definitions_map_for_words(conn, word_ids)
+    fallback_map = source_fallbacks_for_words(conn, word_ids)
+    result = []
+    for row in rows:
+        source_fallback = fallback_map.get(row["id"], {"pronunciation": "", "english_definition": "", "example_sentence": ""})
+        result.append(
+            {
+                "id": row["id"],
+                "lemma": row["lemma"],
+                "best_band_label": row["best_band_label"],
+                "miss_count": row["miss_count"],
+                "last_seen": row["last_seen"],
+                "pronunciation": row["pronunciation"] or source_fallback["pronunciation"],
+                "english_definition": row["english_definition"] or source_fallback["english_definition"],
+                "example_sentence": row["example_sentence"] or source_fallback["example_sentence"],
+                "chinese_preview": definitions_map.get(row["id"], [])[:1],
+            }
+        )
+    return result
 
 
 def previous_test_question(conn: sqlite3.Connection, session_id: int) -> sqlite3.Row | None:
@@ -1344,6 +1375,7 @@ def dictionary_band(
     rows = conn.execute(
         """
         SELECT words.id, words.lemma, words.best_band_label,
+               COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
                COALESCE(word_enrichment.english_definition, '') AS english_definition,
                COALESCE(word_enrichment.example_sentence, '') AS example_sentence
         FROM words
@@ -1362,7 +1394,7 @@ def dictionary_band(
     words = []
     for row in rows:
         definitions = definitions_map.get(row["id"], [])
-        source_fallback = fallback_map.get(row["id"], {"english_definition": "", "example_sentence": ""})
+        source_fallback = fallback_map.get(row["id"], {"pronunciation": "", "english_definition": "", "example_sentence": ""})
         words.append(
             {
                 "id": row["id"],
@@ -1370,6 +1402,7 @@ def dictionary_band(
                 "best_band_label": row["best_band_label"],
                 "english_definition": row["english_definition"] or source_fallback["english_definition"],
                 "example_sentence": row["example_sentence"] or source_fallback["example_sentence"],
+                "pronunciation": row["pronunciation"] or source_fallback["pronunciation"],
                 "chinese_preview": definitions[:2],
                 "chinese_headword": definitions[0] if definitions else "",
             }

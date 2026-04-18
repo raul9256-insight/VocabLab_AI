@@ -120,27 +120,31 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
             continue
         ws = wb[sheet_name]
         header_mode = False
-        header_layout = None
+        header_indices: dict[str, int] = {}
         for row_number, row in enumerate(ws.iter_rows(values_only=True), start=1):
             if not row:
                 continue
             if row_number == 1:
                 first = normalize_header(row[0]) if row else ""
                 second = normalize_header(row[1]) if len(row) > 1 else ""
-                third = normalize_header(row[2]) if len(row) > 2 else ""
-                fourth = normalize_header(row[3]) if len(row) > 3 else ""
                 first_ok = first in {"vocabulary", "word"}
                 second_ok = second in {"type of word", "type", "part of speech"}
                 if first_ok and second_ok:
                     header_mode = True
                     english_headers = {"english definition", "english definitions", "definition in english"}
                     chinese_headers = {"chinese definition", "chinese definitions", "中文定義", "中文定义", "中文释义", "中文釋義"}
-                    if third in english_headers and fourth in chinese_headers:
-                        header_layout = "english_first"
-                    elif third in chinese_headers and fourth in english_headers:
-                        header_layout = "chinese_first"
-                    else:
-                        header_layout = "english_first"
+                    example_headers = {"example sentence", "example", "example sentences"}
+                    pronunciation_headers = {"pronunciation", "ipa", "ipa pronunciation", "international phonetic alphabet"}
+                    for index, cell in enumerate(row):
+                        header = normalize_header(cell)
+                        if header in english_headers:
+                            header_indices["english_definition"] = index
+                        elif header in chinese_headers:
+                            header_indices["chinese_definition"] = index
+                        elif header in example_headers:
+                            header_indices["example_sentence"] = index
+                        elif header in pronunciation_headers:
+                            header_indices["pronunciation"] = index
                     continue
             raw_word = row[0]
             if raw_word is None or not isinstance(raw_word, str):
@@ -151,14 +155,16 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
             pos = row[1] if len(row) > 1 and isinstance(row[1], str) else None
             english_definition = ""
             example_sentence = ""
+            pronunciation = ""
             if header_mode:
-                if header_layout == "chinese_first":
-                    chinese_definition = str(row[2]).strip() if len(row) > 2 and row[2] is not None else ""
-                    english_definition = str(row[3]).strip() if len(row) > 3 and row[3] is not None else ""
-                else:
-                    english_definition = str(row[2]).strip() if len(row) > 2 and row[2] is not None else ""
-                    chinese_definition = str(row[3]).strip() if len(row) > 3 and row[3] is not None else ""
-                example_sentence = str(row[4]).strip() if len(row) > 4 and row[4] is not None else ""
+                english_index = header_indices.get("english_definition")
+                chinese_index = header_indices.get("chinese_definition")
+                example_index = header_indices.get("example_sentence")
+                pronunciation_index = header_indices.get("pronunciation")
+                english_definition = str(row[english_index]).strip() if english_index is not None and english_index < len(row) and row[english_index] is not None else ""
+                chinese_definition = str(row[chinese_index]).strip() if chinese_index is not None and chinese_index < len(row) and row[chinese_index] is not None else ""
+                example_sentence = str(row[example_index]).strip() if example_index is not None and example_index < len(row) and row[example_index] is not None else ""
+                pronunciation = str(row[pronunciation_index]).strip() if pronunciation_index is not None and pronunciation_index < len(row) and row[pronunciation_index] is not None else ""
                 meanings = [item.strip() for item in chinese_definition.splitlines() if item and item.strip()]
                 if not meanings and chinese_definition:
                     meanings = [chinese_definition]
@@ -187,6 +193,7 @@ def iter_workbook_entries(path: Path) -> Iterable[dict]:
                         "raw_cells": [None if c is None else str(c) for c in row[2:]],
                         "english_definition": english_definition,
                         "example_sentence": example_sentence,
+                        "pronunciation": pronunciation,
                         "header_mode": header_mode,
                     },
                     ensure_ascii=False,

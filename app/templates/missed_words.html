@@ -27,12 +27,20 @@
     {% for row in rows %}
     <a class="review-word-card" href="/word/{{ row.id }}">
       <div class="review-word-top">
-        <strong>{{ row.lemma }}</strong>
+        <div class="bilingual-word-pair inline">
+          <strong>{{ row.lemma }}</strong>
+          {% if row.chinese_preview %}
+          <strong>{{ row.chinese_preview[0] }}</strong>
+          {% endif %}
+        </div>
         <span class="word-band-pill">{{ row.best_band_label }}</span>
       </div>
       <div class="review-word-meta">
         <span class="review-miss-pill">missed {{ row.miss_count }} time{% if row.miss_count != 1 %}s{% endif %}</span>
       </div>
+      {% if row.pronunciation %}
+      <p class="review-word-ipa">{{ row.pronunciation }}</p>
+      {% endif %}
       {% if row.english_definition %}
       <p>{{ row.english_definition }}</p>
       {% elif row.example_sentence %}

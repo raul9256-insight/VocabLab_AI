@@ -18,6 +18,7 @@ EXPECTED_COLUMNS = [
     "band_label",
     "parts_of_speech",
     "chinese_definitions",
+    "pronunciation",
     "english_definition",
     "example_sentence",
     "synonyms",
@@ -79,6 +80,7 @@ def export_template(
     rows = conn.execute(
         f"""
         SELECT words.id, words.lemma, words.best_band_label,
+               COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
                COALESCE(word_enrichment.english_definition, '') AS english_definition,
                COALESCE(word_enrichment.example_sentence, '') AS example_sentence,
                COALESCE(word_enrichment.synonyms_json, '[]') AS synonyms_json,
@@ -105,6 +107,7 @@ def export_template(
                 row["best_band_label"],
                 ", ".join(parts_of_speech_for_word(conn, row["id"])),
                 " | ".join(definitions_for_word(conn, row["id"])),
+                row["pronunciation"],
                 row["english_definition"],
                 row["example_sentence"],
                 "\n".join(json.loads(row["synonyms_json"])),
@@ -132,27 +135,30 @@ def import_enrichment_rows(conn: sqlite3.Connection, rows: list[dict[str, str]])
             continue
         current = conn.execute(
             """
-            SELECT english_definition, synonyms_json, example_sentence, sentence_distractors_json
+            SELECT pronunciation, english_definition, synonyms_json, example_sentence, sentence_distractors_json
             FROM word_enrichment
             WHERE word_id = ?
             """,
             (word["id"],),
         ).fetchone()
+        current_pronunciation = current["pronunciation"] if current else ""
         current_english = current["english_definition"] if current else ""
         current_synonyms = json.loads(current["synonyms_json"]) if current else []
         current_example = current["example_sentence"] if current else ""
         current_distractors = json.loads(current["sentence_distractors_json"]) if current else []
 
+        incoming_pronunciation = (raw_row.get("pronunciation", "") or raw_row.get("ipa", "")).strip()
         incoming_english = raw_row.get("english_definition", "").strip()
         incoming_example = raw_row.get("example_sentence", "").strip()
         incoming_synonyms = parse_list_field(raw_row.get("synonyms", ""))
         incoming_distractors = parse_list_field(raw_row.get("sentence_distractors", ""))
         notes = raw_row.get("notes", "").strip()
-        has_new_content = any([incoming_english, incoming_example, incoming_synonyms, incoming_distractors, notes])
+        has_new_content = any([incoming_pronunciation, incoming_english, incoming_example, incoming_synonyms, incoming_distractors, notes])
         if not has_new_content:
             stats["skipped"] += 1
             continue
 
+        pronunciation = incoming_pronunciation or current_pronunciation
         english_definition = incoming_english or current_english
         example_sentence = incoming_example or current_example
         synonyms = incoming_synonyms or current_synonyms
@@ -161,10 +167,11 @@ def import_enrichment_rows(conn: sqlite3.Connection, rows: list[dict[str, str]])
         conn.execute(
             """
             INSERT INTO word_enrichment (
-                word_id, english_definition, synonyms_json, example_sentence, sentence_distractors_json
+                word_id, pronunciation, english_definition, synonyms_json, example_sentence, sentence_distractors_json
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(word_id) DO UPDATE SET
+                pronunciation = excluded.pronunciation,
                 english_definition = excluded.english_definition,
                 synonyms_json = excluded.synonyms_json,
                 example_sentence = excluded.example_sentence,
@@ -173,6 +180,7 @@ def import_enrichment_rows(conn: sqlite3.Connection, rows: list[dict[str, str]])
             """,
             (
                 word["id"],
+                pronunciation,
                 english_definition,
                 json.dumps(synonyms, ensure_ascii=False),
                 example_sentence,

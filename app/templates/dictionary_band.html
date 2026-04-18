@@ -42,6 +42,9 @@
           <strong>{{ word.chinese_headword }}</strong>
           {% endif %}
         </div>
+        {% if word.pronunciation %}
+        <span class="dictionary-result-meta ipa-line">{{ word.pronunciation }}</span>
+        {% endif %}
         {% if word.english_definition %}
         <p>{{ word.english_definition }}</p>
         {% elif word.example_sentence %}
