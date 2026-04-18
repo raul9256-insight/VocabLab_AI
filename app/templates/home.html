@@ -103,13 +103,13 @@
             <strong>{{ word.chinese_headword }}</strong>
             {% endif %}
           </div>
-          <span class="word-type-pill">{{ word.parts_of_speech|join(", ") if word.parts_of_speech else "type" }}</span>
+          <span class="word-type-pill">{{ word.parts_of_speech|join(", ") if word.parts_of_speech else t("unknown_type") }}</span>
         </div>
         {% if word.pronunciation %}
         <span class="refined-word-ipa">{{ word.pronunciation }}</span>
         {% endif %}
         <span class="refined-word-band">{{ word.best_band_label }}</span>
-        <p>{{ word.english_definition or (word.chinese_preview|join(" / ")) or "Open this word to add richer details." }}</p>
+        <p>{{ word.english_definition or (word.chinese_preview|join(" / ")) or t("open_word_add_details") }}</p>
       </a>
       {% endfor %}
     </div>
