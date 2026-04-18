@@ -457,9 +457,9 @@ def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4) -> list[
         FROM words
         LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
         ORDER BY words.best_band_rank DESC, words.lemma
-        LIMIT ?
+        LIMIT 60
         """,
-        (limit,),
+        (),
     ).fetchall()
     word_ids = [row["id"] for row in rows]
     definitions_map = definitions_map_for_words(conn, word_ids)
@@ -472,6 +472,10 @@ def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4) -> list[
         source_fallback = fallback_map.get(row["id"], {"pronunciation": "", "english_definition": "", "example_sentence": ""})
         english_definition = row["english_definition"] or source_fallback["english_definition"]
         example_sentence = row["example_sentence"] or source_fallback["example_sentence"]
+        if len(row["lemma"].strip()) <= 4:
+            continue
+        if not defs and not english_definition and not example_sentence:
+            continue
         items.append(
             {
                 "id": row["id"],
@@ -485,6 +489,8 @@ def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4) -> list[
                 "chinese_headword": defs[0] if defs else "",
             }
         )
+        if len(items) >= limit:
+            break
     return items
 
 
