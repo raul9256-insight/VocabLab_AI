@@ -39,7 +39,7 @@
         <div class="bilingual-word-pair">
           <strong>{{ word.lemma }}</strong>
           {% if word.chinese_headword %}
-          <strong>{{ word.chinese_headword }}</strong>
+          <strong>{{ zh_text(word.chinese_headword) }}</strong>
           {% endif %}
         </div>
         {% if word.pronunciation %}

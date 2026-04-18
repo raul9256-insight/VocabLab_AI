@@ -16,6 +16,10 @@ from fastapi.templating import Jinja2Templates
 
 from app.db import (
     band_summary,
+    briefing_articles_for_section,
+    briefing_overview,
+    briefing_section_by_slug,
+    briefing_sections,
     definitions_for_word,
     fetch_stats,
     get_connection,
@@ -667,6 +671,18 @@ def to_simplified(text: str) -> str:
     return text.translate(SIMPLIFIED_CHAR_MAP)
 
 
+def localize_chinese_text(text: str, lang: str) -> str:
+    if not text:
+        return text
+    if lang == "zh-Hans":
+        return to_simplified(text)
+    return text
+
+
+def localize_chinese_list(items: list[str], lang: str) -> list[str]:
+    return [localize_chinese_text(item, lang) for item in items]
+
+
 TRANSLATIONS["zh-Hans"] = {key: to_simplified(value) for key, value in TRANSLATIONS["zh-Hant"].items()}
 TRANSLATIONS["zh-Hans"].update(
     {
@@ -973,6 +989,8 @@ def render(request: Request, template_name: str, **context) -> HTMLResponse:
             "lang_url": lambda target_lang: build_lang_url(request, target_lang),
             "qtype_label": lambda value: translate_question_type(value, lang),
             "status_label": lambda value: translate_status(value, lang),
+            "zh_text": lambda text: localize_chinese_text(text, lang),
+            "zh_list": lambda items: localize_chinese_list(items, lang),
         }
     )
     response = templates.TemplateResponse(name=template_name, request=request, context=context)
@@ -1883,32 +1901,26 @@ def finish_learning_session(conn: sqlite3.Connection, session_id: int) -> None:
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
     conn = db_conn()
-    stats = fetch_stats(conn)
-    latest_test = latest_test_result(conn)
-    latest_learning = latest_learning_result(conn)
-    recommended_band = latest_test["estimated_band_label"] if latest_test else "50~99 (3924)"
-    bands = decorate_band_rows(band_summary(conn))
-    max_band_total = max((band["workbook_total"] for band in bands), default=1)
-    hero_band_chart = [
-        {
-            "label": band["range_label"],
-            "count": band["workbook_total"],
-            "percent": max(18, round((band["workbook_total"] / max_band_total) * 100)),
-        }
-        for band in bands[:5]
-    ]
+    section_slug = request.query_params.get("section")
+    sections = briefing_sections(conn)
+    active_section = briefing_section_by_slug(conn, section_slug)
+    if active_section is None:
+        raise HTTPException(status_code=500, detail="No briefing sections available")
+    articles = briefing_articles_for_section(conn, active_section["id"])
+    overview = briefing_overview(conn)
     return render(
         request,
         "home.html",
-        stats=stats,
-        bands=bands,
-        latest_test=latest_test,
-        latest_learning=latest_learning,
-        recommended_band=recommended_band,
-        missed_words_count=len(missed_words(conn, limit=10)),
-        spotlight_words=dashboard_spotlight_words(conn),
-        hero_band_chart=hero_band_chart,
+        sections=sections,
+        active_section=active_section,
+        articles=articles,
+        overview=overview,
     )
+
+
+@app.get("/briefing", response_class=HTMLResponse)
+def briefing_home(request: Request) -> HTMLResponse:
+    return home(request)
 
 @app.get("/test", response_class=HTMLResponse)
 def test_intro(request: Request) -> HTMLResponse:

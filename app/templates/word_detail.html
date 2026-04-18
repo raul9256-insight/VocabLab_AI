@@ -14,7 +14,7 @@
           <div class="bilingual-word-pair detail">
             <h1>{{ word.lemma }}</h1>
             {% if chinese_headword %}
-            <h1>{{ chinese_headword }}</h1>
+            <h1>{{ zh_text(chinese_headword) }}</h1>
             {% endif %}
           </div>
           <button class="pronounce-button" type="button" data-pronounce="{{ word.lemma }}" aria-label="{{ t('pronunciation_label') }} {{ word.lemma }}">🔊</button>
@@ -67,7 +67,7 @@
             <span class="focus-label">{{ t("chinese_definition") }}</span>
             {% if definitions %}
             <ul class="clean-list">
-              {% for item in definitions %}
+              {% for item in zh_list(definitions) %}
               <li>{{ item }}</li>
               {% endfor %}
             </ul>

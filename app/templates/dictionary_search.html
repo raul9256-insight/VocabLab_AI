@@ -42,7 +42,7 @@
               <div class="bilingual-word-pair inline">
                 <strong>{{ word.lemma }}</strong>
                 {% if word.chinese_preview %}
-                <strong>{{ word.chinese_preview[0] }}</strong>
+                <strong>{{ zh_text(word.chinese_preview[0]) }}</strong>
                 {% endif %}
               </div>
               <button class="pronounce-button small" type="button" data-pronounce="{{ word.lemma }}" aria-label="{{ t('pronunciation_label') }} {{ word.lemma }}">🔊</button>
@@ -61,7 +61,7 @@
           </div>
           <div class="dictionary-result-box">
             <span class="focus-label">{{ t("chinese_label") }}</span>
-            <p>{{ word.chinese_preview|join(" / ") if word.chinese_preview else t("not_available") }}</p>
+            <p>{{ zh_list(word.chinese_preview)|join(" / ") if word.chinese_preview else t("not_available") }}</p>
           </div>
         </div>
         <div class="dictionary-result-box subtle">

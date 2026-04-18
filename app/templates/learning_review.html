@@ -32,7 +32,7 @@
           <span class="focus-label">{{ t("chinese_definition") }}</span>
           {% if definitions %}
           <ul class="clean-list">
-          {% for item in definitions[:4] %}
+          {% for item in zh_list(definitions[:4]) %}
             <li>{{ item }}</li>
             {% endfor %}
           </ul>
@@ -97,7 +97,7 @@
         </div>
         <div class="learning-info-block">
           <span class="focus-label">{{ t("chinese_definition") }}</span>
-          <p>{{ definitions[:2]|join(" / ") if definitions else t("not_added_yet") }}</p>
+          <p>{{ zh_list(definitions[:2])|join(" / ") if definitions else t("not_added_yet") }}</p>
         </div>
         <div class="learning-info-block">
           <span class="focus-label">{{ t("word_status") }}</span>

@@ -30,7 +30,7 @@
         <div class="bilingual-word-pair inline">
           <strong>{{ row.lemma }}</strong>
           {% if row.chinese_preview %}
-          <strong>{{ row.chinese_preview[0] }}</strong>
+          <strong>{{ zh_text(row.chinese_preview[0]) }}</strong>
           {% endif %}
         </div>
         <span class="word-band-pill">{{ row.best_band_label }}</span>
