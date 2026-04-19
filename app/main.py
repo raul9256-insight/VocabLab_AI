@@ -38,6 +38,13 @@ USER_ID = 1
 TEST_QUESTION_COUNT = 15
 LEARNING_WORD_COUNT = 5
 SUPPORTED_LANGS = {"en", "zh-Hant", "zh-Hans"}
+SUPPORTED_PERSONAS = {
+    "student",
+    "teacher",
+    "business_professional",
+    "ai_power_user",
+    "lifelong_learner",
+}
 
 TRANSLATIONS = {
     "en": {
@@ -58,6 +65,34 @@ TRANSLATIONS = {
         "home_eyebrow": "Dashboard",
         "home_title": "Hello, Lawrence.",
         "home_lede": "Build your Economist vocabulary with a clear daily flow: test, learn, and review.",
+        "onboarding_step_1": "Step 1",
+        "onboarding_step_2": "Step 2",
+        "onboarding_title": "Welcome to Economist Lab",
+        "onboarding_lede": "Let's make your learning experience personal.",
+        "onboarding_name_label": "First name",
+        "onboarding_name_hint": "Optional. Add your name if you'd like a more personal dashboard.",
+        "onboarding_name_placeholder": "Your first name",
+        "onboarding_role_title": "Who are you?",
+        "onboarding_role_lede": "Pick the track that fits you best. We'll tailor the dashboard and recommendations right away.",
+        "onboarding_submit": "Continue to my dashboard",
+        "persona_student": "Student",
+        "persona_student_desc": "High school or university learners building stronger academic English.",
+        "persona_teacher": "Teacher / Educator",
+        "persona_teacher_desc": "Teaching, coaching, or creating materials for others.",
+        "persona_business": "Business Professional",
+        "persona_business_desc": "Work communication, presentations, meetings, and sharper decision language.",
+        "persona_ai": "AI Power User",
+        "persona_ai_desc": "Using AI daily for prompting, writing, analysis, and higher-precision output.",
+        "persona_lifelong": "Lifelong Learner / Other",
+        "persona_lifelong_desc": "Adults learning for growth, curiosity, and long-term communication confidence.",
+        "persona_featured": "Recommended",
+        "persona_message_prefix": "Great!",
+        "persona_message_student": "We'll highlight academic reading support and structured vocabulary growth.",
+        "persona_message_teacher": "We'll surface clearer teaching-ready examples and explanation-focused word cards.",
+        "persona_message_business": "We'll recommend more business, AI prompting, and professional communication vocabulary.",
+        "persona_message_ai": "We'll recommend more AI prompting, precise instruction language, and professional-use vocabulary.",
+        "persona_message_lifelong": "We'll recommend a balanced mix of practical, high-frequency, and confidence-building vocabulary.",
+        "personal_dashboard": "Your personalized dashboard",
         "motto_label": "Motto",
         "motto_quote": "Without grammar very little can be conveyed, without vocabulary nothing can be conveyed.",
         "motto_cite": "Wilkins, 1972, p. 111",
@@ -116,6 +151,34 @@ TRANSLATIONS = {
         "home_eyebrow": "首頁總覽",
         "home_title": "Lawrence，你好。",
         "home_lede": "把《經濟學人》詞彙整理成清楚的每日學習流程：測驗、練習、複習。",
+        "onboarding_step_1": "第 1 步",
+        "onboarding_step_2": "第 2 步",
+        "onboarding_title": "歡迎來到 Economist Lab",
+        "onboarding_lede": "先讓我們把你的學習體驗調整得更貼近你。",
+        "onboarding_name_label": "名字",
+        "onboarding_name_hint": "可選填。如果你願意，我們會用名字讓首頁更有個人感。",
+        "onboarding_name_placeholder": "你的名字",
+        "onboarding_role_title": "你目前是哪一類使用者？",
+        "onboarding_role_lede": "請選最符合你的角色，我們會立刻調整首頁和推薦內容。",
+        "onboarding_submit": "進入我的個人化首頁",
+        "persona_student": "學生",
+        "persona_student_desc": "高中、大學或研究所階段，想建立更強的學術英語能力。",
+        "persona_teacher": "教師 / 教育工作者",
+        "persona_teacher_desc": "教學、帶領學生，或需要整理教材與說明內容。",
+        "persona_business": "商務專業人士",
+        "persona_business_desc": "工作溝通、簡報、會議與更精準的專業表達。",
+        "persona_ai": "AI 重度使用者",
+        "persona_ai_desc": "每天都會使用 AI 進行提示詞、寫作、分析或內容整理。",
+        "persona_lifelong": "終身學習者 / 其他",
+        "persona_lifelong_desc": "為了成長、興趣與長期溝通能力而持續學習的成人使用者。",
+        "persona_featured": "推薦",
+        "persona_message_prefix": "很好！",
+        "persona_message_student": "我們會優先推薦更適合學術閱讀與循序累積的詞彙內容。",
+        "persona_message_teacher": "我們會提供更適合教學說明、舉例與整理概念的詞彙內容。",
+        "persona_message_business": "我們會推薦更多商務、AI 提示與專業溝通場景的詞彙。",
+        "persona_message_ai": "我們會推薦更多 AI 提示詞、精準指令語言與專業應用詞彙。",
+        "persona_message_lifelong": "我們會推薦更平衡、實用且能建立長期信心的詞彙內容。",
+        "personal_dashboard": "你的個人化首頁",
         "motto_label": "學習信念",
         "motto_quote": "Without grammar very little can be conveyed, without vocabulary nothing can be conveyed.",
         "motto_cite": "Wilkins, 1972, p. 111",
@@ -700,6 +763,34 @@ TRANSLATIONS["zh-Hans"].update(
         "home_eyebrow": "首页总览",
         "home_title": "Lawrence，你好。",
         "home_lede": "把《经济学人》词汇整理成清晰的每日学习流程：检测、练习、复习。",
+        "onboarding_step_1": "第 1 步",
+        "onboarding_step_2": "第 2 步",
+        "onboarding_title": "欢迎来到 Economist Lab",
+        "onboarding_lede": "先让我们把你的学习体验调整得更贴近你。",
+        "onboarding_name_label": "名字",
+        "onboarding_name_hint": "可选填。如果你愿意，我们会用名字让首页更有个人感。",
+        "onboarding_name_placeholder": "你的名字",
+        "onboarding_role_title": "你目前是哪一类使用者？",
+        "onboarding_role_lede": "请选择最符合你的角色，我们会立刻调整首页和推荐内容。",
+        "onboarding_submit": "进入我的个性化首页",
+        "persona_student": "学生",
+        "persona_student_desc": "高中、大学或研究所阶段，想建立更强的学术英语能力。",
+        "persona_teacher": "教师 / 教育工作者",
+        "persona_teacher_desc": "教学、带领学生，或需要整理教材与说明内容。",
+        "persona_business": "商务专业人士",
+        "persona_business_desc": "工作沟通、简报、会议与更精准的专业表达。",
+        "persona_ai": "AI 重度使用者",
+        "persona_ai_desc": "每天都会使用 AI 进行提示词、写作、分析或内容整理。",
+        "persona_lifelong": "终身学习者 / 其他",
+        "persona_lifelong_desc": "为了成长、兴趣与长期沟通能力而持续学习的成人使用者。",
+        "persona_featured": "推荐",
+        "persona_message_prefix": "很好！",
+        "persona_message_student": "我们会优先推荐更适合学术阅读与循序积累的词汇内容。",
+        "persona_message_teacher": "我们会提供更适合教学说明、举例与整理概念的词汇内容。",
+        "persona_message_business": "我们会推荐更多商务、AI 提示与专业沟通场景的词汇。",
+        "persona_message_ai": "我们会推荐更多 AI 提示词、精准指令语言与专业应用词汇。",
+        "persona_message_lifelong": "我们会推荐更平衡、实用且能建立长期信心的词汇内容。",
+        "personal_dashboard": "你的个性化首页",
         "tests_taken": "已完成检测",
         "current_band": "当前建议范围",
         "today_goal": "今日目标",
@@ -976,11 +1067,37 @@ def build_lang_url(request: Request, lang: str) -> str:
     return f"{request.url.path}?{query}" if query else request.url.path
 
 
+def build_home_url(lang: str) -> str:
+    return f"/?lang={lang}" if lang != "en" else "/"
+
+
+def get_profile_name(request: Request) -> str:
+    raw = (request.cookies.get("profile_name") or "").strip()
+    return raw[:40] if raw else "Lawrence"
+
+
+def get_profile_persona(request: Request) -> str | None:
+    raw = (request.cookies.get("profile_persona") or "").strip()
+    return raw if raw in SUPPORTED_PERSONAS else None
+
+
+def persona_message_key(persona: str | None) -> str:
+    return {
+        "student": "persona_message_student",
+        "teacher": "persona_message_teacher",
+        "business_professional": "persona_message_business",
+        "ai_power_user": "persona_message_ai",
+        "lifelong_learner": "persona_message_lifelong",
+    }.get(persona or "", "persona_message_lifelong")
+
+
 def render(request: Request, template_name: str, **context) -> HTMLResponse:
     lang = getattr(request.state, "lang", get_lang(request))
     context.update(
         {
             "lang": lang,
+            "profile_name": get_profile_name(request),
+            "profile_persona": get_profile_persona(request),
             "t": lambda key, **kwargs: translate(lang, key, **kwargs),
             "lang_url": lambda target_lang: build_lang_url(request, target_lang),
             "qtype_label": lambda value: translate_question_type(value, lang),
@@ -1922,6 +2039,9 @@ def finish_learning_session(conn: sqlite3.Connection, session_id: int) -> None:
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
     conn = db_conn()
+    lang = getattr(request.state, "lang", get_lang(request))
+    profile_name = get_profile_name(request)
+    profile_persona = get_profile_persona(request)
     stats = fetch_stats(conn)
     latest_test = latest_test_result(conn)
     latest_learning = latest_learning_result(conn)
@@ -1939,6 +2059,9 @@ def home(request: Request) -> HTMLResponse:
     return render(
         request,
         "home.html",
+        show_onboarding=profile_persona is None,
+        personalized_name=profile_name,
+        persona_message=translate(lang, persona_message_key(profile_persona)) if profile_persona else "",
         stats=stats,
         bands=bands,
         latest_test=latest_test,
@@ -1948,6 +2071,23 @@ def home(request: Request) -> HTMLResponse:
         spotlight_words=dashboard_spotlight_words(conn),
         hero_band_chart=hero_band_chart,
     )
+
+
+@app.post("/onboarding")
+def onboarding_submit(
+    request: Request,
+    first_name: str = Form(""),
+    persona: str = Form("lifelong_learner"),
+) -> RedirectResponse:
+    safe_persona = persona if persona in SUPPORTED_PERSONAS else "lifelong_learner"
+    safe_name = (first_name or "").strip()[:40]
+    response = RedirectResponse(url=build_home_url(getattr(request.state, "lang", get_lang(request))), status_code=303)
+    response.set_cookie("profile_persona", safe_persona, max_age=60 * 60 * 24 * 365)
+    if safe_name:
+        response.set_cookie("profile_name", safe_name, max_age=60 * 60 * 24 * 365)
+    else:
+        response.delete_cookie("profile_name")
+    return response
 
 
 @app.get("/test", response_class=HTMLResponse)
