@@ -1,5 +1,6 @@
 let currentAudio = null;
 let currentAudioUrl = null;
+let pronunciationNotice = null;
 
 function cleanupCurrentAudio() {
   if (currentAudio) {
@@ -12,20 +13,25 @@ function cleanupCurrentAudio() {
   }
 }
 
-function fallbackSpeakText(text) {
-  if (!("speechSynthesis" in window) || !text) {
-    return;
+function ensurePronunciationNotice() {
+  if (pronunciationNotice) {
+    return pronunciationNotice;
   }
+  pronunciationNotice = document.createElement("div");
+  pronunciationNotice.className = "pronunciation-notice";
+  pronunciationNotice.hidden = true;
+  document.body.appendChild(pronunciationNotice);
+  return pronunciationNotice;
+}
 
-  const synth = window.speechSynthesis;
-  synth.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  utterance.rate = 0.82;
-  utterance.pitch = 0.88;
-  utterance.volume = 0.9;
-  synth.speak(utterance);
+function showPronunciationNotice(message) {
+  const notice = ensurePronunciationNotice();
+  notice.textContent = message;
+  notice.hidden = false;
+  window.clearTimeout(showPronunciationNotice.timeoutId);
+  showPronunciationNotice.timeoutId = window.setTimeout(() => {
+    notice.hidden = true;
+  }, 2600);
 }
 
 async function playGeneratedAudio(text) {
@@ -51,7 +57,8 @@ async function speakText(text) {
   try {
     await playGeneratedAudio(text);
   } catch (_error) {
-    fallbackSpeakText(text);
+    cleanupCurrentAudio();
+    showPronunciationNotice("Pronunciation is temporarily unavailable.");
   }
 }
 

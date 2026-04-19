@@ -2217,6 +2217,21 @@ input[type="file"] {
   box-shadow: 0 8px 18px rgba(95, 115, 255, 0.12);
 }
 
+.pronunciation-notice {
+  position: fixed;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  z-index: 50;
+  max-width: 280px;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  background: rgba(35, 39, 52, 0.94);
+  color: #f8f9ff;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  box-shadow: 0 16px 40px rgba(18, 22, 35, 0.24);
+}
+
 .word-detail-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(100px, 1fr));
