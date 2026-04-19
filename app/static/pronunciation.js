@@ -37,7 +37,16 @@ function showPronunciationNotice(message) {
 async function playGeneratedAudio(text) {
   const response = await fetch(`/api/pronounce?text=${encodeURIComponent(text)}`);
   if (!response.ok) {
-    throw new Error(`Pronunciation request failed with ${response.status}`);
+    let message = `Pronunciation request failed with ${response.status}`;
+    try {
+      const payload = await response.json();
+      if (payload && typeof payload.detail === "string" && payload.detail.trim()) {
+        message = payload.detail.trim();
+      }
+    } catch (_error) {
+      // Ignore JSON parsing failures and use the status-based message.
+    }
+    throw new Error(message);
   }
 
   const blob = await response.blob();
@@ -56,9 +65,9 @@ async function speakText(text) {
 
   try {
     await playGeneratedAudio(text);
-  } catch (_error) {
+  } catch (error) {
     cleanupCurrentAudio();
-    showPronunciationNotice("Pronunciation is temporarily unavailable.");
+    showPronunciationNotice(error?.message || "Pronunciation is temporarily unavailable.");
   }
 }
 
