@@ -826,11 +826,11 @@ TRANSLATIONS["zh-Hant"].update(
         "hero_chart_note": "快速看看目前詞彙資料在不同常見程度分類中的分布情況。",
         "hero_chart_total": "總詞彙數",
         "hero_chart_bands": "詞彙分類",
-        "nav_ai_power": "AI 強化詞彙",
+        "nav_ai_power": "AI 指令詞庫",
         "ai_power_label": "新詞彙軌道",
         "ai_power_title": "AI 與專業高價值詞彙",
         "ai_power_lede": "這是一條獨立於 Economist 頻率分類之外的新路線，專為想提升提示能力、商務英語與精準表達的成人與專業人士設計。",
-        "ai_power_open": "打開 AI 強化詞彙",
+        "ai_power_open": "打開 AI 指令詞庫",
         "ai_power_target": "500 詞路線圖",
         "ai_power_categories": "核心分類",
         "ai_power_starter": "起始種子詞",
@@ -861,7 +861,7 @@ TRANSLATIONS["zh-Hant"].update(
         "ai_power_results": "目前顯示 {count} 個分類",
         "ai_power_open_category": "打開分類",
         "ai_power_words_ready": "已補齊 {count} 個詞",
-        "ai_power_back": "返回 AI 強化詞彙",
+        "ai_power_back": "返回 AI 指令詞庫",
         "ai_power_all_words": "此分類全部詞彙",
         "ai_power_prompt_usage": "提示用法",
         "ai_power_normal_usage": "一般用法",
@@ -1282,11 +1282,11 @@ TRANSLATIONS["zh-Hans"].update(
         "hero_chart_note": "快速看看当前词汇资料在不同常见程度分类中的分布情况。",
         "hero_chart_total": "总词汇数",
         "hero_chart_bands": "词汇分类",
-        "nav_ai_power": "AI 强化词汇",
+        "nav_ai_power": "AI 指令词库",
         "ai_power_label": "新词汇路线",
         "ai_power_title": "AI 与专业高价值词汇",
         "ai_power_lede": "这是一条独立于 Economist 频率分类之外的新路线，专为想提升提示能力、商务英语与精准表达的成人与专业人士设计。",
-        "ai_power_open": "打开 AI 强化词汇",
+        "ai_power_open": "打开 AI 指令词库",
         "ai_power_target": "500 词路线图",
         "ai_power_categories": "核心分类",
         "ai_power_starter": "起始种子词",
@@ -1317,7 +1317,7 @@ TRANSLATIONS["zh-Hans"].update(
         "ai_power_results": "当前显示 {count} 个分类",
         "ai_power_open_category": "打开分类",
         "ai_power_words_ready": "已补齐 {count} 个词",
-        "ai_power_back": "返回 AI 强化词汇",
+        "ai_power_back": "返回 AI 指令词库",
         "ai_power_all_words": "此分类全部词汇",
         "ai_power_prompt_usage": "提示用法",
         "ai_power_normal_usage": "一般用法",
@@ -1619,6 +1619,94 @@ def ai_power_entry_by_slug(category: dict, entry_slug: str) -> dict | None:
         if entry["slug"] == entry_slug:
             return entry
     return None
+
+
+def ai_prompt_sections(entry: dict, lang: str = "en") -> list[dict[str, str]]:
+    word = entry.get("english", "")
+    base_prompt = entry.get("ai_prompt_example", "").strip() or f'Use "{word}" naturally in the response.'
+    if lang == "zh-Hant":
+        return [
+            {
+                "title": "專業諮詢與管理",
+                "subtitle": "Strategic & Professional Services",
+                "prompt": f"{base_prompt} 請同時補上利害關係人、風險、優先順序與下一步建議。",
+            },
+            {
+                "title": "創意與內容行銷",
+                "subtitle": "Creative & Marketing Content",
+                "prompt": f"{base_prompt} 請把語氣調整得更具吸引力，並加入受眾洞察、主訊息與內容角度。",
+            },
+            {
+                "title": "技術、工程與學術",
+                "subtitle": "Technology, Engineering & Research",
+                "prompt": f"{base_prompt} 請讓回答更有結構，包含方法、假設、技術細節與驗證方向。",
+            },
+            {
+                "title": "金融、法律與合規",
+                "subtitle": "Finance, Legal & Compliance",
+                "prompt": f"{base_prompt} 請使用更精準與審慎的語言，並加入風險揭露、合規考量與決策重點。",
+            },
+            {
+                "title": "教育與終身學習",
+                "subtitle": "Education & Lifelong Learning",
+                "prompt": f"{base_prompt} 請用更清楚、可教學的方式說明，並補上步驟、例子與常見誤解。",
+            },
+        ]
+    if lang == "zh-Hans":
+        return [
+            {
+                "title": "专业咨询与管理",
+                "subtitle": "Strategic & Professional Services",
+                "prompt": f"{base_prompt} 请同时补上利益相关者、风险、优先顺序与下一步建议。",
+            },
+            {
+                "title": "创意与内容营销",
+                "subtitle": "Creative & Marketing Content",
+                "prompt": f"{base_prompt} 请把语气调整得更具吸引力，并加入受众洞察、主信息与内容角度。",
+            },
+            {
+                "title": "技术、工程与学术",
+                "subtitle": "Technology, Engineering & Research",
+                "prompt": f"{base_prompt} 请让回答更有结构，包含方法、假设、技术细节与验证方向。",
+            },
+            {
+                "title": "金融、法律与合规",
+                "subtitle": "Finance, Legal & Compliance",
+                "prompt": f"{base_prompt} 请使用更精准与审慎的语言，并加入风险披露、合规考量与决策重点。",
+            },
+            {
+                "title": "教育与终身学习",
+                "subtitle": "Education & Lifelong Learning",
+                "prompt": f"{base_prompt} 请用更清楚、可教学的方式说明，并补上步骤、例子与常见误解。",
+            },
+        ]
+    return [
+        {
+            "title": "Strategic & Professional Services",
+            "subtitle": "Professional consulting and management",
+            "prompt": f"{base_prompt} Add stakeholders, risks, priorities, and recommended next steps.",
+        },
+        {
+            "title": "Creative & Marketing Content",
+            "subtitle": "Creative and audience-facing communication",
+            "prompt": f"{base_prompt} Make the tone more audience-aware and add messaging angles, hooks, and content direction.",
+        },
+        {
+            "title": "Technology, Engineering & Research",
+            "subtitle": "Technical and analytical work",
+            "prompt": f"{base_prompt} Make the answer more structured with method, assumptions, technical detail, and validation steps.",
+        },
+        {
+            "title": "Finance, Legal & Compliance",
+            "subtitle": "High-precision professional contexts",
+            "prompt": f"{base_prompt} Use more precise and risk-aware language, including compliance checks and decision considerations.",
+        },
+        {
+            "title": "Education & Lifelong Learning",
+            "subtitle": "Teaching and self-learning",
+            "prompt": f"{base_prompt} Explain it in a teachable way with steps, examples, and common misunderstandings to avoid.",
+        },
+    ]
 
 
 def render(request: Request, template_name: str, **context) -> HTMLResponse:
@@ -2989,6 +3077,7 @@ def ai_power_entry_page(request: Request, category_slug: str, entry_slug: str) -
         "ai_power_word.html",
         category=category,
         entry=entry,
+        prompt_sections=ai_prompt_sections(entry, lang),
     )
 
 

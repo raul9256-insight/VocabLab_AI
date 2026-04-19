@@ -2302,7 +2302,7 @@ input[type="file"] {
 }
 
 .word-definition-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .word-info-card {
@@ -2314,6 +2314,26 @@ input[type="file"] {
 
 .word-info-card.primary {
   background: linear-gradient(180deg, rgba(232, 238, 255, 0.9), rgba(255, 255, 255, 0.92));
+}
+
+.ai-prompt-section-card {
+  background: linear-gradient(180deg, rgba(239, 242, 255, 0.96), rgba(255, 255, 255, 0.96));
+}
+
+.ai-power-prompt-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.ai-power-prompt-card {
+  gap: 0.45rem;
+}
+
+.ai-power-prompt-subtitle {
+  color: #5666f1;
+  font-size: 0.9rem;
+  line-height: 1.25;
 }
 
 .word-info-card p,
@@ -3432,9 +3452,29 @@ input[type="file"] {
   color: #8f1b2b;
 }
 
+.band-card-tone-foundation {
+  border-color: rgba(143, 27, 43, 0.18);
+  background: linear-gradient(180deg, rgba(252, 240, 242, 0.96), rgba(255, 255, 255, 0.94));
+}
+
+.band-card-tone-foundation:hover {
+  border-color: rgba(143, 27, 43, 0.32);
+  box-shadow: 0 16px 30px rgba(143, 27, 43, 0.12);
+}
+
 .band-card-tone-insight .band-type-name,
 .band-card-tone-insight strong {
   color: #7c536b;
+}
+
+.band-card-tone-insight {
+  border-color: rgba(124, 83, 107, 0.18);
+  background: linear-gradient(180deg, rgba(248, 242, 247, 0.96), rgba(255, 255, 255, 0.94));
+}
+
+.band-card-tone-insight:hover {
+  border-color: rgba(124, 83, 107, 0.3);
+  box-shadow: 0 16px 30px rgba(124, 83, 107, 0.12);
 }
 
 .band-card-tone-precision .band-type-name,
@@ -3442,14 +3482,44 @@ input[type="file"] {
   color: #9f7644;
 }
 
+.band-card-tone-precision {
+  border-color: rgba(159, 118, 68, 0.2);
+  background: linear-gradient(180deg, rgba(250, 246, 238, 0.96), rgba(255, 255, 255, 0.94));
+}
+
+.band-card-tone-precision:hover {
+  border-color: rgba(159, 118, 68, 0.32);
+  box-shadow: 0 16px 30px rgba(159, 118, 68, 0.12);
+}
+
 .band-card-tone-intellectual .band-type-name,
 .band-card-tone-intellectual strong {
   color: #657795;
 }
 
+.band-card-tone-intellectual {
+  border-color: rgba(101, 119, 149, 0.18);
+  background: linear-gradient(180deg, rgba(243, 246, 252, 0.96), rgba(255, 255, 255, 0.94));
+}
+
+.band-card-tone-intellectual:hover {
+  border-color: rgba(101, 119, 149, 0.3);
+  box-shadow: 0 16px 30px rgba(101, 119, 149, 0.12);
+}
+
 .band-card-tone-elite .band-type-name,
 .band-card-tone-elite strong {
   color: #2f4464;
+}
+
+.band-card-tone-elite {
+  border-color: rgba(47, 68, 100, 0.2);
+  background: linear-gradient(180deg, rgba(240, 244, 250, 0.96), rgba(255, 255, 255, 0.94));
+}
+
+.band-card-tone-elite:hover {
+  border-color: rgba(47, 68, 100, 0.32);
+  box-shadow: 0 16px 30px rgba(47, 68, 100, 0.14);
 }
 
 .motto-chart-foot {

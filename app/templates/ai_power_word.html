@@ -65,31 +65,29 @@
               {% endif %}
             </ul>
           </section>
+          <section class="word-info-card">
+            <span class="focus-label">{{ t("ai_power_normal_usage") }}</span>
+            <p>{{ entry.example_sentence or t("no_example_sentence") }}</p>
+          </section>
         </div>
       </article>
 
-      <article class="panel dashboard-v2-card word-section-card">
-        <div class="card-head tight">
-          <div>
-            <p class="eyebrow">{{ t("ai_power_normal_usage") }}</p>
-            <h2>{{ t("example_sentence") }}</h2>
-          </div>
-        </div>
-        <section class="word-info-card">
-          <p>{{ entry.example_sentence or t("no_example_sentence") }}</p>
-        </section>
-      </article>
-
-      <article class="panel dashboard-v2-card word-section-card">
+      <article class="panel dashboard-v2-card word-section-card ai-prompt-section-card">
         <div class="card-head tight">
           <div>
             <p class="eyebrow">{{ t("ai_power_prompt_usage") }}</p>
             <h2>{{ t("ai_power_item_prompt") }}</h2>
           </div>
         </div>
-        <section class="word-info-card primary">
-          <p>{{ entry.ai_prompt_example or t("unknown") }}</p>
-        </section>
+        <div class="ai-power-prompt-grid">
+          {% for section in prompt_sections %}
+          <section class="word-info-card primary ai-power-prompt-card">
+            <span class="focus-label">{{ section.title }}</span>
+            <strong class="ai-power-prompt-subtitle">{{ section.subtitle }}</strong>
+            <p>{{ section.prompt }}</p>
+          </section>
+          {% endfor %}
+        </div>
       </article>
     </div>
   </section>
