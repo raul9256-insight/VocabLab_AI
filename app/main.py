@@ -1419,13 +1419,14 @@ def ai_power_track(lang: str = "en") -> dict:
     for item in AI_POWER_TRACK:
         title = item["title"]
         description = item["description"]
+        sorted_terms = sorted(item["terms"], key=lambda term: term.lower())
         if lang == "zh-Hant":
             title = item["title_zh_hant"]
             description = item["description_zh_hant"]
         elif lang == "zh-Hans":
             title = item["title_zh_hans"]
             description = item["description_zh_hans"]
-        starter_count += len(item["terms"])
+        starter_count += len(sorted_terms)
         categories.append(
             {
                 "slug": item["slug"],
@@ -1433,8 +1434,8 @@ def ai_power_track(lang: str = "en") -> dict:
                 "english_title": item["title"],
                 "description": description,
                 "target_count": item["target_count"],
-                "starter_count": len(item["terms"]),
-                "terms": item["terms"],
+                "starter_count": len(sorted_terms),
+                "terms": sorted_terms,
                 "normal_example": item["normal_example"],
                 "prompt_example": item["prompt_example"],
             }

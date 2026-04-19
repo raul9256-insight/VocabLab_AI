@@ -139,7 +139,7 @@ def export_ai_power_template(categories: list[dict], output_path: Path) -> int:
 
     total_rows = 0
     for category in categories:
-        for term in category.get("terms", []):
+        for term in sorted(category.get("terms", []), key=lambda value: value.lower()):
             ws.append(
                 [
                     category.get("slug", ""),
