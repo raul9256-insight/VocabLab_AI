@@ -2673,6 +2673,11 @@ input[type="file"] {
   gap: 1rem;
 }
 
+.ai-power-shell {
+  display: grid;
+  gap: 1rem;
+}
+
 .learning-hero,
 .learning-question-card,
 .learning-side-card,
@@ -2763,6 +2768,59 @@ input[type="file"] {
 .learning-result-card strong {
   font-size: 1.7rem;
   letter-spacing: -0.03em;
+}
+
+.ai-power-home-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 248, 255, 0.94));
+}
+
+.ai-power-home-grid,
+.ai-power-category-grid,
+.ai-power-example-grid,
+.ai-power-chip-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.ai-power-home-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.ai-power-category-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ai-power-category-card,
+.ai-power-hero {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 248, 255, 0.94));
+}
+
+.ai-power-example-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 1rem 0;
+}
+
+.ai-power-chip-grid {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.ai-power-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.72rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(112, 125, 184, 0.14);
+  background: rgba(255, 255, 255, 0.88);
+  color: #44506d;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.ai-power-note {
+  min-width: 132px;
 }
 
 .learning-support-grid {
@@ -3469,6 +3527,8 @@ input[type="file"] {
   .learning-session-grid,
   .learning-review-grid,
   .learning-result-grid,
+  .ai-power-category-grid,
+  .ai-power-example-grid,
   .review-hero-top,
   .dictionary-refined-head,
   .dictionary-result-body,
@@ -3494,6 +3554,7 @@ input[type="file"] {
   .review-grid,
   .test-band-breakdown-grid,
   .learning-stats-grid,
+  .ai-power-home-grid,
   .refined-words-grid,
   .refined-recommend-grid,
   .hero-actions-grid,

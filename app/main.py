@@ -46,6 +46,128 @@ SUPPORTED_PERSONAS = {
     "lifelong_learner",
 }
 
+AI_POWER_TRACK = [
+    {
+        "slug": "core-instruction",
+        "title": "Core Instruction Verbs",
+        "title_zh_hant": "核心指令動詞",
+        "title_zh_hans": "核心指令动词",
+        "target_count": 80,
+        "description": "High-utility verbs for prompting, briefing, revising, and directing AI output clearly.",
+        "description_zh_hant": "最適合用在提示詞、任務說明、修改與指揮 AI 產出的高頻指令動詞。",
+        "description_zh_hans": "最适合用在提示词、任务说明、修改与指挥 AI 产出的高频指令动词。",
+        "normal_example": "Please clarify the main argument before you send the memo.",
+        "prompt_example": "Analyze this meeting transcript, summarize the key risks, and rewrite the action items in a professional tone.",
+        "terms": [
+            "analyze", "summarize", "explain", "elaborate", "clarify", "outline", "brainstorm", "generate",
+            "create", "rewrite", "refine", "optimize", "improve", "simplify", "expand", "prioritize",
+            "evaluate", "assess", "compare", "contrast", "recommend", "suggest", "demonstrate", "illustrate",
+            "visualize", "simulate", "role-play", "act as", "structure", "format", "organize", "categorize",
+            "synthesize", "critique", "review", "proofread", "edit", "translate", "rephrase", "iterate",
+            "debug", "troubleshoot", "ideate", "strategize", "conceptualize", "delegate", "negotiate",
+            "facilitate", "moderate", "articulate", "quantify", "qualify", "validate", "verify", "justify",
+            "substantiate", "extrapolate", "interpolate",
+        ],
+    },
+    {
+        "slug": "output-structure",
+        "title": "Output Format & Structure",
+        "title_zh_hant": "輸出格式與結構",
+        "title_zh_hans": "输出格式与结构",
+        "target_count": 70,
+        "description": "Words and phrases that control shape, sequence, readability, and delivery format.",
+        "description_zh_hant": "用來控制輸出形狀、順序、可讀性與交付格式的關鍵詞組。",
+        "description_zh_hans": "用来控制输出形状、顺序、可读性与交付格式的关键词组。",
+        "normal_example": "Use a checklist and a short executive summary in the final report.",
+        "prompt_example": "Return the answer as a numbered list, then add a table with key takeaways and action items.",
+        "terms": [
+            "step-by-step", "bullet points", "numbered list", "table", "markdown", "JSON", "pros and cons",
+            "advantages vs disadvantages", "summary first", "detailed version", "beginner-friendly",
+            "advanced level", "example", "template", "framework", "checklist", "timeline", "flowchart",
+            "comparison table", "key takeaways", "action items", "executive summary", "one-pager",
+            "SWOT analysis", "mind map", "before and after",
+        ],
+    },
+    {
+        "slug": "quality-style",
+        "title": "Quality & Style",
+        "title_zh_hant": "品質與風格",
+        "title_zh_hans": "品质与风格",
+        "target_count": 90,
+        "description": "Descriptors that tune tone, clarity, persuasion, and the professional quality of responses.",
+        "description_zh_hant": "用來調整語氣、清晰度、說服力與整體專業質感的描述詞。",
+        "description_zh_hans": "用来调整语气、清晰度、说服力与整体专业质感的描述词。",
+        "normal_example": "Her presentation was concise, persuasive, and highly professional.",
+        "prompt_example": "Rewrite this email in a concise, balanced, and data-driven style for senior stakeholders.",
+        "terms": [
+            "concise", "detailed", "professional", "formal", "casual", "engaging", "persuasive", "objective",
+            "balanced", "insightful", "nuanced", "rigorous", "logical", "coherent", "elegant", "sophisticated",
+            "clear", "precise", "natural", "fluent", "compelling", "authoritative", "empathetic",
+            "motivational", "creative", "innovative", "strategic", "tactical", "data-driven", "evidence-based",
+            "user-friendly", "high-quality", "premium", "robust", "sustainable", "ethical", "cutting-edge",
+        ],
+    },
+    {
+        "slug": "reasoning-thinking",
+        "title": "Reasoning & Thinking",
+        "title_zh_hant": "推理與思考",
+        "title_zh_hans": "推理与思考",
+        "target_count": 60,
+        "description": "Mental-model vocabulary for decision-making, analysis, and deeper prompt reasoning.",
+        "description_zh_hant": "適合決策、分析與更深層提示推理的思考模型詞彙。",
+        "description_zh_hans": "适合决策、分析与更深层提示推理的思考模型词汇。",
+        "normal_example": "We need a more systematic approach before making a final decision.",
+        "prompt_example": "Think step by step, identify the root cause, weigh the alternatives, and recommend the strongest option.",
+        "terms": [
+            "think step by step", "chain of thought", "first principles", "break down", "analyze deeply",
+            "evaluate options", "weigh pros and cons", "consider alternatives", "critical thinking",
+            "systematic", "methodical", "logical reasoning", "root cause", "counterfactual", "assumption",
+            "hypothesis", "inference", "deduction", "induction", "analogy", "mental model",
+            "decision framework", "risk assessment", "scenario planning",
+        ],
+    },
+    {
+        "slug": "ai-tech",
+        "title": "AI & Tech Terms",
+        "title_zh_hant": "AI 與科技詞彙",
+        "title_zh_hans": "AI 与科技词汇",
+        "target_count": 80,
+        "description": "Essential vocabulary for understanding modern AI systems, prompting, workflows, and tooling.",
+        "description_zh_hant": "理解現代 AI 系統、提示工程、工作流程與工具時最常用的核心詞彙。",
+        "description_zh_hans": "理解现代 AI 系统、提示工程、工作流程与工具时最常用的核心词汇。",
+        "normal_example": "The product team is testing a new chatbot API with a larger context window.",
+        "prompt_example": "Use the system prompt to define the role, then produce a retrieval-augmented answer with cited sources.",
+        "terms": [
+            "prompt", "prompting", "prompt engineering", "LLM", "large language model", "generative AI",
+            "hallucination", "fine-tune", "context window", "token", "embedding", "few-shot", "zero-shot",
+            "temperature", "top-p", "system prompt", "user prompt", "assistant response", "RAG",
+            "retrieval augmented generation", "agent", "chain", "iteration", "output", "input",
+            "training data", "inference", "parameters", "API", "integration", "workflow", "automation",
+            "chatbot", "virtual assistant",
+        ],
+    },
+    {
+        "slug": "business-professional",
+        "title": "Business & Professional Vocabulary",
+        "title_zh_hant": "商務與專業詞彙",
+        "title_zh_hans": "商务与专业词汇",
+        "target_count": 120,
+        "description": "Professional language for meetings, strategy, operations, positioning, and executive communication.",
+        "description_zh_hant": "適合會議、策略、營運、定位與高階溝通場景的專業英語。",
+        "description_zh_hans": "适合会议、策略、营运、定位与高阶沟通场景的专业英语。",
+        "normal_example": "Stakeholder alignment is essential before we launch the strategic initiative.",
+        "prompt_example": "Draft a quarterly review with KPI trends, ROI discussion, risk mitigation, and executive action items.",
+        "terms": [
+            "stakeholder", "KPI", "ROI", "synergy", "leverage", "optimize", "streamline", "scalability",
+            "disrupt", "innovation", "agile", "ecosystem", "benchmark", "deliverables", "milestone",
+            "pipeline", "revenue stream", "cost-benefit", "value proposition", "branding", "positioning",
+            "negotiation", "consensus", "alignment", "accountability", "transparency", "governance",
+            "compliance", "risk mitigation", "due diligence", "strategic initiative", "quarterly review",
+            "performance metric",
+        ],
+    },
+]
+
 TRANSLATIONS = {
     "en": {
         "brand_title": "Economist Lab",
@@ -460,6 +582,28 @@ TRANSLATIONS["en"].update(
         "hero_chart_note": "A quick look at how your vocabulary source is distributed across frequency groups.",
         "hero_chart_total": "Total Words",
         "hero_chart_bands": "Frequency groups",
+        "nav_ai_power": "AI Power Vocab",
+        "ai_power_label": "New Track",
+        "ai_power_title": "AI + Professional Power Vocabulary",
+        "ai_power_lede": "A separate track for adults and professionals who want stronger prompting, clearer business English, and more precise communication with AI.",
+        "ai_power_open": "Open AI Power Vocabulary",
+        "ai_power_target": "500-word roadmap",
+        "ai_power_categories": "Focus categories",
+        "ai_power_starter": "Starter seed list",
+        "ai_power_progress": "AI Power Level",
+        "ai_power_structure_title": "What each word card should include",
+        "ai_power_structure_lede": "This track stays separate from Economist frequency bands and is designed around direct real-world use.",
+        "ai_power_item_english": "English",
+        "ai_power_item_trad": "Traditional Chinese",
+        "ai_power_item_simp": "Simplified Chinese",
+        "ai_power_item_sentence": "Example sentence",
+        "ai_power_item_prompt": "AI prompt example",
+        "ai_power_category_terms": "{count} starter terms",
+        "ai_power_home_title": "Build a second track for AI and professional use",
+        "ai_power_home_note": "Keep Economist vocabulary for frequency-based study, and add a separate AI track for prompting, meetings, writing, and decision-making.",
+        "ai_power_category_cta": "Category focus",
+        "ai_power_examples_title": "Why this track is different",
+        "ai_power_examples_lede": "Each category comes with normal usage and AI usage, so the vocabulary becomes immediately usable instead of purely academic.",
     }
 )
 
@@ -662,6 +806,28 @@ TRANSLATIONS["zh-Hant"].update(
         "hero_chart_note": "快速看看目前詞彙資料在不同常見程度分類中的分布情況。",
         "hero_chart_total": "總詞彙數",
         "hero_chart_bands": "詞彙分類",
+        "nav_ai_power": "AI 強化詞彙",
+        "ai_power_label": "新詞彙軌道",
+        "ai_power_title": "AI 與專業高價值詞彙",
+        "ai_power_lede": "這是一條獨立於 Economist 頻率分類之外的新路線，專為想提升提示能力、商務英語與精準表達的成人與專業人士設計。",
+        "ai_power_open": "打開 AI 強化詞彙",
+        "ai_power_target": "500 詞路線圖",
+        "ai_power_categories": "核心分類",
+        "ai_power_starter": "起始種子詞",
+        "ai_power_progress": "AI Power Level",
+        "ai_power_structure_title": "每張詞卡應包含的內容",
+        "ai_power_structure_lede": "這條詞彙軌道不混入 Economist 頻率分類，而是直接對應真實工作與 AI 使用場景。",
+        "ai_power_item_english": "英文詞彙",
+        "ai_power_item_trad": "繁體中文",
+        "ai_power_item_simp": "簡體中文",
+        "ai_power_item_sentence": "一般例句",
+        "ai_power_item_prompt": "AI 提示範例",
+        "ai_power_category_terms": "{count} 個起始詞",
+        "ai_power_home_title": "建立第二條 AI 與專業應用詞彙軌道",
+        "ai_power_home_note": "保留 Economist 詞彙作為頻率式學習，再另外建立一條面向提示、會議、寫作與決策的 AI 詞彙路線。",
+        "ai_power_category_cta": "分類重點",
+        "ai_power_examples_title": "這條路線的差異",
+        "ai_power_examples_lede": "每個分類都同時提供一般用法與 AI 用法，讓詞彙不是只會背，而是能立刻用。",
     }
 )
 
@@ -1078,6 +1244,28 @@ TRANSLATIONS["zh-Hans"].update(
         "hero_chart_note": "快速看看当前词汇资料在不同常见程度分类中的分布情况。",
         "hero_chart_total": "总词汇数",
         "hero_chart_bands": "词汇分类",
+        "nav_ai_power": "AI 强化词汇",
+        "ai_power_label": "新词汇路线",
+        "ai_power_title": "AI 与专业高价值词汇",
+        "ai_power_lede": "这是一条独立于 Economist 频率分类之外的新路线，专为想提升提示能力、商务英语与精准表达的成人与专业人士设计。",
+        "ai_power_open": "打开 AI 强化词汇",
+        "ai_power_target": "500 词路线图",
+        "ai_power_categories": "核心分类",
+        "ai_power_starter": "起始种子词",
+        "ai_power_progress": "AI Power Level",
+        "ai_power_structure_title": "每张词卡应包含的内容",
+        "ai_power_structure_lede": "这条词汇路线不混入 Economist 频率分类，而是直接对应真实工作与 AI 使用场景。",
+        "ai_power_item_english": "英文词汇",
+        "ai_power_item_trad": "繁体中文",
+        "ai_power_item_simp": "简体中文",
+        "ai_power_item_sentence": "一般例句",
+        "ai_power_item_prompt": "AI 提示范例",
+        "ai_power_category_terms": "{count} 个起始词",
+        "ai_power_home_title": "建立第二条 AI 与专业应用词汇路线",
+        "ai_power_home_note": "保留 Economist 词汇作为频率式学习，再另外建立一条面向提示、会议、写作与决策的 AI 词汇路线。",
+        "ai_power_category_cta": "分类重点",
+        "ai_power_examples_title": "这条路线的差异",
+        "ai_power_examples_lede": "每个分类都同时提供一般用法与 AI 用法，让词汇不是只会背，而是能立刻用。",
     }
 )
 
@@ -1211,6 +1399,41 @@ def hero_band_identity(range_label: str) -> dict[str, str]:
         "50~99": {"title": "菁英語庫", "subtitle": "The Elite Lexicon"},
     }
     return identities.get(range_label, {"title": range_label, "subtitle": ""})
+
+
+def ai_power_track(lang: str = "en") -> dict:
+    categories = []
+    starter_count = 0
+    for item in AI_POWER_TRACK:
+        title = item["title"]
+        description = item["description"]
+        if lang == "zh-Hant":
+            title = item["title_zh_hant"]
+            description = item["description_zh_hant"]
+        elif lang == "zh-Hans":
+            title = item["title_zh_hans"]
+            description = item["description_zh_hans"]
+        starter_count += len(item["terms"])
+        categories.append(
+            {
+                "slug": item["slug"],
+                "title": title,
+                "english_title": item["title"],
+                "description": description,
+                "target_count": item["target_count"],
+                "starter_count": len(item["terms"]),
+                "terms": item["terms"],
+                "normal_example": item["normal_example"],
+                "prompt_example": item["prompt_example"],
+            }
+        )
+    return {
+        "target_count": 500,
+        "starter_count": starter_count,
+        "category_count": len(categories),
+        "progress_label": f"0 / 500",
+        "categories": categories,
+    }
 
 
 def render(request: Request, template_name: str, **context) -> HTMLResponse:
@@ -2203,6 +2426,7 @@ def home(request: Request) -> HTMLResponse:
         missed_words_count=len(missed_words(conn, limit=10)),
         spotlight_words=dashboard_spotlight_words(conn),
         hero_band_chart=hero_band_chart,
+        ai_power=ai_power_track(lang),
     )
 
 
@@ -2501,6 +2725,16 @@ def dictionary_home(request: Request) -> HTMLResponse:
         "dictionary_home.html",
         bands=bands,
         missed_count=len(missed_words(conn, limit=10, lang=getattr(request.state, "lang", get_lang(request)))),
+    )
+
+
+@app.get("/ai-power-vocabulary", response_class=HTMLResponse)
+def ai_power_vocabulary(request: Request) -> HTMLResponse:
+    lang = getattr(request.state, "lang", get_lang(request))
+    return render(
+        request,
+        "ai_power_vocab.html",
+        ai_power=ai_power_track(lang),
     )
 
 

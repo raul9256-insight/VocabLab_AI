@@ -38,6 +38,10 @@
           <span class="nav-icon">字</span>
           <span>{{ t("nav_dictionary") }}</span>
         </a>
+        <a href="/ai-power-vocabulary" class="{% if request.url.path.startswith('/ai-power-vocabulary') %}active{% endif %}">
+          <span class="nav-icon">AI</span>
+          <span>{{ t("nav_ai_power") }}</span>
+        </a>
         <a href="/review/missed" class="{% if request.url.path.startswith('/review') %}active{% endif %}">
           <span class="nav-icon">↺</span>
           <span>{{ t("nav_missed") }}</span>

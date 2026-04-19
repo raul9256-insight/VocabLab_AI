@@ -172,6 +172,36 @@
   </article>
 </section>
 
+<section class="panel dashboard-v2-card ai-power-home-panel">
+  <div class="card-head tight">
+    <div>
+      <p class="eyebrow">{{ t("ai_power_label") }}</p>
+      <h2>{{ t("ai_power_home_title") }}</h2>
+      <p class="section-subtle">{{ t("ai_power_home_note") }}</p>
+    </div>
+    <a class="button secondary" href="/ai-power-vocabulary">{{ t("ai_power_open") }}</a>
+  </div>
+
+  <div class="ai-power-home-grid">
+    <div class="learning-stat-card">
+      <span>{{ t("ai_power_target") }}</span>
+      <strong>{{ ai_power.target_count }}</strong>
+    </div>
+    <div class="learning-stat-card">
+      <span>{{ t("ai_power_categories") }}</span>
+      <strong>{{ ai_power.category_count }}</strong>
+    </div>
+    <div class="learning-stat-card">
+      <span>{{ t("ai_power_starter") }}</span>
+      <strong>{{ ai_power.starter_count }}</strong>
+    </div>
+    <div class="learning-stat-card">
+      <span>{{ t("ai_power_progress") }}</span>
+      <strong>{{ ai_power.progress_label }}</strong>
+    </div>
+  </div>
+</section>
+
 <section class="panel dashboard-v2-card refined-band-panel">
   <div class="card-head tight">
     <div>
