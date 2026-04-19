@@ -148,25 +148,17 @@
       <div>
         <p class="eyebrow">{{ t("recommended_for_you") }}</p>
         <h2>{{ t("choose_next") }}</h2>
-        <p class="section-subtle">{{ t("choose_next_note") }}</p>
+        <p class="section-subtle">{{ recommendation_note }}</p>
       </div>
     </div>
     <div class="refined-recommend-grid">
-      <a class="recommend-card recommend-card-blue" href="/test">
-        <span class="recommend-tag">{{ t("placement") }}</span>
-        <strong>{{ t("nav_test") }}</strong>
-        <p>{% if latest_test %}{{ t("latest_result", band=latest_test.estimated_band_label) }}{% else %}{{ t("first_test_prompt") }}{% endif %}</p>
+      {% for card in recommendation_cards %}
+      <a class="recommend-card {{ card.class_name }}" href="{{ card.href }}">
+        <span class="recommend-tag">{{ t(card.tag_key) }}</span>
+        <strong>{{ t(card.title_key) }}</strong>
+        <p>{{ t(card.body_key) }}</p>
       </a>
-      <a class="recommend-card recommend-card-pink" href="/learning">
-        <span class="recommend-tag">{{ t("practice") }}</span>
-        <strong>{{ t("learning_session") }}</strong>
-        <p>{{ t("start_short_session") }}</p>
-      </a>
-      <a class="recommend-card recommend-card-sand" href="/review/missed">
-        <span class="recommend-tag">{{ t("review") }}</span>
-        <strong>{{ t("nav_missed") }}</strong>
-        <p>{{ t("review_queue_count", count=missed_words_count) }}</p>
-      </a>
+      {% endfor %}
     </div>
   </article>
 </section>

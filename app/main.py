@@ -132,6 +132,26 @@ TRANSLATIONS = {
         "latest_score": "Latest score: {score}/{total}.",
         "start_short_session": "Start a short session in your recommended band.",
         "review_queue_count": "{count} words are waiting in your review list.",
+        "recommend_note_student": "Start with level-finding and steady academic vocabulary growth.",
+        "recommend_note_teacher": "Focus on lesson-ready words, clearer explanations, and review material.",
+        "recommend_note_business": "Focus on business communication, AI prompting, and precise professional language.",
+        "recommend_note_ai": "Focus on precise prompting, instruction language, and high-utility vocabulary.",
+        "recommend_note_lifelong": "Keep a balanced flow with practical learning, checking, and review.",
+        "card_student_test": "Find your current starting range, then build upward with confidence.",
+        "card_student_learning": "Practice a short set of high-value words for steady academic growth.",
+        "card_student_dictionary": "Browse common bands and save useful words for study or writing.",
+        "card_teacher_dictionary": "Open words quickly, compare meanings, and pull examples for teaching.",
+        "card_teacher_review": "Turn missed items into reusable teaching and revision material.",
+        "card_teacher_learning": "Use short sessions to spot useful classroom-ready vocabulary.",
+        "card_business_learning": "Train the words that improve meetings, presentations, and decision language.",
+        "card_business_dictionary": "Look up precise vocabulary for reports, emails, and professional writing.",
+        "card_business_test": "Check your current range first, then focus on the right band.",
+        "card_ai_learning": "Build precise instruction vocabulary you can reuse in prompts and workflows.",
+        "card_ai_dictionary": "Browse clear, high-utility words for prompting, analysis, and writing.",
+        "card_ai_test": "Estimate your level, then train the band that gives the fastest return.",
+        "card_lifelong_learning": "Keep momentum with a short session built around useful, reusable words.",
+        "card_lifelong_test": "Use a quick test to choose a comfortable and motivating starting point.",
+        "card_lifelong_review": "Return to missed words and turn them into long-term memory.",
     },
     "zh-Hant": {
         "brand_title": "經濟學人詞彙實驗室",
@@ -218,6 +238,26 @@ TRANSLATIONS = {
         "latest_score": "最近分數：{score}/{total}。",
         "start_short_session": "先從建議的詞彙範圍開始做一個短練習。",
         "review_queue_count": "目前有 {count} 個錯題等待你複習。",
+        "recommend_note_student": "先找出適合的起點，再穩定累積學術與高頻詞彙。",
+        "recommend_note_teacher": "優先使用可教學、可解釋、可複習的詞彙內容。",
+        "recommend_note_business": "優先強化商務溝通、AI 提示與精準專業表達。",
+        "recommend_note_ai": "優先強化提示詞、指令語言與高實用性的精準詞彙。",
+        "recommend_note_lifelong": "用平衡的方式持續累積，兼顧學習、檢查與複習。",
+        "card_student_test": "先找出目前適合的起始範圍，再更有方向地往上累積。",
+        "card_student_learning": "先做一輪短練習，穩定補強高價值學術詞彙。",
+        "card_student_dictionary": "按常見程度瀏覽，收藏適合閱讀與寫作的詞彙。",
+        "card_teacher_dictionary": "快速查詞、比較詞義與例句，整理成可教學的內容。",
+        "card_teacher_review": "把錯題整理成更適合教學與複習的材料。",
+        "card_teacher_learning": "用短練習找出值得帶進課堂的詞彙。",
+        "card_business_learning": "強化能改善會議、簡報與決策表達的關鍵詞彙。",
+        "card_business_dictionary": "查找更精準的報告、email 與專業寫作用語。",
+        "card_business_test": "先快速確認目前範圍，再集中在最適合的詞彙分類。",
+        "card_ai_learning": "建立可直接用在提示詞、分析與工作流程中的精準詞彙。",
+        "card_ai_dictionary": "瀏覽適合提示、分析與寫作的高實用性詞彙。",
+        "card_ai_test": "先估算程度，再集中練習回報最快的詞彙範圍。",
+        "card_lifelong_learning": "用一輪短練習，穩定累積實用且能反覆使用的詞彙。",
+        "card_lifelong_test": "先用快速測驗找出舒服又有成就感的起點。",
+        "card_lifelong_review": "回頭複習曾經答錯的詞，慢慢變成長期記憶。",
     },
 }
 
@@ -827,6 +867,26 @@ TRANSLATIONS["zh-Hans"].update(
         "latest_score": "最近分数：{score}/{total}。",
         "start_short_session": "先从建议的词汇范围开始做一轮短练习。",
         "review_queue_count": "目前有 {count} 个错题等你复习。",
+        "recommend_note_student": "先找出适合的起点，再稳定积累学术与高频词汇。",
+        "recommend_note_teacher": "优先使用可教学、可解释、可复习的词汇内容。",
+        "recommend_note_business": "优先强化商务沟通、AI 提示与精准专业表达。",
+        "recommend_note_ai": "优先强化提示词、指令语言与高实用性的精准词汇。",
+        "recommend_note_lifelong": "用平衡的方式持续积累，兼顾学习、检查与复习。",
+        "card_student_test": "先找出目前适合的起始范围，再更有方向地往上积累。",
+        "card_student_learning": "先做一轮短练习，稳定补强高价值学术词汇。",
+        "card_student_dictionary": "按常见程度浏览，收藏适合阅读与写作的词汇。",
+        "card_teacher_dictionary": "快速查词、比较词义与例句，整理成可教学的内容。",
+        "card_teacher_review": "把错题整理成更适合教学与复习的材料。",
+        "card_teacher_learning": "用短练习找出值得带进课堂的词汇。",
+        "card_business_learning": "强化能改善会议、简报与决策表达的关键词汇。",
+        "card_business_dictionary": "查找更精准的报告、email 与专业写作用语。",
+        "card_business_test": "先快速确认目前范围，再集中在最适合的词汇分类。",
+        "card_ai_learning": "建立可直接用在提示词、分析与工作流程中的精准词汇。",
+        "card_ai_dictionary": "浏览适合提示、分析与写作的高实用性词汇。",
+        "card_ai_test": "先估算程度，再集中练习回报最快的词汇范围。",
+        "card_lifelong_learning": "用一轮短练习，稳定积累实用且能反复使用的词汇。",
+        "card_lifelong_test": "先用快速测验找出舒服又有成就感的起点。",
+        "card_lifelong_review": "回头复习曾经答错的词，慢慢变成长久记忆。",
         "back_to_dictionary": "回到词典",
         "dictionary_title": "词典",
         "dictionary_home_title": "搜索、浏览、整理你的词汇库。",
@@ -1098,6 +1158,48 @@ def persona_message_key(persona: str | None) -> str:
         "ai_power_user": "persona_message_ai",
         "lifelong_learner": "persona_message_lifelong",
     }.get(persona or "", "persona_message_lifelong")
+
+
+def recommendation_note_key(persona: str | None) -> str:
+    return {
+        "student": "recommend_note_student",
+        "teacher": "recommend_note_teacher",
+        "business_professional": "recommend_note_business",
+        "ai_power_user": "recommend_note_ai",
+        "lifelong_learner": "recommend_note_lifelong",
+    }.get(persona or "", "recommend_note_lifelong")
+
+
+def recommendation_cards(persona: str | None) -> list[dict[str, str]]:
+    if persona == "student":
+        return [
+            {"tag_key": "placement", "title_key": "nav_test", "body_key": "card_student_test", "href": "/test", "class_name": "recommend-card-blue"},
+            {"tag_key": "practice", "title_key": "learning_session", "body_key": "card_student_learning", "href": "/learning", "class_name": "recommend-card-pink"},
+            {"tag_key": "review", "title_key": "nav_dictionary", "body_key": "card_student_dictionary", "href": "/dictionary", "class_name": "recommend-card-sand"},
+        ]
+    if persona == "teacher":
+        return [
+            {"tag_key": "review", "title_key": "nav_dictionary", "body_key": "card_teacher_dictionary", "href": "/dictionary", "class_name": "recommend-card-blue"},
+            {"tag_key": "review", "title_key": "nav_missed", "body_key": "card_teacher_review", "href": "/review/missed", "class_name": "recommend-card-pink"},
+            {"tag_key": "practice", "title_key": "nav_learning", "body_key": "card_teacher_learning", "href": "/learning", "class_name": "recommend-card-sand"},
+        ]
+    if persona == "business_professional":
+        return [
+            {"tag_key": "practice", "title_key": "nav_learning", "body_key": "card_business_learning", "href": "/learning", "class_name": "recommend-card-blue"},
+            {"tag_key": "review", "title_key": "nav_dictionary", "body_key": "card_business_dictionary", "href": "/dictionary", "class_name": "recommend-card-pink"},
+            {"tag_key": "placement", "title_key": "nav_test", "body_key": "card_business_test", "href": "/test", "class_name": "recommend-card-sand"},
+        ]
+    if persona == "ai_power_user":
+        return [
+            {"tag_key": "practice", "title_key": "nav_learning", "body_key": "card_ai_learning", "href": "/learning", "class_name": "recommend-card-blue"},
+            {"tag_key": "review", "title_key": "nav_dictionary", "body_key": "card_ai_dictionary", "href": "/dictionary", "class_name": "recommend-card-pink"},
+            {"tag_key": "placement", "title_key": "nav_test", "body_key": "card_ai_test", "href": "/test", "class_name": "recommend-card-sand"},
+        ]
+    return [
+        {"tag_key": "practice", "title_key": "nav_learning", "body_key": "card_lifelong_learning", "href": "/learning", "class_name": "recommend-card-blue"},
+        {"tag_key": "placement", "title_key": "nav_test", "body_key": "card_lifelong_test", "href": "/test", "class_name": "recommend-card-pink"},
+        {"tag_key": "review", "title_key": "nav_missed", "body_key": "card_lifelong_review", "href": "/review/missed", "class_name": "recommend-card-sand"},
+    ]
 
 
 def render(request: Request, template_name: str, **context) -> HTMLResponse:
@@ -2078,6 +2180,8 @@ def home(request: Request) -> HTMLResponse:
         "home.html",
         personalized_name=profile_name,
         persona_message=translate(lang, persona_message_key(profile_persona)),
+        recommendation_note=translate(lang, recommendation_note_key(profile_persona)),
+        recommendation_cards=recommendation_cards(profile_persona),
         stats=stats,
         bands=bands,
         latest_test=latest_test,
