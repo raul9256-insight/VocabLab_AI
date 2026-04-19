@@ -1,96 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Home | Economist Vocabulary Lab{% endblock %}
+{% block title %}Dashboard | Economist Vocabulary Lab{% endblock %}
 {% block content %}
-{% if show_onboarding %}
-<section class="panel dashboard-v2-card onboarding-shell">
-  <div class="onboarding-grid">
-    <article class="onboarding-step-card">
-      <div class="card-head tight">
-        <div>
-          <p class="eyebrow">{{ t("onboarding_step_1") }}</p>
-          <h1>{{ t("onboarding_title") }}</h1>
-          <p class="lede">{{ t("onboarding_lede") }}</p>
-        </div>
-      </div>
-      <form class="stack-form onboarding-form" method="post" action="/onboarding{% if lang != 'en' %}?lang={{ lang }}{% endif %}">
-        <label>
-          <span>{{ t("onboarding_name_label") }}</span>
-          <input type="text" name="first_name" placeholder="{{ t('onboarding_name_placeholder') }}" maxlength="40">
-          <small>{{ t("onboarding_name_hint") }}</small>
-        </label>
-
-        <div class="onboarding-role-block">
-          <div class="card-head tight">
-            <div>
-              <p class="eyebrow">{{ t("onboarding_step_2") }}</p>
-              <h2>{{ t("onboarding_role_title") }}</h2>
-              <p class="section-subtle">{{ t("onboarding_role_lede") }}</p>
-            </div>
-          </div>
-
-          <div class="persona-grid">
-            <label class="persona-card">
-              <input type="radio" name="persona" value="student">
-              <div class="persona-card-copy">
-                <strong>{{ t("persona_student") }}</strong>
-                <p>{{ t("persona_student_desc") }}</p>
-              </div>
-            </label>
-
-            <label class="persona-card">
-              <input type="radio" name="persona" value="teacher">
-              <div class="persona-card-copy">
-                <strong>{{ t("persona_teacher") }}</strong>
-                <p>{{ t("persona_teacher_desc") }}</p>
-              </div>
-            </label>
-
-            <label class="persona-card featured">
-              <input type="radio" name="persona" value="business_professional" checked>
-              <span class="persona-badge">{{ t("persona_featured") }}</span>
-              <div class="persona-card-copy">
-                <strong>{{ t("persona_business") }}</strong>
-                <p>{{ t("persona_business_desc") }}</p>
-              </div>
-            </label>
-
-            <label class="persona-card featured ai">
-              <input type="radio" name="persona" value="ai_power_user">
-              <span class="persona-badge">{{ t("persona_featured") }}</span>
-              <div class="persona-card-copy">
-                <strong>{{ t("persona_ai") }}</strong>
-                <p>{{ t("persona_ai_desc") }}</p>
-              </div>
-            </label>
-
-            <label class="persona-card wide">
-              <input type="radio" name="persona" value="lifelong_learner">
-              <div class="persona-card-copy">
-                <strong>{{ t("persona_lifelong") }}</strong>
-                <p>{{ t("persona_lifelong_desc") }}</p>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <button class="button onboarding-submit" type="submit">{{ t("onboarding_submit") }}</button>
-      </form>
-    </article>
-
-    <aside class="onboarding-preview-card">
-      <p class="eyebrow">{{ t("personal_dashboard") }}</p>
-      <h2>{{ t("home_title") }}</h2>
-      <p class="section-subtle">{{ t("choose_next_note") }}</p>
-      <div class="preview-chip-row">
-        <span class="preview-chip">{{ t("persona_business") }}</span>
-        <span class="preview-chip">{{ t("persona_ai") }}</span>
-        <span class="preview-chip">{{ t("nav_learning") }}</span>
-      </div>
-      <blockquote class="preview-quote">“{{ t("motto_quote") }}”</blockquote>
-    </aside>
-  </div>
-</section>
-{% else %}
 <section class="panel dashboard-v2-card motto-hero">
   <div class="motto-hero-grid">
     <blockquote class="motto-quote">
@@ -279,5 +189,4 @@
     {% endfor %}
   </div>
 </section>
-{% endif %}
 {% endblock %}

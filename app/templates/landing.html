@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome | Economist Vocabulary Lab</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="landing-body">
+  <main class="landing-shell">
+    <section class="landing-panel">
+      <div class="landing-copy">
+        <p class="eyebrow">{{ t("onboarding_step_1") }}</p>
+        <h1>{{ t("onboarding_title") }}</h1>
+        <p class="lede">{{ t("onboarding_lede") }}</p>
+      </div>
+
+      <form class="stack-form onboarding-form" method="post" action="/onboarding{% if lang != 'en' %}?lang={{ lang }}{% endif %}">
+        <label>
+          <span>{{ t("onboarding_name_label") }}</span>
+          <input type="text" name="first_name" placeholder="{{ t('onboarding_name_placeholder') }}" maxlength="40">
+          <small>{{ t("onboarding_name_hint") }}</small>
+        </label>
+
+        <div class="onboarding-role-block">
+          <div class="card-head tight">
+            <div>
+              <p class="eyebrow">{{ t("onboarding_step_2") }}</p>
+              <h2>{{ t("onboarding_role_title") }}</h2>
+              <p class="section-subtle">{{ t("onboarding_role_lede") }}</p>
+            </div>
+          </div>
+
+          <div class="persona-grid">
+            <label class="persona-card">
+              <input type="radio" name="persona" value="student">
+              <div class="persona-card-copy">
+                <strong>{{ t("persona_student") }}</strong>
+                <p>{{ t("persona_student_desc") }}</p>
+              </div>
+            </label>
+
+            <label class="persona-card">
+              <input type="radio" name="persona" value="teacher">
+              <div class="persona-card-copy">
+                <strong>{{ t("persona_teacher") }}</strong>
+                <p>{{ t("persona_teacher_desc") }}</p>
+              </div>
+            </label>
+
+            <label class="persona-card featured">
+              <input type="radio" name="persona" value="business_professional" checked>
+              <span class="persona-badge">{{ t("persona_featured") }}</span>
+              <div class="persona-card-copy">
+                <strong>{{ t("persona_business") }}</strong>
+                <p>{{ t("persona_business_desc") }}</p>
+              </div>
+            </label>
+
+            <label class="persona-card featured ai">
+              <input type="radio" name="persona" value="ai_power_user">
+              <span class="persona-badge">{{ t("persona_featured") }}</span>
+              <div class="persona-card-copy">
+                <strong>{{ t("persona_ai") }}</strong>
+                <p>{{ t("persona_ai_desc") }}</p>
+              </div>
+            </label>
+
+            <label class="persona-card wide">
+              <input type="radio" name="persona" value="lifelong_learner">
+              <div class="persona-card-copy">
+                <strong>{{ t("persona_lifelong") }}</strong>
+                <p>{{ t("persona_lifelong_desc") }}</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <button class="button onboarding-submit" type="submit">{{ t("onboarding_submit") }}</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

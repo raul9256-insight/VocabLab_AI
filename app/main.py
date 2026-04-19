@@ -2037,11 +2037,18 @@ def finish_learning_session(conn: sqlite3.Connection, session_id: int) -> None:
 
 
 @app.get("/", response_class=HTMLResponse)
+def landing_page(request: Request) -> HTMLResponse:
+    return render(request, "landing.html")
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
     conn = db_conn()
     lang = getattr(request.state, "lang", get_lang(request))
     profile_name = get_profile_name(request)
     profile_persona = get_profile_persona(request)
+    if profile_persona is None:
+        return RedirectResponse(url=build_home_url(lang), status_code=303)
     stats = fetch_stats(conn)
     latest_test = latest_test_result(conn)
     latest_learning = latest_learning_result(conn)
@@ -2059,9 +2066,8 @@ def home(request: Request) -> HTMLResponse:
     return render(
         request,
         "home.html",
-        show_onboarding=profile_persona is None,
         personalized_name=profile_name,
-        persona_message=translate(lang, persona_message_key(profile_persona)) if profile_persona else "",
+        persona_message=translate(lang, persona_message_key(profile_persona)),
         stats=stats,
         bands=bands,
         latest_test=latest_test,
@@ -2081,7 +2087,8 @@ def onboarding_submit(
 ) -> RedirectResponse:
     safe_persona = persona if persona in SUPPORTED_PERSONAS else "lifelong_learner"
     safe_name = (first_name or "").strip()[:40]
-    response = RedirectResponse(url=build_home_url(getattr(request.state, "lang", get_lang(request))), status_code=303)
+    lang = getattr(request.state, "lang", get_lang(request))
+    response = RedirectResponse(url=(f"/dashboard?lang={lang}" if lang != "en" else "/dashboard"), status_code=303)
     response.set_cookie("profile_persona", safe_persona, max_age=60 * 60 * 24 * 365)
     if safe_name:
         response.set_cookie("profile_name", safe_name, max_age=60 * 60 * 24 * 365)

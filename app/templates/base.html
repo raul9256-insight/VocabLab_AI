@@ -10,7 +10,7 @@
 <body class="app-body">
   <div class="app-shell">
     <aside class="app-sidebar">
-      <a class="sidebar-brand" href="/">
+      <a class="sidebar-brand" href="/dashboard">
         <span class="brand-mark brand-mark-word">
           <span class="brand-mark-main">Aa</span>
           <span class="brand-mark-sub">詞</span>
@@ -22,7 +22,7 @@
       </a>
 
       <nav class="sidebar-nav" aria-label="Primary">
-        <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">
+        <a href="/dashboard" class="{% if request.url.path == '/dashboard' %}active{% endif %}">
           <span class="nav-icon">◫</span>
           <span>{{ t("nav_dashboard") }}</span>
         </a>
