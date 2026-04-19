@@ -50,8 +50,10 @@
     <p class="section-note">{{ t("bands_note") }}</p>
     <div class="dictionary-band-grid">
       {% for band in bands %}
-      <a class="dictionary-band-card" href="/dictionary/band/{{ band.best_band_rank }}">
+      <a class="dictionary-band-card band-card-tone-{{ band.tone }}" href="/dictionary/band/{{ band.best_band_rank }}">
         <strong>{{ band.range_label }}</strong>
+        <span class="band-type-name">{{ band.title }}</span>
+        <span class="band-type-subtitle">{{ band.subtitle }}</span>
         <small>{{ band.workbook_total }} words</small>
       </a>
       {% endfor %}

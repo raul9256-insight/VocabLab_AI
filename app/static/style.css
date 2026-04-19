@@ -3285,11 +3285,6 @@ input[type="file"] {
   justify-content: center;
 }
 
-.motto-band-column.is-foundation .motto-band-count {
-  color: #9e1f2f;
-  font-size: 0.94rem;
-}
-
 .motto-band-column-track {
   position: relative;
   width: 100%;
@@ -3303,12 +3298,6 @@ input[type="file"] {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(95, 115, 255, 0.03));
 }
 
-.motto-band-column.is-foundation .motto-band-column-track {
-  max-width: 60px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(158, 31, 47, 0.03));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-}
-
 .motto-band-column-fill {
   width: 100%;
   border-radius: 16px 16px 10px 10px;
@@ -3316,42 +3305,6 @@ input[type="file"] {
   box-shadow:
     0 14px 24px rgba(86, 99, 141, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
-
-.motto-band-column.is-foundation .motto-band-column-fill {
-  background: linear-gradient(180deg, #f2c5cc, #c74d5d 45%, #9e1f2f 76%, #7c1622);
-  box-shadow:
-    0 14px 24px rgba(158, 31, 47, 0.18),
-    0 0 0 1px rgba(255, 255, 255, 0.22) inset,
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
-}
-
-.motto-band-column:nth-child(2) .motto-band-column-fill {
-  background: linear-gradient(180deg, #e0d2de, #b28aa4 50%, #7c536b);
-  box-shadow:
-    0 14px 24px rgba(124, 83, 107, 0.17),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
-
-.motto-band-column:nth-child(3) .motto-band-column-fill {
-  background: linear-gradient(180deg, #efe0cb, #c9a779 52%, #9f7644);
-  box-shadow:
-    0 14px 24px rgba(159, 118, 68, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
-
-.motto-band-column:nth-child(4) .motto-band-column-fill {
-  background: linear-gradient(180deg, #d8dfec, #9aa9c4 52%, #657795);
-  box-shadow:
-    0 14px 24px rgba(101, 119, 149, 0.17),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
-
-.motto-band-column:nth-child(5) .motto-band-column-fill {
-  background: linear-gradient(180deg, #cad5e7, #7789ad 50%, #2f4464);
-  box-shadow:
-    0 14px 24px rgba(47, 68, 100, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .motto-band-label {
@@ -3388,10 +3341,115 @@ input[type="file"] {
   line-height: 1.05;
 }
 
-.motto-band-column.is-foundation .motto-band-title,
-.motto-band-column.is-foundation .motto-band-range,
-.motto-band-column.is-foundation .motto-band-count {
+.band-tone-foundation .motto-band-column-track {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(158, 31, 47, 0.03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.band-tone-foundation .motto-band-column-fill {
+  background: linear-gradient(180deg, #f2c5cc, #c74d5d 45%, #9e1f2f 76%, #7c1622);
+  box-shadow:
+    0 14px 24px rgba(158, 31, 47, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.22) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.band-tone-foundation .motto-band-title,
+.band-tone-foundation .motto-band-range,
+.band-tone-foundation .motto-band-count {
   color: #8f1b2b;
+}
+
+.band-tone-insight .motto-band-column-fill {
+  background: linear-gradient(180deg, #e0d2de, #b28aa4 50%, #7c536b);
+  box-shadow:
+    0 14px 24px rgba(124, 83, 107, 0.17),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.band-tone-insight .motto-band-title,
+.band-tone-insight .motto-band-range,
+.band-tone-insight .motto-band-count {
+  color: #7c536b;
+}
+
+.band-tone-precision .motto-band-column-fill {
+  background: linear-gradient(180deg, #efe0cb, #c9a779 52%, #9f7644);
+  box-shadow:
+    0 14px 24px rgba(159, 118, 68, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.band-tone-precision .motto-band-title,
+.band-tone-precision .motto-band-range,
+.band-tone-precision .motto-band-count {
+  color: #9f7644;
+}
+
+.band-tone-intellectual .motto-band-column-fill {
+  background: linear-gradient(180deg, #d8dfec, #9aa9c4 52%, #657795);
+  box-shadow:
+    0 14px 24px rgba(101, 119, 149, 0.17),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.band-tone-intellectual .motto-band-title,
+.band-tone-intellectual .motto-band-range,
+.band-tone-intellectual .motto-band-count {
+  color: #657795;
+}
+
+.band-tone-elite .motto-band-column-fill {
+  background: linear-gradient(180deg, #cad5e7, #7789ad 50%, #2f4464);
+  box-shadow:
+    0 14px 24px rgba(47, 68, 100, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.band-tone-elite .motto-band-title,
+.band-tone-elite .motto-band-range,
+.band-tone-elite .motto-band-count {
+  color: #2f4464;
+}
+
+.band-type-name {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.band-type-subtitle {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #7d859d;
+}
+
+.band-card-tone-foundation .band-type-name,
+.band-card-tone-foundation strong {
+  color: #8f1b2b;
+}
+
+.band-card-tone-insight .band-type-name,
+.band-card-tone-insight strong {
+  color: #7c536b;
+}
+
+.band-card-tone-precision .band-type-name,
+.band-card-tone-precision strong {
+  color: #9f7644;
+}
+
+.band-card-tone-intellectual .band-type-name,
+.band-card-tone-intellectual strong {
+  color: #657795;
+}
+
+.band-card-tone-elite .band-type-name,
+.band-card-tone-elite strong {
+  color: #2f4464;
 }
 
 .motto-chart-foot {

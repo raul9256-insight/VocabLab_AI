@@ -1448,13 +1448,13 @@ def recommendation_cards(persona: str | None) -> list[dict[str, str]]:
 
 def hero_band_identity(range_label: str) -> dict[str, str]:
     identities = {
-        "2000~": {"title": "基石", "subtitle": "The Foundation"},
-        "500~1999": {"title": "深度洞察", "subtitle": "Insight"},
-        "200~499": {"title": "精準修辭", "subtitle": "Precision"},
-        "100~199": {"title": "智識擴張", "subtitle": "Intellectual"},
-        "50~99": {"title": "菁英語庫", "subtitle": "The Elite Lexicon"},
+        "2000~": {"title": "基石", "subtitle": "The Foundation", "tone": "foundation"},
+        "500~1999": {"title": "深度洞察", "subtitle": "Insight", "tone": "insight"},
+        "200~499": {"title": "精準修辭", "subtitle": "Precision", "tone": "precision"},
+        "100~199": {"title": "智識擴張", "subtitle": "Intellectual", "tone": "intellectual"},
+        "50~99": {"title": "菁英語庫", "subtitle": "The Elite Lexicon", "tone": "elite"},
     }
-    return identities.get(range_label, {"title": range_label, "subtitle": ""})
+    return identities.get(range_label, {"title": range_label, "subtitle": "", "tone": "default"})
 
 
 def slugify_ai_power_value(value: str) -> str:
@@ -1935,6 +1935,7 @@ def decorate_band_rows(rows: list[sqlite3.Row]) -> list[dict]:
     decorated = []
     for row in rows:
         label = row["best_band_label"]
+        identity = hero_band_identity(label.split(" (")[0])
         match = re.search(r"\((\d+)\)", label)
         workbook_total = int(match.group(1)) if match else row["total"]
         decorated.append(
@@ -1944,6 +1945,9 @@ def decorate_band_rows(rows: list[sqlite3.Row]) -> list[dict]:
                 "total": row["total"],
                 "workbook_total": workbook_total,
                 "range_label": label.split(" (")[0],
+                "title": identity["title"],
+                "subtitle": identity["subtitle"],
+                "tone": identity["tone"],
             }
         )
     return sorted(decorated, key=lambda band: band["best_band_rank"], reverse=True)
@@ -2591,6 +2595,7 @@ def home(request: Request) -> HTMLResponse:
             "label": band["range_label"],
             "title": hero_band_identity(band["range_label"])["title"],
             "subtitle": hero_band_identity(band["range_label"])["subtitle"],
+            "tone": hero_band_identity(band["range_label"])["tone"],
             "count": band["workbook_total"],
             "percent": max(18, round((band["workbook_total"] / max_band_total) * 100)),
         }

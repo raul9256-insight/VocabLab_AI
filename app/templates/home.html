@@ -18,7 +18,7 @@
 
       <div class="motto-band-chart visual" aria-label="{{ t('hero_chart_bands') }}">
         {% for band in hero_band_chart %}
-        <div class="motto-band-column{% if loop.first %} is-foundation{% endif %}">
+        <div class="motto-band-column band-tone-{{ band.tone }}">
           <strong class="motto-band-count">{{ band.count }}</strong>
           <div class="motto-band-column-track">
             <div class="motto-band-column-fill" style="height: {{ band.percent }}%"></div>
@@ -213,8 +213,10 @@
   <p class="section-note">{{ t("bands_note") }}</p>
   <div class="band-grid-v2 refined-band-grid">
     {% for band in bands %}
-    <a class="band-card-v2 refined-band-card" href="/dictionary/band/{{ band.best_band_rank }}">
+    <a class="band-card-v2 refined-band-card band-card-tone-{{ band.tone }}" href="/dictionary/band/{{ band.best_band_rank }}">
       <strong>{{ band.range_label }}</strong>
+      <span class="band-type-name">{{ band.title }}</span>
+      <span class="band-type-subtitle">{{ band.subtitle }}</span>
       <small>{{ band.workbook_total }} words</small>
     </a>
     {% endfor %}
