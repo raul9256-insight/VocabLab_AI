@@ -556,6 +556,7 @@ TRANSLATIONS["en"].update(
         "vocabulary_progression": "Vocabulary Progression",
         "meaning_family": "Meaning family",
         "current_stage_label": "Current stage",
+        "next_step_label": "Next step",
         "cluster_domain_label": "Domain",
         "cluster_path_label": "Growth path",
         "progression_attributes": "Progression attributes",
@@ -816,6 +817,7 @@ TRANSLATIONS["zh-Hant"].update(
         "vocabulary_progression": "詞彙進階路徑",
         "meaning_family": "核心語義群組",
         "current_stage_label": "目前階段",
+        "next_step_label": "下一步建議",
         "cluster_domain_label": "主題領域",
         "cluster_path_label": "成長路徑",
         "progression_attributes": "進階屬性",
@@ -1330,6 +1332,7 @@ TRANSLATIONS["zh-Hans"].update(
         "vocabulary_progression": "词汇进阶路径",
         "meaning_family": "核心语义群组",
         "current_stage_label": "目前阶段",
+        "next_step_label": "下一步建议",
         "cluster_domain_label": "主题领域",
         "cluster_path_label": "成长路径",
         "progression_attributes": "进阶属性",
@@ -2276,6 +2279,34 @@ def word_payload(conn: sqlite3.Connection, word_id: int, lang: str = "en") -> di
         }
         for group in progression["relationship_groups"]
     ]
+    preferred_relation_order = {
+        "level_up": 0,
+        "more_business": 1,
+        "more_precise": 2,
+        "more_formal": 3,
+        "more_ai": 4,
+        "more_academic": 5,
+        "related_not_interchangeable": 6,
+    }
+    sorted_groups = sorted(
+        relationship_groups,
+        key=lambda group: preferred_relation_order.get(group["relation_type"], 99),
+    )
+    next_suggestions: list[dict] = []
+    for group in sorted_groups:
+        for item in group["words"]:
+            next_suggestions.append(
+                {
+                    "lemma": item["lemma"],
+                    "band_label": item["band_label"],
+                    "relation_label": group["label"],
+                    "explanation": item["explanation"],
+                }
+            )
+            if len(next_suggestions) >= 3:
+                break
+        if len(next_suggestions) >= 3:
+            break
     source_rows = conn.execute(
         """
         SELECT workbook_name, sheet_name, row_number, pos, meanings_json, extra_json
@@ -2316,6 +2347,7 @@ def word_payload(conn: sqlite3.Connection, word_id: int, lang: str = "en") -> di
         "progression": {
             **progression,
             "relationship_groups": relationship_groups,
+            "next_suggestions": next_suggestions,
         },
     }
 

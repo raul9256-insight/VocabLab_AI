@@ -2368,6 +2368,10 @@ input[type="file"] {
   margin-top: 1rem;
 }
 
+.word-progress-section.compact {
+  margin-top: 0.75rem;
+}
+
 .progression-chip-row {
   gap: 0.5rem;
 }
@@ -2384,6 +2388,10 @@ input[type="file"] {
 
 .progression-relation-row {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.progression-relation-row.simple {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .progression-path-card,
@@ -2416,6 +2424,11 @@ input[type="file"] {
   margin: 0.15rem 0 0;
   color: #505774;
   line-height: 1.5;
+}
+
+.progression-relation-card.simple {
+  gap: 0.35rem;
+  background: white;
 }
 
 .soft-chip {

@@ -132,72 +132,35 @@
             <span class="focus-label">{{ t("current_stage_label") }}</span>
             {% if progression.primary_cluster %}
             <p><strong>{{ progression.primary_cluster.stage_label or t("stage_fallback") }}</strong></p>
-            <p>{{ progression.primary_cluster.role|replace('_', ' ')|title }}</p>
-            <p class="section-note">{{ word.best_band_label }}</p>
+            <p>{{ word.best_band_label }}</p>
             {% else %}
             <p>{{ t("no_progression_data") }}</p>
             {% endif %}
           </section>
         </div>
-
-        {% if progression.attributes %}
-        <section class="word-progress-section">
-          <span class="focus-label">{{ t("progression_attributes") }}</span>
-          <div class="word-chip-row progression-chip-row">
-            <span class="soft-chip">{{ t("formality_level_label") }} {{ progression.attributes.formality_level }}/5</span>
-            <span class="soft-chip">{{ t("precision_level_label") }} {{ progression.attributes.precision_level }}/5</span>
-            <span class="soft-chip">{{ t("exam_relevance_label") }} {{ progression.attributes.exam_relevance }}/5</span>
-            <span class="soft-chip">{{ t("business_relevance_label") }} {{ progression.attributes.business_relevance }}/5</span>
-            <span class="soft-chip">{{ t("ai_relevance_label") }} {{ progression.attributes.ai_relevance }}/5</span>
-            <span class="soft-chip">{{ t("productivity_likelihood_label") }} {{ progression.attributes.productivity_likelihood }}/5</span>
-          </div>
+        {% if progression.attributes and progression.attributes.usage_note %}
+        <section class="word-progress-section compact">
+          <span class="focus-label">{{ t("usage_notes_label") }}</span>
+          <section class="word-info-card">
+            <p>{{ progression.attributes.usage_note }}</p>
+          </section>
         </section>
         {% endif %}
 
-        {% if progression.cluster_path %}
-        <section class="word-progress-section">
-          <span class="focus-label">{{ t("cluster_path_label") }}</span>
-          <div class="progression-path-row">
-            {% for item in progression.cluster_path %}
-            <div class="progression-path-card{% if item.is_current %} active{% endif %}">
+        {% if progression.next_suggestions %}
+        <section class="word-progress-section compact">
+          <span class="focus-label">{{ t("next_step_label") }}</span>
+          <div class="progression-relation-row simple">
+            {% for item in progression.next_suggestions %}
+            <div class="progression-relation-card simple">
               <strong>{{ item.lemma }}</strong>
-              <span>{{ item.stage_label or t("stage_fallback") }}</span>
-              <small>{{ item.band_label }}</small>
+              <small>{{ item.relation_label }}</small>
+              {% if item.explanation %}
+              <p>{{ item.explanation }}</p>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
-        </section>
-        {% endif %}
-
-        <div class="word-definition-grid progression-notes-grid">
-          <section class="word-info-card">
-            <span class="focus-label">{{ t("usage_notes_label") }}</span>
-            <p>{{ progression.attributes.usage_note if progression.attributes and progression.attributes.usage_note else t("no_usage_note") }}</p>
-          </section>
-          <section class="word-info-card">
-            <span class="focus-label">{{ t("register_notes_label") }}</span>
-            <p>{{ progression.attributes.register_note if progression.attributes and progression.attributes.register_note else t("no_usage_note") }}</p>
-          </section>
-        </div>
-
-        {% if progression.relationship_groups %}
-        <section class="word-progress-section">
-          {% for group in progression.relationship_groups %}
-          <div class="progression-relation-block">
-            <span class="focus-label">{{ group.label }}</span>
-            <div class="word-chip-row progression-relation-row">
-              {% for item in group.words %}
-              <div class="progression-relation-card">
-                <strong>{{ item.lemma }}</strong>
-                <small>{{ item.band_label }}</small>
-                {% if item.explanation %}
-                <p>{{ item.explanation }}</p>
-                {% endif %}
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-          {% endfor %}
         </section>
         {% endif %}
         {% else %}
