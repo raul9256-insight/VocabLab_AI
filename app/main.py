@@ -188,7 +188,7 @@ AI_POWER_TRACK = [
 
 TRANSLATIONS = {
     "en": {
-        "brand_title": "Economist Lab",
+        "brand_title": "VocabLab AI",
         "brand_subtitle": "Personal vocabulary system",
         "nav_dashboard": "Dashboard",
         "nav_test": "Level Test",
@@ -207,7 +207,7 @@ TRANSLATIONS = {
         "home_lede": "Build your Economist vocabulary with a clear daily flow: test, learn, and review.",
         "onboarding_step_1": "Step 1",
         "onboarding_step_2": "Step 2",
-        "onboarding_title": "Welcome to Economist Lab",
+        "onboarding_title": "Welcome to VocabLab AI",
         "onboarding_lede": "Let's make your learning experience personal.",
         "onboarding_name_label": "First name",
         "onboarding_name_hint": "Optional. Add your name if you'd like a more personal dashboard.",
@@ -319,7 +319,7 @@ TRANSLATIONS = {
         "card_lifelong_review": "Return to missed words and turn them into long-term memory.",
     },
     "zh-Hant": {
-        "brand_title": "經濟學人詞彙實驗室",
+        "brand_title": "VocabLab AI",
         "brand_subtitle": "個人詞彙學習系統",
         "nav_dashboard": "首頁總覽",
         "nav_test": "程度測驗",
@@ -338,7 +338,7 @@ TRANSLATIONS = {
         "home_lede": "把《經濟學人》詞彙整理成清楚的每日學習流程：測驗、練習、複習。",
         "onboarding_step_1": "第 1 步",
         "onboarding_step_2": "第 2 步",
-        "onboarding_title": "歡迎來到 Economist Lab",
+        "onboarding_title": "歡迎來到 VocabLab AI",
         "onboarding_lede": "先讓我們把你的學習體驗調整得更貼近你。",
         "onboarding_name_label": "名字",
         "onboarding_name_hint": "可選填。如果你願意，我們會用名字讓首頁更有個人感。",
@@ -1056,7 +1056,7 @@ TRANSLATIONS["zh-Hans"] = {key: to_simplified(value) for key, value in TRANSLATI
 TRANSLATIONS["zh-Hans"].update(
     {
         "language_label": "语言",
-        "brand_title": "经济学人词汇实验室",
+        "brand_title": "VocabLab AI",
         "brand_subtitle": "个人词汇学习系统",
         "nav_dashboard": "首页总览",
         "nav_test": "程度检测",
@@ -1075,7 +1075,7 @@ TRANSLATIONS["zh-Hans"].update(
         "home_lede": "把《经济学人》词汇整理成清晰的每日学习流程：检测、练习、复习。",
         "onboarding_step_1": "第 1 步",
         "onboarding_step_2": "第 2 步",
-        "onboarding_title": "欢迎来到 Economist Lab",
+        "onboarding_title": "欢迎来到 VocabLab AI",
         "onboarding_lede": "先让我们把你的学习体验调整得更贴近你。",
         "onboarding_name_label": "名字",
         "onboarding_name_hint": "可选填。如果你愿意，我们会用名字让首页更有个人感。",

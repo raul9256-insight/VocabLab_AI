@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome | Economist Vocabulary Lab</title>
+  <title>Welcome | VocabLab AI</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="landing-body">
@@ -15,9 +15,17 @@
         <p class="lede">{{ t("onboarding_lede") }}</p>
       </div>
 
-      <div class="landing-mode-switch" role="tablist" aria-label="User type">
-        <a href="/{% if lang != 'en' %}?lang={{ lang }}{% endif %}" class="landing-mode-pill {% if landing_mode != 'registered' %}active{% endif %}">{{ t("landing_mode_guest") }}</a>
-        <a href="/?mode=registered{% if lang != 'en' %}&lang={{ lang }}{% endif %}" class="landing-mode-pill {% if landing_mode == 'registered' %}active{% endif %}">{{ t("landing_mode_registered") }}</a>
+      <div class="landing-mode-grid" role="tablist" aria-label="User type">
+        <a href="/{% if lang != 'en' %}?lang={{ lang }}{% endif %}" class="landing-mode-card {% if landing_mode != 'registered' %}active{% endif %}">
+          <span class="landing-mode-card-label">{{ t("landing_mode_guest") }}</span>
+          <strong>{{ t("landing_guest_title") }}</strong>
+          <small>{{ t("landing_guest_lede") }}</small>
+        </a>
+        <a href="/?mode=registered{% if lang != 'en' %}&lang={{ lang }}{% endif %}" class="landing-mode-card {% if landing_mode == 'registered' %}active{% endif %}">
+          <span class="landing-mode-card-label">{{ t("landing_mode_registered") }}</span>
+          <strong>{{ t("landing_registered_title") }}</strong>
+          <small>{{ t("landing_registered_lede") }}</small>
+        </a>
       </div>
 
       {% if auth_error %}
