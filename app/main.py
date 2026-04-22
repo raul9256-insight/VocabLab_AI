@@ -36,6 +36,7 @@ BASE_DIR = Path(__file__).resolve().parent
 EXPORT_DIR = BASE_DIR.parent / "exports"
 DATA_DIR = BASE_DIR.parent / "data"
 AI_POWER_DATA_PATH = DATA_DIR / "ai_power_vocab.json"
+STATIC_ASSET_VERSION = "20260422b"
 app = FastAPI(title="Economist Vocabulary Lab")
 app.add_middleware(
     CORSMiddleware,
@@ -1895,6 +1896,7 @@ def render(request: Request, template_name: str, **context) -> HTMLResponse:
             "profile_initials": profile_initials(get_profile_name(request)),
             "profile_persona": get_profile_persona(request),
             "registered_user": user,
+            "static_version": STATIC_ASSET_VERSION,
             "t": lambda key, **kwargs: translate(lang, key, **kwargs),
             "lang_url": lambda target_lang: build_lang_url(request, target_lang),
             "qtype_label": lambda value: translate_question_type(value, lang),
