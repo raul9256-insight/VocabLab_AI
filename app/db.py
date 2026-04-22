@@ -77,6 +77,50 @@ CREATE TABLE IF NOT EXISTS learning_questions (
     is_correct INTEGER,
     answered_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS vocab_clusters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug TEXT NOT NULL UNIQUE,
+    label TEXT NOT NULL,
+    core_meaning TEXT NOT NULL DEFAULT '',
+    domain TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS vocab_cluster_words (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cluster_id INTEGER NOT NULL REFERENCES vocab_clusters(id) ON DELETE CASCADE,
+    word_id INTEGER NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+    role TEXT NOT NULL DEFAULT 'member',
+    stage_rank INTEGER NOT NULL DEFAULT 1,
+    stage_label TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    UNIQUE(cluster_id, word_id)
+);
+
+CREATE TABLE IF NOT EXISTS word_progression_attributes (
+    word_id INTEGER PRIMARY KEY REFERENCES words(id) ON DELETE CASCADE,
+    formality_level INTEGER NOT NULL DEFAULT 1,
+    precision_level INTEGER NOT NULL DEFAULT 1,
+    exam_relevance INTEGER NOT NULL DEFAULT 0,
+    business_relevance INTEGER NOT NULL DEFAULT 0,
+    ai_relevance INTEGER NOT NULL DEFAULT 0,
+    productivity_likelihood INTEGER NOT NULL DEFAULT 0,
+    domain TEXT NOT NULL DEFAULT '',
+    register_note TEXT NOT NULL DEFAULT '',
+    usage_note TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS word_relationships (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_word_id INTEGER NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+    target_word_id INTEGER NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+    relation_type TEXT NOT NULL,
+    explanation TEXT NOT NULL DEFAULT '',
+    strength INTEGER NOT NULL DEFAULT 1,
+    UNIQUE(source_word_id, target_word_id, relation_type)
+);
 """
 
 
@@ -182,3 +226,118 @@ def parts_of_speech_for_word(conn: sqlite3.Connection, word_id: int) -> list[str
         (word_id,),
     ).fetchall()
     return [row["pos"] for row in rows]
+
+
+def progression_profile_for_word(conn: sqlite3.Connection, word_id: int) -> dict:
+    cluster_rows = conn.execute(
+        """
+        SELECT
+            vocab_clusters.id,
+            vocab_clusters.slug,
+            vocab_clusters.label,
+            vocab_clusters.core_meaning,
+            vocab_clusters.domain,
+            vocab_cluster_words.role,
+            vocab_cluster_words.stage_rank,
+            vocab_cluster_words.stage_label,
+            vocab_cluster_words.note
+        FROM vocab_cluster_words
+        JOIN vocab_clusters ON vocab_clusters.id = vocab_cluster_words.cluster_id
+        WHERE vocab_cluster_words.word_id = ?
+        ORDER BY vocab_cluster_words.stage_rank, vocab_clusters.label
+        """,
+        (word_id,),
+    ).fetchall()
+
+    clusters = [dict(row) for row in cluster_rows]
+    primary_cluster = clusters[0] if clusters else None
+
+    cluster_path: list[dict] = []
+    if primary_cluster:
+        path_rows = conn.execute(
+            """
+            SELECT
+                words.id AS word_id,
+                words.lemma,
+                words.best_band_label,
+                vocab_cluster_words.stage_rank,
+                vocab_cluster_words.stage_label,
+                vocab_cluster_words.role
+            FROM vocab_cluster_words
+            JOIN words ON words.id = vocab_cluster_words.word_id
+            WHERE vocab_cluster_words.cluster_id = ?
+            ORDER BY vocab_cluster_words.stage_rank, words.lemma
+            """,
+            (primary_cluster["id"],),
+        ).fetchall()
+        cluster_path = [
+            {
+                **dict(row),
+                "is_current": row["word_id"] == word_id,
+            }
+            for row in path_rows
+        ]
+
+    attribute_row = conn.execute(
+        """
+        SELECT
+            formality_level,
+            precision_level,
+            exam_relevance,
+            business_relevance,
+            ai_relevance,
+            productivity_likelihood,
+            domain,
+            register_note,
+            usage_note
+        FROM word_progression_attributes
+        WHERE word_id = ?
+        """,
+        (word_id,),
+    ).fetchone()
+    attributes = dict(attribute_row) if attribute_row else None
+
+    relationship_rows = conn.execute(
+        """
+        SELECT
+            word_relationships.relation_type,
+            word_relationships.explanation,
+            word_relationships.strength,
+            words.id AS target_word_id,
+            words.lemma AS target_lemma,
+            words.best_band_label AS target_band_label
+        FROM word_relationships
+        JOIN words ON words.id = word_relationships.target_word_id
+        WHERE word_relationships.source_word_id = ?
+        ORDER BY word_relationships.relation_type, word_relationships.strength DESC, words.lemma
+        """,
+        (word_id,),
+    ).fetchall()
+
+    grouped_relationships: list[dict] = []
+    groups: dict[str, list[dict]] = {}
+    for row in relationship_rows:
+        groups.setdefault(row["relation_type"], []).append(
+            {
+                "word_id": row["target_word_id"],
+                "lemma": row["target_lemma"],
+                "band_label": row["target_band_label"],
+                "explanation": row["explanation"],
+                "strength": row["strength"],
+            }
+        )
+    for relation_type, words in groups.items():
+        grouped_relationships.append(
+            {
+                "relation_type": relation_type,
+                "words": words,
+            }
+        )
+
+    return {
+        "clusters": clusters,
+        "primary_cluster": primary_cluster,
+        "cluster_path": cluster_path,
+        "attributes": attributes,
+        "relationship_groups": grouped_relationships,
+    }

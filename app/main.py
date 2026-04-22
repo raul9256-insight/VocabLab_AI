@@ -25,8 +25,17 @@ from app.db import (
     get_connection,
     letters_for_band,
     parts_of_speech_for_word,
+    progression_profile_for_word,
 )
-from app.enrichment_io import export_ai_power_template, export_template, import_ai_power_rows, import_enrichment_rows, iter_import_rows
+from app.enrichment_io import (
+    export_ai_power_template,
+    export_taxonomy_template,
+    export_template,
+    import_ai_power_rows,
+    import_enrichment_rows,
+    import_taxonomy_rows,
+    iter_import_rows,
+)
 from app.openai_enrichment import generate_enrichment_batch, load_env_file
 from app.openai_speech import speech_api_ready, synthesize_pronunciation_audio
 from economist_vocab import DEFAULT_DB_PATH
@@ -543,6 +552,24 @@ TRANSLATIONS["en"].update(
         "no_example_sentence": "No example sentence added yet.",
         "synonyms_label": "Synonyms",
         "no_synonyms": "No synonyms added yet.",
+        "progression_section": "Progression",
+        "vocabulary_progression": "Vocabulary Progression",
+        "meaning_family": "Meaning family",
+        "current_stage_label": "Current stage",
+        "cluster_domain_label": "Domain",
+        "cluster_path_label": "Growth path",
+        "progression_attributes": "Progression attributes",
+        "formality_level_label": "Formality",
+        "precision_level_label": "Precision",
+        "exam_relevance_label": "Exam relevance",
+        "business_relevance_label": "Business relevance",
+        "ai_relevance_label": "AI relevance",
+        "productivity_likelihood_label": "Active-use potential",
+        "usage_notes_label": "Usage notes",
+        "register_notes_label": "Register notes",
+        "no_progression_data": "No progression mapping added yet.",
+        "no_usage_note": "No usage note added yet.",
+        "stage_fallback": "General stage",
         "source_section": "Source",
         "workbook_references": "Workbook references",
         "pos_not_provided": "Part of speech not provided",
@@ -785,6 +812,24 @@ TRANSLATIONS["zh-Hant"].update(
         "no_example_sentence": "尚未加入例句。",
         "synonyms_label": "同義詞",
         "no_synonyms": "尚未加入同義詞。",
+        "progression_section": "進階路徑",
+        "vocabulary_progression": "詞彙進階路徑",
+        "meaning_family": "核心語義群組",
+        "current_stage_label": "目前階段",
+        "cluster_domain_label": "主題領域",
+        "cluster_path_label": "成長路徑",
+        "progression_attributes": "進階屬性",
+        "formality_level_label": "正式程度",
+        "precision_level_label": "精準程度",
+        "exam_relevance_label": "考試相關度",
+        "business_relevance_label": "商務相關度",
+        "ai_relevance_label": "AI 指令相關度",
+        "productivity_likelihood_label": "主動產出機率",
+        "usage_notes_label": "使用說明",
+        "register_notes_label": "語域提醒",
+        "no_progression_data": "尚未加入詞彙進階路徑。",
+        "no_usage_note": "尚未加入使用說明。",
+        "stage_fallback": "一般階段",
         "source_section": "來源",
         "workbook_references": "工作表來源",
         "pos_not_provided": "原始資料未提供詞性",
@@ -1281,6 +1326,24 @@ TRANSLATIONS["zh-Hans"].update(
         "no_example_sentence": "尚未加入例句。",
         "synonyms_label": "同义词",
         "no_synonyms": "尚未加入同义词。",
+        "progression_section": "进阶路径",
+        "vocabulary_progression": "词汇进阶路径",
+        "meaning_family": "核心语义群组",
+        "current_stage_label": "目前阶段",
+        "cluster_domain_label": "主题领域",
+        "cluster_path_label": "成长路径",
+        "progression_attributes": "进阶属性",
+        "formality_level_label": "正式程度",
+        "precision_level_label": "精准程度",
+        "exam_relevance_label": "考试相关度",
+        "business_relevance_label": "商务相关度",
+        "ai_relevance_label": "AI 指令相关度",
+        "productivity_likelihood_label": "主动产出机率",
+        "usage_notes_label": "使用说明",
+        "register_notes_label": "语域提醒",
+        "no_progression_data": "尚未加入词汇进阶路径。",
+        "no_usage_note": "尚未加入使用说明。",
+        "stage_fallback": "一般阶段",
         "source_section": "来源",
         "workbook_references": "工作表来源",
         "pos_not_provided": "原始资料未提供词性",
@@ -1495,6 +1558,39 @@ def translate_status(value: str, lang: str = "en") -> str:
         "zh-Hans": {"new": "新词", "learning": "学习中", "review": "待复习", "mastered": "已熟悉"},
     }
     return labels.get(lang, labels["en"]).get(value, value)
+
+
+def translate_relation_type(value: str, lang: str = "en") -> str:
+    labels = {
+        "en": {
+            "level_up": "Level-up suggestions",
+            "more_formal": "More formal alternatives",
+            "more_precise": "More precise alternatives",
+            "more_business": "Business alternatives",
+            "more_academic": "Academic alternatives",
+            "more_ai": "AI prompt alternatives",
+            "related_not_interchangeable": "Related but not interchangeable",
+        },
+        "zh-Hant": {
+            "level_up": "升級建議",
+            "more_formal": "更正式的替代詞",
+            "more_precise": "更精準的替代詞",
+            "more_business": "更適合商務情境",
+            "more_academic": "更適合學術情境",
+            "more_ai": "更適合 AI 指令",
+            "related_not_interchangeable": "相關但不能直接互換",
+        },
+        "zh-Hans": {
+            "level_up": "升级建议",
+            "more_formal": "更正式的替代词",
+            "more_precise": "更精准的替代词",
+            "more_business": "更适合商务情境",
+            "more_academic": "更适合学术情境",
+            "more_ai": "更适合 AI 指令",
+            "related_not_interchangeable": "相关但不能直接互换",
+        },
+    }
+    return labels.get(lang, labels["en"]).get(value, value.replace("_", " ").title())
 
 
 def build_lang_url(request: Request, lang: str) -> str:
@@ -2172,6 +2268,14 @@ def parts_of_speech_map_for_words(conn: sqlite3.Connection, word_ids: list[int])
 def word_payload(conn: sqlite3.Connection, word_id: int, lang: str = "en") -> dict:
     row = word_row(conn, word_id)
     parts_of_speech = parts_of_speech_for_word(conn, word_id)
+    progression = progression_profile_for_word(conn, word_id)
+    relationship_groups = [
+        {
+            **group,
+            "label": translate_relation_type(group["relation_type"], lang),
+        }
+        for group in progression["relationship_groups"]
+    ]
     source_rows = conn.execute(
         """
         SELECT workbook_name, sheet_name, row_number, pos, meanings_json, extra_json
@@ -2209,6 +2313,10 @@ def word_payload(conn: sqlite3.Connection, word_id: int, lang: str = "en") -> di
         "synonyms": synonyms,
         "example_sentence": example_sentence,
         "sentence_distractors": json_loads(enrichment["sentence_distractors_json"]) if enrichment else [],
+        "progression": {
+            **progression,
+            "relationship_groups": relationship_groups,
+        },
     }
 
 
@@ -3993,6 +4101,43 @@ async def bulk_import_upload(file: UploadFile = File(...)) -> RedirectResponse:
     stats = import_enrichment_rows(conn, rows)
     return RedirectResponse(
         url=f"/bulk-import?imported=1&updated={stats['updated']}&missing={stats['missing_words']}",
+        status_code=303,
+    )
+
+
+@app.post("/bulk-import/export-taxonomy")
+def bulk_export_taxonomy_template(
+    band_rank: str = Form(""),
+    limit: str = Form("300"),
+) -> RedirectResponse:
+    conn = db_conn()
+    EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+    selected_band = int(band_rank) if band_rank.strip() else None
+    selected_limit = int(limit) if limit.strip() else None
+    band_suffix = f"band-{selected_band}" if selected_band is not None else "all-bands"
+    output_path = EXPORT_DIR / f"taxonomy-template-{band_suffix}.xlsx"
+    export_taxonomy_template(
+        conn,
+        output_path,
+        band_rank=selected_band,
+        limit=selected_limit,
+    )
+    return RedirectResponse(url="/bulk-import?taxonomy_exported=1", status_code=303)
+
+
+@app.post("/bulk-import/upload-taxonomy")
+async def bulk_import_taxonomy_upload(file: UploadFile = File(...)) -> RedirectResponse:
+    conn = db_conn()
+    content = await file.read()
+    rows = iter_import_rows(file.filename or "", content)
+    stats = import_taxonomy_rows(conn, rows)
+    return RedirectResponse(
+        url=(
+            "/bulk-import?"
+            f"taxonomy_imported=1&updated={stats['updated']}"
+            f"&missing={stats['missing_words']}"
+            f"&related_missing={stats['missing_related_words']}"
+        ),
         status_code=303,
     )
 

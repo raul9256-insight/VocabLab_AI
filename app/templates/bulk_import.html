@@ -23,6 +23,16 @@
     <strong>Import complete.</strong> Updated {{ request.query_params.get('updated') or 0 }} words. Missing words: {{ request.query_params.get('missing') or 0 }}.
   </div>
   {% endif %}
+  {% if request.query_params.get('taxonomy_exported') %}
+  <div class="callout">
+    <strong>Taxonomy template exported.</strong> Check the <code>{{ export_dir }}</code> folder for the new Excel file.
+  </div>
+  {% endif %}
+  {% if request.query_params.get('taxonomy_imported') %}
+  <div class="callout">
+    <strong>Taxonomy import complete.</strong> Updated {{ request.query_params.get('updated') or 0 }} rows. Missing words: {{ request.query_params.get('missing') or 0 }}. Missing related words: {{ request.query_params.get('related_missing') or 0 }}.
+  </div>
+  {% endif %}
   {% if request.query_params.get('generated') %}
   <div class="callout">
     <strong>AI generation complete.</strong> Selected {{ request.query_params.get('selected') or 0 }} words and updated {{ request.query_params.get('updated') or 0 }} words.
@@ -104,6 +114,51 @@
         <input type="file" name="file" accept=".xlsx,.csv" required>
       </label>
       <button class="button" type="submit">Import Enrichment</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>4. Export Taxonomy Template</h2>
+    <p>Export a progression-mapping template so you can organize basic, exam, business, and AI vocabulary paths in Excel first.</p>
+    <form method="post" action="/bulk-import/export-taxonomy" class="stack-form">
+      <label>
+        <span>Frequency Band</span>
+        <select name="band_rank">
+          <option value="">All bands</option>
+          {% for band in bands %}
+          <option value="{{ band.best_band_rank }}">{{ band.best_band_label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        <span>How many words</span>
+        <input type="number" name="limit" value="300" min="1" max="{{ stats.total_words }}">
+      </label>
+      <button class="button" type="submit">Export Taxonomy Template</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>5. Fill In The Taxonomy File</h2>
+    <p>Recommended columns to curate first:</p>
+    <ul>
+      <li><strong>cluster_slug</strong> and <strong>cluster_label</strong>: define the meaning family, for example <code>importance</code></li>
+      <li><strong>stage_rank</strong> and <strong>stage_label</strong>: describe growth such as basic, exam, business, or expert</li>
+      <li><strong>formality_level</strong>, <strong>precision_level</strong>, <strong>exam_relevance</strong>, <strong>business_relevance</strong>, <strong>ai_relevance</strong>: map how the word evolves across contexts</li>
+      <li><strong>related_word</strong> and <strong>relation_type</strong>: link upgrade words such as <code>important -> crucial</code></li>
+      <li><strong>relation_explanation</strong> and <strong>usage_note</strong>: explain why the target word is not just harder, but different in use</li>
+    </ul>
+  </article>
+
+  <article class="panel">
+    <h2>6. Upload The Taxonomy File</h2>
+    <p>Supported formats: <code>.xlsx</code> and <code>.csv</code>.</p>
+    <form method="post" action="/bulk-import/upload-taxonomy" enctype="multipart/form-data" class="stack-form">
+      <label>
+        <span>Completed taxonomy file</span>
+        <input type="file" name="file" accept=".xlsx,.csv" required>
+      </label>
+      <button class="button" type="submit">Import Taxonomy</button>
     </form>
   </article>
 </section>

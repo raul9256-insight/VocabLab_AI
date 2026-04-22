@@ -2357,6 +2357,67 @@ input[type="file"] {
   grid-template-columns: repeat(auto-fit, minmax(120px, max-content));
 }
 
+.progression-summary-grid,
+.progression-notes-grid {
+  margin-bottom: 1rem;
+}
+
+.word-progress-section {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.progression-chip-row {
+  gap: 0.5rem;
+}
+
+.progression-path-row,
+.progression-relation-row {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.progression-path-row {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.progression-relation-row {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.progression-path-card,
+.progression-relation-card {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(112, 125, 184, 0.14);
+  background: rgba(246, 247, 255, 0.92);
+}
+
+.progression-path-card.active {
+  border-color: rgba(95, 115, 255, 0.42);
+  background: linear-gradient(180deg, rgba(95, 115, 255, 0.13), rgba(95, 115, 255, 0.06));
+  box-shadow: 0 10px 24px rgba(95, 115, 255, 0.12);
+}
+
+.progression-path-card span,
+.progression-path-card small,
+.progression-relation-card small {
+  color: #6c7392;
+}
+
+.progression-relation-block + .progression-relation-block {
+  margin-top: 1rem;
+}
+
+.progression-relation-card p {
+  margin: 0.15rem 0 0;
+  color: #505774;
+  line-height: 1.5;
+}
+
 .soft-chip {
   display: inline-flex;
   align-items: center;
