@@ -91,11 +91,24 @@ def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
     conn.executescript(WEB_SCHEMA)
     ensure_column(conn, "word_enrichment", "english_definition", "TEXT NOT NULL DEFAULT ''")
     ensure_column(conn, "word_enrichment", "pronunciation", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "users", "email", "TEXT")
+    ensure_column(conn, "users", "password_hash", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "users", "display_name", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "users", "persona", "TEXT NOT NULL DEFAULT 'lifelong_learner'")
     conn.execute(
         """
         INSERT INTO users (id, username)
         VALUES (1, 'lawrence')
         ON CONFLICT(id) DO NOTHING
+        """
+    )
+    conn.execute(
+        """
+        UPDATE users
+        SET email = COALESCE(NULLIF(email, ''), 'lawrence@example.local'),
+            display_name = COALESCE(NULLIF(display_name, ''), 'Lawrence'),
+            persona = COALESCE(NULLIF(persona, ''), 'lifelong_learner')
+        WHERE id = 1
         """
     )
     conn.commit()

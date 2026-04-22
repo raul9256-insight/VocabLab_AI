@@ -15,7 +15,131 @@
         <p class="lede">{{ t("onboarding_lede") }}</p>
       </div>
 
+      <div class="landing-mode-switch" role="tablist" aria-label="User type">
+        <a href="/{% if lang != 'en' %}?lang={{ lang }}{% endif %}" class="landing-mode-pill {% if landing_mode != 'registered' %}active{% endif %}">{{ t("landing_mode_guest") }}</a>
+        <a href="/?mode=registered{% if lang != 'en' %}&lang={{ lang }}{% endif %}" class="landing-mode-pill {% if landing_mode == 'registered' %}active{% endif %}">{{ t("landing_mode_registered") }}</a>
+      </div>
+
+      {% if auth_error %}
+      <div class="landing-auth-error">{{ t(auth_error) }}</div>
+      {% endif %}
+
+      {% if landing_mode == 'registered' %}
+      <section class="landing-auth-grid">
+        <div class="landing-auth-card">
+          <div class="card-head tight">
+            <div>
+              <p class="eyebrow">{{ t("landing_mode_registered") }}</p>
+              <h2>{{ t("signup_title") }}</h2>
+              <p class="section-subtle">{{ t("landing_registered_lede") }}</p>
+            </div>
+          </div>
+
+          <form class="stack-form onboarding-form" method="post" action="/auth/signup{% if lang != 'en' %}?lang={{ lang }}{% endif %}">
+            <label>
+              <span>{{ t("signup_name_label") }}</span>
+              <input type="text" name="display_name" placeholder="{{ t('signup_name_placeholder') }}" maxlength="40">
+            </label>
+
+            <label>
+              <span>{{ t("signup_email_label") }}</span>
+              <input type="email" name="email" placeholder="{{ t('signup_email_placeholder') }}" maxlength="160">
+            </label>
+
+            <label>
+              <span>{{ t("signup_password_label") }}</span>
+              <input type="password" name="password" placeholder="{{ t('signup_password_placeholder') }}" minlength="8" maxlength="120">
+            </label>
+
+            <div class="onboarding-role-block">
+              <div class="card-head tight">
+                <div>
+                  <p class="eyebrow">{{ t("onboarding_step_2") }}</p>
+                  <h2>{{ t("onboarding_role_title") }}</h2>
+                  <p class="section-subtle">{{ t("onboarding_role_lede") }}</p>
+                </div>
+              </div>
+
+              <div class="persona-grid">
+                <label class="persona-card">
+                  <input type="radio" name="persona" value="student">
+                  <div class="persona-card-copy">
+                    <strong>{{ t("persona_student") }}</strong>
+                    <p>{{ t("persona_student_desc") }}</p>
+                  </div>
+                </label>
+
+                <label class="persona-card">
+                  <input type="radio" name="persona" value="teacher">
+                  <div class="persona-card-copy">
+                    <strong>{{ t("persona_teacher") }}</strong>
+                    <p>{{ t("persona_teacher_desc") }}</p>
+                  </div>
+                </label>
+
+                <label class="persona-card featured">
+                  <input type="radio" name="persona" value="business_professional" checked>
+                  <span class="persona-badge">{{ t("persona_featured") }}</span>
+                  <div class="persona-card-copy">
+                    <strong>{{ t("persona_business") }}</strong>
+                    <p>{{ t("persona_business_desc") }}</p>
+                  </div>
+                </label>
+
+                <label class="persona-card featured ai">
+                  <input type="radio" name="persona" value="ai_power_user">
+                  <span class="persona-badge">{{ t("persona_featured") }}</span>
+                  <div class="persona-card-copy">
+                    <strong>{{ t("persona_ai") }}</strong>
+                    <p>{{ t("persona_ai_desc") }}</p>
+                  </div>
+                </label>
+
+                <label class="persona-card wide">
+                  <input type="radio" name="persona" value="lifelong_learner">
+                  <div class="persona-card-copy">
+                    <strong>{{ t("persona_lifelong") }}</strong>
+                    <p>{{ t("persona_lifelong_desc") }}</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <button class="button onboarding-submit" type="submit">{{ t("signup_submit") }}</button>
+          </form>
+        </div>
+
+        <div class="landing-auth-card">
+          <div class="card-head tight">
+            <div>
+              <p class="eyebrow">{{ t("auth_or") }}</p>
+              <h2>{{ t("login_title") }}</h2>
+              <p class="section-subtle">{{ t("landing_registered_title") }}</p>
+            </div>
+          </div>
+
+          <form class="stack-form onboarding-form" method="post" action="/auth/login{% if lang != 'en' %}?lang={{ lang }}{% endif %}">
+            <label>
+              <span>{{ t("login_email_label") }}</span>
+              <input type="email" name="email" placeholder="{{ t('signup_email_placeholder') }}" maxlength="160">
+            </label>
+
+            <label>
+              <span>{{ t("login_password_label") }}</span>
+              <input type="password" name="password" placeholder="{{ t('signup_password_placeholder') }}" minlength="8" maxlength="120">
+            </label>
+
+            <button class="button onboarding-submit" type="submit">{{ t("login_submit") }}</button>
+          </form>
+        </div>
+      </section>
+      {% else %}
       <form class="stack-form onboarding-form" method="post" action="/onboarding{% if lang != 'en' %}?lang={{ lang }}{% endif %}">
+        <div class="landing-section-copy">
+          <h2>{{ t("landing_guest_title") }}</h2>
+          <p class="section-subtle">{{ t("landing_guest_lede") }}</p>
+        </div>
+
         <label>
           <span>{{ t("onboarding_name_label") }}</span>
           <input type="text" name="first_name" placeholder="{{ t('onboarding_name_placeholder') }}" maxlength="40">
@@ -78,6 +202,7 @@
 
         <button class="button onboarding-submit" type="submit">{{ t("onboarding_submit") }}</button>
       </form>
+      {% endif %}
     </section>
   </main>
 </body>

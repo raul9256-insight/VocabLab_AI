@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import hmac
 import os
 import random
 import re
+import secrets
 import sqlite3
 from collections import defaultdict
 from pathlib import Path
 from urllib.parse import urlencode
 
-from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import Body, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -33,6 +37,18 @@ EXPORT_DIR = BASE_DIR.parent / "exports"
 DATA_DIR = BASE_DIR.parent / "data"
 AI_POWER_DATA_PATH = DATA_DIR / "ai_power_vocab.json"
 app = FastAPI(title="Economist Vocabulary Lab")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+        "https://economist-vocab.onrender.com",
+    ],
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -199,6 +215,31 @@ TRANSLATIONS = {
         "onboarding_role_title": "Who are you?",
         "onboarding_role_lede": "Pick the track that fits you best. We'll tailor the dashboard and recommendations right away.",
         "onboarding_submit": "Continue to my dashboard",
+        "landing_mode_guest": "One-time user",
+        "landing_mode_registered": "Registered user",
+        "landing_guest_title": "Quick start without an account",
+        "landing_guest_lede": "Use the current one-time setup, pick your role, and go straight into the dashboard.",
+        "landing_registered_title": "Sign up or log in",
+        "landing_registered_lede": "Create your account to keep your name, persona, and future learning history in one place.",
+        "signup_title": "Create account",
+        "signup_name_label": "Display name",
+        "signup_name_placeholder": "Your name",
+        "signup_email_label": "Email",
+        "signup_email_placeholder": "you@example.com",
+        "signup_password_label": "Password",
+        "signup_password_placeholder": "Create a password",
+        "signup_submit": "Sign up",
+        "login_title": "Log in",
+        "login_email_label": "Email",
+        "login_password_label": "Password",
+        "login_submit": "Log in",
+        "auth_or": "or",
+        "auth_logout": "Log out",
+        "auth_error_email_taken": "This email is already registered.",
+        "auth_error_invalid_login": "Email or password is incorrect.",
+        "auth_error_password_short": "Password must be at least 8 characters.",
+        "auth_error_name_required": "Please add your display name.",
+        "auth_error_email_required": "Please add a valid email.",
         "persona_student": "Student",
         "persona_student_desc": "High school or university learners building stronger academic English.",
         "persona_teacher": "Teacher / Educator",
@@ -305,6 +346,31 @@ TRANSLATIONS = {
         "onboarding_role_title": "你目前是哪一類使用者？",
         "onboarding_role_lede": "請選最符合你的角色，我們會立刻調整首頁和推薦內容。",
         "onboarding_submit": "進入我的個人化首頁",
+        "landing_mode_guest": "單次使用者",
+        "landing_mode_registered": "註冊使用者",
+        "landing_guest_title": "不需帳號，直接開始",
+        "landing_guest_lede": "沿用目前的一次性設定，選擇角色後就能直接進入首頁。",
+        "landing_registered_title": "註冊或登入帳號",
+        "landing_registered_lede": "建立帳號後，可以把名字、角色與之後的學習歷程保留在同一個帳號內。",
+        "signup_title": "建立帳號",
+        "signup_name_label": "顯示名稱",
+        "signup_name_placeholder": "你的名字",
+        "signup_email_label": "電子郵件",
+        "signup_email_placeholder": "you@example.com",
+        "signup_password_label": "密碼",
+        "signup_password_placeholder": "建立密碼",
+        "signup_submit": "註冊",
+        "login_title": "登入帳號",
+        "login_email_label": "電子郵件",
+        "login_password_label": "密碼",
+        "login_submit": "登入",
+        "auth_or": "或",
+        "auth_logout": "登出",
+        "auth_error_email_taken": "這個電子郵件已經註冊過了。",
+        "auth_error_invalid_login": "電子郵件或密碼不正確。",
+        "auth_error_password_short": "密碼至少需要 8 個字元。",
+        "auth_error_name_required": "請填寫顯示名稱。",
+        "auth_error_email_required": "請輸入有效的電子郵件。",
         "persona_student": "學生",
         "persona_student_desc": "高中、大學或研究所階段，想建立更強的學術英語能力。",
         "persona_teacher": "教師 / 教育工作者",
@@ -607,9 +673,9 @@ TRANSLATIONS["en"].update(
         "ai_power_examples_title": "Why this track is different",
         "ai_power_examples_lede": "Each category comes with normal usage and AI usage, so the vocabulary becomes immediately usable instead of purely academic.",
         "ai_power_template_title": "AI Power import template",
-        "ai_power_template_lede": "Download an Excel sheet prefilled with categories and starter terms, then complete Traditional Chinese, Simplified Chinese, example sentences, and AI prompt examples in batches.",
+        "ai_power_template_lede": "Download an Excel sheet prefilled with categories and starter terms, then complete Traditional Chinese, Simplified Chinese, example sentences, and the five AI prompt scenarios in batches.",
         "ai_power_download_template": "Download Excel Template",
-        "ai_power_template_note": "Suggested columns: English, Traditional Chinese, Simplified Chinese, example sentence, AI prompt example, and notes.",
+        "ai_power_template_note": "Suggested columns: English, Traditional Chinese, Simplified Chinese, example sentence, a general AI prompt example, five scenario-specific AI prompts, and notes.",
         "ai_power_upload_title": "Upload completed AI Power file",
         "ai_power_upload_button": "Import AI Power File",
         "ai_power_upload_success": "Import complete. Updated {count} AI Power entries.",
@@ -849,9 +915,9 @@ TRANSLATIONS["zh-Hant"].update(
         "ai_power_examples_title": "這條路線的差異",
         "ai_power_examples_lede": "每個分類都同時提供一般用法與 AI 用法，讓詞彙不是只會背，而是能立刻用。",
         "ai_power_template_title": "AI Power 匯入模板",
-        "ai_power_template_lede": "下載已預填分類與起始詞的 Excel，之後可批量補上繁中、簡中、一般例句與 AI 提示範例。",
+        "ai_power_template_lede": "下載已預填分類與起始詞的 Excel，之後可批量補上繁中、簡中、一般例句，以及 5 個 AI 提示使用情境。",
         "ai_power_download_template": "下載 Excel 模板",
-        "ai_power_template_note": "建議欄位：英文、繁體中文、簡體中文、一般例句、AI 提示範例與備註。",
+        "ai_power_template_note": "建議欄位：英文、繁體中文、簡體中文、一般例句、通用 AI 提示範例、5 個情境化 AI 提示欄位，以及備註。",
         "ai_power_upload_title": "上傳已完成的 AI Power 檔案",
         "ai_power_upload_button": "匯入 AI Power 檔案",
         "ai_power_upload_success": "匯入完成，已更新 {count} 筆 AI Power 詞彙。",
@@ -1017,6 +1083,31 @@ TRANSLATIONS["zh-Hans"].update(
         "onboarding_role_title": "你目前是哪一类使用者？",
         "onboarding_role_lede": "请选择最符合你的角色，我们会立刻调整首页和推荐内容。",
         "onboarding_submit": "进入我的个性化首页",
+        "landing_mode_guest": "单次使用者",
+        "landing_mode_registered": "注册用户",
+        "landing_guest_title": "不需账号，直接开始",
+        "landing_guest_lede": "沿用目前的一次性设置，选择角色后就能直接进入首页。",
+        "landing_registered_title": "注册或登录账号",
+        "landing_registered_lede": "建立账号后，可以把名字、角色与之后的学习记录保留在同一个账号内。",
+        "signup_title": "创建账号",
+        "signup_name_label": "显示名称",
+        "signup_name_placeholder": "你的名字",
+        "signup_email_label": "电子邮件",
+        "signup_email_placeholder": "you@example.com",
+        "signup_password_label": "密码",
+        "signup_password_placeholder": "创建密码",
+        "signup_submit": "注册",
+        "login_title": "登录账号",
+        "login_email_label": "电子邮件",
+        "login_password_label": "密码",
+        "login_submit": "登录",
+        "auth_or": "或",
+        "auth_logout": "登出",
+        "auth_error_email_taken": "这个电子邮件已经注册过了。",
+        "auth_error_invalid_login": "电子邮件或密码不正确。",
+        "auth_error_password_short": "密码至少需要 8 个字符。",
+        "auth_error_name_required": "请填写显示名称。",
+        "auth_error_email_required": "请输入有效的电子邮件。",
         "persona_student": "学生",
         "persona_student_desc": "高中、大学或研究所阶段，想建立更强的学术英语能力。",
         "persona_teacher": "教师 / 教育工作者",
@@ -1375,7 +1466,42 @@ def build_home_url(lang: str) -> str:
     return f"/?lang={lang}" if lang != "en" else "/"
 
 
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 120000).hex()
+    return f"{salt}${digest}"
+
+
+def verify_password(password: str, password_hash: str) -> bool:
+    if not password_hash or "$" not in password_hash:
+        return False
+    salt, expected = password_hash.split("$", 1)
+    actual = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 120000).hex()
+    return hmac.compare_digest(actual, expected)
+
+
+def normalized_email(value: str) -> str:
+    return (value or "").strip().lower()[:160]
+
+
+def valid_email(value: str) -> bool:
+    return bool(re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", value or ""))
+
+
+def registered_user_row(request: Request) -> sqlite3.Row | None:
+    raw = (request.cookies.get("registered_user_id") or "").strip()
+    if not raw.isdigit():
+        return None
+    conn = db_conn()
+    return conn.execute("SELECT * FROM users WHERE id = ?", (int(raw),)).fetchone()
+
+
 def get_profile_name(request: Request) -> str:
+    user = registered_user_row(request)
+    if user is not None:
+        display_name = (user["display_name"] or "").strip()
+        if display_name:
+            return display_name[:40]
     raw = (request.cookies.get("profile_name") or "").strip()
     return raw[:40] if raw else "Lawrence"
 
@@ -1390,6 +1516,11 @@ def profile_initials(name: str) -> str:
 
 
 def get_profile_persona(request: Request) -> str | None:
+    user = registered_user_row(request)
+    if user is not None:
+        persona = (user["persona"] or "").strip()
+        if persona in SUPPORTED_PERSONAS:
+            return persona
     raw = (request.cookies.get("profile_persona") or "").strip()
     return raw if raw in SUPPORTED_PERSONAS else None
 
@@ -1521,6 +1652,11 @@ def ai_power_track(lang: str = "en") -> dict:
                     "simplified_chinese": entry.get("simplified_chinese", ""),
                     "example_sentence": entry.get("example_sentence", ""),
                     "ai_prompt_example": entry.get("ai_prompt_example", ""),
+                    "prompt_strategic": entry.get("prompt_strategic", ""),
+                    "prompt_creative": entry.get("prompt_creative", ""),
+                    "prompt_technical": entry.get("prompt_technical", ""),
+                    "prompt_finance": entry.get("prompt_finance", ""),
+                    "prompt_education": entry.get("prompt_education", ""),
                     "ipa": entry.get("ipa", ""),
                     "completed": is_completed,
                 }
@@ -1629,27 +1765,27 @@ def ai_prompt_sections(entry: dict, lang: str = "en") -> list[dict[str, str]]:
             {
                 "title": "專業諮詢與管理",
                 "subtitle": "Strategic & Professional Services",
-                "prompt": f"{base_prompt} 請同時補上利害關係人、風險、優先順序與下一步建議。",
+                "prompt": entry.get("prompt_strategic", "").strip() or f"{base_prompt} 請同時補上利害關係人、風險、優先順序與下一步建議。",
             },
             {
                 "title": "創意與內容行銷",
                 "subtitle": "Creative & Marketing Content",
-                "prompt": f"{base_prompt} 請把語氣調整得更具吸引力，並加入受眾洞察、主訊息與內容角度。",
+                "prompt": entry.get("prompt_creative", "").strip() or f"{base_prompt} 請把語氣調整得更具吸引力，並加入受眾洞察、主訊息與內容角度。",
             },
             {
                 "title": "技術、工程與學術",
                 "subtitle": "Technology, Engineering & Research",
-                "prompt": f"{base_prompt} 請讓回答更有結構，包含方法、假設、技術細節與驗證方向。",
+                "prompt": entry.get("prompt_technical", "").strip() or f"{base_prompt} 請讓回答更有結構，包含方法、假設、技術細節與驗證方向。",
             },
             {
                 "title": "金融、法律與合規",
                 "subtitle": "Finance, Legal & Compliance",
-                "prompt": f"{base_prompt} 請使用更精準與審慎的語言，並加入風險揭露、合規考量與決策重點。",
+                "prompt": entry.get("prompt_finance", "").strip() or f"{base_prompt} 請使用更精準與審慎的語言，並加入風險揭露、合規考量與決策重點。",
             },
             {
                 "title": "教育與終身學習",
                 "subtitle": "Education & Lifelong Learning",
-                "prompt": f"{base_prompt} 請用更清楚、可教學的方式說明，並補上步驟、例子與常見誤解。",
+                "prompt": entry.get("prompt_education", "").strip() or f"{base_prompt} 請用更清楚、可教學的方式說明，並補上步驟、例子與常見誤解。",
             },
         ]
     if lang == "zh-Hans":
@@ -1657,66 +1793,108 @@ def ai_prompt_sections(entry: dict, lang: str = "en") -> list[dict[str, str]]:
             {
                 "title": "专业咨询与管理",
                 "subtitle": "Strategic & Professional Services",
-                "prompt": f"{base_prompt} 请同时补上利益相关者、风险、优先顺序与下一步建议。",
+                "prompt": entry.get("prompt_strategic", "").strip() or f"{base_prompt} 请同时补上利益相关者、风险、优先顺序与下一步建议。",
             },
             {
                 "title": "创意与内容营销",
                 "subtitle": "Creative & Marketing Content",
-                "prompt": f"{base_prompt} 请把语气调整得更具吸引力，并加入受众洞察、主信息与内容角度。",
+                "prompt": entry.get("prompt_creative", "").strip() or f"{base_prompt} 请把语气调整得更具吸引力，并加入受众洞察、主信息与内容角度。",
             },
             {
                 "title": "技术、工程与学术",
                 "subtitle": "Technology, Engineering & Research",
-                "prompt": f"{base_prompt} 请让回答更有结构，包含方法、假设、技术细节与验证方向。",
+                "prompt": entry.get("prompt_technical", "").strip() or f"{base_prompt} 请让回答更有结构，包含方法、假设、技术细节与验证方向。",
             },
             {
                 "title": "金融、法律与合规",
                 "subtitle": "Finance, Legal & Compliance",
-                "prompt": f"{base_prompt} 请使用更精准与审慎的语言，并加入风险披露、合规考量与决策重点。",
+                "prompt": entry.get("prompt_finance", "").strip() or f"{base_prompt} 请使用更精准与审慎的语言，并加入风险披露、合规考量与决策重点。",
             },
             {
                 "title": "教育与终身学习",
                 "subtitle": "Education & Lifelong Learning",
-                "prompt": f"{base_prompt} 请用更清楚、可教学的方式说明，并补上步骤、例子与常见误解。",
+                "prompt": entry.get("prompt_education", "").strip() or f"{base_prompt} 请用更清楚、可教学的方式说明，并补上步骤、例子与常见误解。",
             },
         ]
     return [
         {
             "title": "Strategic & Professional Services",
             "subtitle": "Professional consulting and management",
-            "prompt": f"{base_prompt} Add stakeholders, risks, priorities, and recommended next steps.",
+            "prompt": entry.get("prompt_strategic", "").strip() or f"{base_prompt} Add stakeholders, risks, priorities, and recommended next steps.",
         },
         {
             "title": "Creative & Marketing Content",
             "subtitle": "Creative and audience-facing communication",
-            "prompt": f"{base_prompt} Make the tone more audience-aware and add messaging angles, hooks, and content direction.",
+            "prompt": entry.get("prompt_creative", "").strip() or f"{base_prompt} Make the tone more audience-aware and add messaging angles, hooks, and content direction.",
         },
         {
             "title": "Technology, Engineering & Research",
             "subtitle": "Technical and analytical work",
-            "prompt": f"{base_prompt} Make the answer more structured with method, assumptions, technical detail, and validation steps.",
+            "prompt": entry.get("prompt_technical", "").strip() or f"{base_prompt} Make the answer more structured with method, assumptions, technical detail, and validation steps.",
         },
         {
             "title": "Finance, Legal & Compliance",
             "subtitle": "High-precision professional contexts",
-            "prompt": f"{base_prompt} Use more precise and risk-aware language, including compliance checks and decision considerations.",
+            "prompt": entry.get("prompt_finance", "").strip() or f"{base_prompt} Use more precise and risk-aware language, including compliance checks and decision considerations.",
         },
         {
             "title": "Education & Lifelong Learning",
             "subtitle": "Teaching and self-learning",
-            "prompt": f"{base_prompt} Explain it in a teachable way with steps, examples, and common misunderstandings to avoid.",
+            "prompt": entry.get("prompt_education", "").strip() or f"{base_prompt} Explain it in a teachable way with steps, examples, and common misunderstandings to avoid.",
         },
+    ]
+
+
+def mobile_profile(name: str = "", persona: str = "", lang: str = "en") -> dict[str, str]:
+    safe_name = (name or "").strip()[:40] or "Lawrence"
+    safe_persona = persona if persona in SUPPORTED_PERSONAS else "lifelong_learner"
+    return {
+        "name": safe_name,
+        "initials": profile_initials(safe_name),
+        "persona": safe_persona,
+        "persona_message": translate(lang, persona_message_key(safe_persona)),
+        "recommendation_note": translate(lang, recommendation_note_key(safe_persona)),
+    }
+
+
+def mobile_word_card(word: dict, lang: str = "en") -> dict:
+    chinese_preview = word.get("chinese_preview", []) or []
+    return {
+        "id": word.get("id"),
+        "lemma": word.get("lemma", ""),
+        "band_label": word.get("best_band_label", ""),
+        "english_definition": word.get("english_definition", ""),
+        "example_sentence": word.get("example_sentence", ""),
+        "pronunciation": word.get("pronunciation", ""),
+        "parts_of_speech": word.get("parts_of_speech", []),
+        "chinese_preview": [localize_chinese_text(item, lang) for item in chinese_preview],
+        "chinese_headword": localize_chinese_text(word.get("chinese_headword", ""), lang),
+    }
+
+
+def mobile_recommendation_cards(persona: str, lang: str = "en") -> list[dict[str, str]]:
+    cards = recommendation_cards(persona)
+    return [
+        {
+            "title": translate(lang, card["title_key"]),
+            "body": translate(lang, card["body_key"]),
+            "href": card["href"],
+            "tag": translate(lang, card["tag_key"]),
+        }
+        for card in cards
     ]
 
 
 def render(request: Request, template_name: str, **context) -> HTMLResponse:
     lang = getattr(request.state, "lang", get_lang(request))
+    user = registered_user_row(request)
     context.update(
         {
             "lang": lang,
             "profile_name": get_profile_name(request),
             "profile_initials": profile_initials(get_profile_name(request)),
             "profile_persona": get_profile_persona(request),
+            "registered_user": user,
             "t": lambda key, **kwargs: translate(lang, key, **kwargs),
             "lang_url": lambda target_lang: build_lang_url(request, target_lang),
             "qtype_label": lambda value: translate_question_type(value, lang),
@@ -2497,6 +2675,11 @@ def create_learning_session(conn: sqlite3.Connection) -> int:
         LIMIT 30
         """,
     ).fetchall()
+    populate_learning_session(conn, session_id, words)
+    return session_id
+
+
+def populate_learning_session(conn: sqlite3.Connection, session_id: int, words: list[sqlite3.Row]) -> None:
     position = 1
     used_word_ids: set[int] = set()
     for word in words:
@@ -2531,6 +2714,29 @@ def create_learning_session(conn: sqlite3.Connection) -> int:
         if added_for_word:
             used_word_ids.add(word["id"])
     conn.commit()
+
+
+def create_learning_retry_session(conn: sqlite3.Connection, source_session_id: int) -> int:
+    cursor = conn.execute(
+        """
+        INSERT INTO learning_sessions (user_id)
+        VALUES (?)
+        """,
+        (USER_ID,),
+    )
+    session_id = cursor.lastrowid
+    rows = conn.execute(
+        """
+        SELECT DISTINCT words.*
+        FROM learning_questions
+        JOIN words ON words.id = learning_questions.word_id
+        WHERE learning_questions.session_id = ?
+          AND COALESCE(learning_questions.is_correct, 0) = 0
+        ORDER BY learning_questions.position
+        """,
+        (source_session_id,),
+    ).fetchall()
+    populate_learning_session(conn, session_id, rows)
     return session_id
 
 
@@ -2661,7 +2867,14 @@ def finish_learning_session(conn: sqlite3.Connection, session_id: int) -> None:
 
 @app.get("/", response_class=HTMLResponse)
 def landing_page(request: Request) -> HTMLResponse:
-    return render(request, "landing.html")
+    mode = request.query_params.get("mode", "guest")
+    auth_error = request.query_params.get("auth_error", "")
+    return render(
+        request,
+        "landing.html",
+        landing_mode=mode if mode in {"guest", "registered"} else "guest",
+        auth_error=auth_error,
+    )
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
@@ -2723,6 +2936,91 @@ def onboarding_submit(
         response.set_cookie("profile_name", safe_name, max_age=60 * 60 * 24 * 365)
     else:
         response.delete_cookie("profile_name")
+    return response
+
+
+def auth_redirect_url(lang: str, *, error_key: str = "", mode: str = "registered") -> str:
+    params = []
+    if mode:
+        params.append(("mode", mode))
+    if error_key:
+        params.append(("auth_error", error_key))
+    if lang != "en":
+        params.append(("lang", lang))
+    query = urlencode(params)
+    return f"/?{query}" if query else "/"
+
+
+@app.post("/auth/signup")
+def auth_signup(
+    request: Request,
+    display_name: str = Form(""),
+    email: str = Form(""),
+    password: str = Form(""),
+    persona: str = Form("lifelong_learner"),
+) -> RedirectResponse:
+    conn = db_conn()
+    lang = getattr(request.state, "lang", get_lang(request))
+    safe_name = (display_name or "").strip()[:40]
+    safe_email = normalized_email(email)
+    safe_persona = persona if persona in SUPPORTED_PERSONAS else "lifelong_learner"
+    if not safe_name:
+        return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_name_required"), status_code=303)
+    if not valid_email(safe_email):
+        return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_email_required"), status_code=303)
+    if len(password or "") < 8:
+        return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_password_short"), status_code=303)
+    existing = conn.execute("SELECT id FROM users WHERE lower(email) = ?", (safe_email,)).fetchone()
+    if existing is not None:
+        return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_email_taken"), status_code=303)
+    username_seed = re.sub(r"[^a-z0-9]+", "_", safe_email.split("@", 1)[0]).strip("_") or "user"
+    username = username_seed
+    suffix = 1
+    while conn.execute("SELECT 1 FROM users WHERE username = ?", (username,)).fetchone():
+        suffix += 1
+        username = f"{username_seed}_{suffix}"
+    cursor = conn.execute(
+        """
+        INSERT INTO users (username, email, password_hash, display_name, persona)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (username, safe_email, hash_password(password), safe_name, safe_persona),
+    )
+    conn.commit()
+    user_id = cursor.lastrowid
+    response = RedirectResponse(url=(f"/dashboard?lang={lang}" if lang != "en" else "/dashboard"), status_code=303)
+    response.set_cookie("registered_user_id", str(user_id), max_age=60 * 60 * 24 * 365)
+    response.set_cookie("profile_name", safe_name, max_age=60 * 60 * 24 * 365)
+    response.set_cookie("profile_persona", safe_persona, max_age=60 * 60 * 24 * 365)
+    return response
+
+
+@app.post("/auth/login")
+def auth_login(
+    request: Request,
+    email: str = Form(""),
+    password: str = Form(""),
+) -> RedirectResponse:
+    conn = db_conn()
+    lang = getattr(request.state, "lang", get_lang(request))
+    safe_email = normalized_email(email)
+    user = conn.execute("SELECT * FROM users WHERE lower(email) = ?", (safe_email,)).fetchone()
+    if user is None or not verify_password(password, user["password_hash"]):
+        return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_invalid_login"), status_code=303)
+    response = RedirectResponse(url=(f"/dashboard?lang={lang}" if lang != "en" else "/dashboard"), status_code=303)
+    response.set_cookie("registered_user_id", str(user["id"]), max_age=60 * 60 * 24 * 365)
+    response.set_cookie("profile_name", (user["display_name"] or "Lawrence")[:40], max_age=60 * 60 * 24 * 365)
+    response.set_cookie("profile_persona", (user["persona"] or "lifelong_learner"), max_age=60 * 60 * 24 * 365)
+    return response
+
+
+@app.post("/auth/logout")
+def auth_logout(request: Request) -> RedirectResponse:
+    lang = getattr(request.state, "lang", get_lang(request))
+    response = RedirectResponse(url=build_home_url(lang), status_code=303)
+    response.delete_cookie("registered_user_id")
+    response.delete_cookie("profile_name")
+    response.delete_cookie("profile_persona")
     return response
 
 
@@ -3079,6 +3377,433 @@ def ai_power_entry_page(request: Request, category_slug: str, entry_slug: str) -
         entry=entry,
         prompt_sections=ai_prompt_sections(entry, lang),
     )
+
+
+@app.get("/api/mobile/bootstrap")
+def mobile_bootstrap(
+    lang: str = Query("en"),
+    name: str = Query(""),
+    persona: str = Query("lifelong_learner"),
+) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    profile = mobile_profile(name, persona, safe_lang)
+    stats = fetch_stats(conn)
+    latest_test = latest_test_result(conn)
+    latest_learning = latest_learning_result(conn)
+    bands = decorate_band_rows(band_summary(conn))
+    max_band_total = max((band["workbook_total"] for band in bands), default=1)
+    hero_band_chart = [
+        {
+            "label": band["range_label"],
+            "title": band["title"],
+            "subtitle": band["subtitle"],
+            "tone": band["tone"],
+            "count": band["workbook_total"],
+            "percent": max(18, round((band["workbook_total"] / max_band_total) * 100)),
+        }
+        for band in bands[:5]
+    ]
+    spotlight = [mobile_word_card(item, safe_lang) for item in dashboard_spotlight_words(conn, limit=6, lang=safe_lang)]
+    ai_power = ai_power_track(safe_lang)
+    return {
+        "profile": profile,
+        "stats": stats,
+        "recommended_band": latest_test["estimated_band_label"] if latest_test else "2000~ (2330)",
+        "latest_test": (
+            {
+                "score": latest_test["score"],
+                "estimated_band_label": latest_test["estimated_band_label"],
+            }
+            if latest_test
+            else None
+        ),
+        "latest_learning": (
+            {
+                "score": latest_learning["score"],
+                "session_id": latest_learning["id"],
+            }
+            if latest_learning
+            else None
+        ),
+        "hero_band_chart": hero_band_chart,
+        "spotlight_words": spotlight,
+        "recommendation_cards": mobile_recommendation_cards(profile["persona"], safe_lang),
+        "missed_words_count": len(missed_words(conn, limit=20, lang=safe_lang)),
+        "ai_power_summary": {
+            "target_count": ai_power["target_count"],
+            "completed_count": ai_power["completed_count"],
+            "category_count": ai_power["category_count"],
+            "progress_label": ai_power["progress_label"],
+        },
+    }
+
+
+@app.get("/api/mobile/dictionary/search")
+def mobile_dictionary_search(
+    q: str = Query(""),
+    lang: str = Query("en"),
+    band_rank: int | None = Query(None),
+    limit: int = Query(20, ge=1, le=50),
+) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    rows = search_result_cards(conn, q, band_rank=band_rank, lang=safe_lang) if q.strip() else []
+    return {
+        "query": q,
+        "result_count": len(rows[:limit]),
+        "results": [mobile_word_card(item, safe_lang) for item in rows[:limit]],
+    }
+
+
+@app.get("/api/mobile/word/{word_id}")
+def mobile_word_detail(word_id: int, lang: str = Query("en")) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    payload = word_payload(conn, word_id, safe_lang)
+    word = payload["word"]
+    return {
+        "id": word["id"],
+        "lemma": word["lemma"],
+        "band_label": word["best_band_label"],
+        "status": translate_status(word["status"], safe_lang),
+        "correct_count": word["correct_count"],
+        "wrong_count": word["wrong_count"],
+        "notes": word["notes"] or "",
+        "ipa": payload["pronunciation"],
+        "english_definition": payload["english_definition"],
+        "chinese_definitions": [localize_chinese_text(item, safe_lang) for item in payload["definitions"]],
+        "parts_of_speech": payload["parts_of_speech"],
+        "example_sentence": payload["example_sentence"],
+        "synonyms": payload["synonyms"],
+        "sentence_distractors": payload["sentence_distractors"],
+    }
+
+
+@app.post("/api/mobile/word/{word_id}/note")
+def mobile_word_note_update(
+    word_id: int,
+    lang: str = Query("en"),
+    notes: str = Body("", embed=True),
+) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    word_row(conn, word_id)
+    cleaned = notes.strip()
+    conn.execute(
+        """
+        UPDATE study_cards
+        SET notes = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE word_id = ?
+        """,
+        (cleaned, word_id),
+    )
+    conn.commit()
+    payload = word_payload(conn, word_id, safe_lang)
+    return {
+        "word_id": word_id,
+        "notes": payload["word"]["notes"] or "",
+        "message": "saved",
+    }
+
+
+def mobile_learning_question_payload(conn: sqlite3.Connection, question: sqlite3.Row, lang: str) -> dict:
+    payload = word_payload(conn, question["word_id"], lang)
+    word = conn.execute(
+        """
+        SELECT id, lemma, best_band_label, best_band_rank
+        FROM words
+        WHERE id = ?
+        """,
+        (question["word_id"],),
+    ).fetchone()
+    parts_of_speech = parts_of_speech_for_word(conn, question["word_id"])
+    return {
+        "id": question["id"],
+        "prompt_text": question["prompt_text"],
+        "question_type": question["question_type"],
+        "question_type_label": translate_question_type(question["question_type"], lang),
+        "options": json_loads(question["options_json"]),
+        "word": {
+            "id": word["id"],
+            "lemma": word["lemma"],
+            "band_label": word["best_band_label"],
+            "band_rank": word["best_band_rank"],
+            "ipa": payload["pronunciation"],
+            "parts_of_speech": parts_of_speech,
+        },
+    }
+
+
+def mobile_learning_review_payload(conn: sqlite3.Connection, question: sqlite3.Row, lang: str) -> dict:
+    payload = word_payload(conn, question["word_id"], lang)
+    word = payload["word"]
+    return {
+        "id": question["id"],
+        "prompt_text": question["prompt_text"],
+        "question_type": question["question_type"],
+        "question_type_label": translate_question_type(question["question_type"], lang),
+        "options": json_loads(question["options_json"]),
+        "correct_option": question["correct_option"],
+        "user_answer": question["user_answer"] or "",
+        "is_correct": bool(question["is_correct"]),
+        "explanation": question["explanation"] or "",
+        "word": {
+            "id": word["id"],
+            "lemma": word["lemma"],
+            "band_label": word["best_band_label"],
+            "status": translate_status(word["status"], lang),
+            "correct_count": word["correct_count"],
+            "wrong_count": word["wrong_count"],
+            "ipa": payload["pronunciation"],
+            "parts_of_speech": payload["parts_of_speech"],
+            "english_definition": payload["english_definition"],
+            "chinese_definitions": [localize_chinese_text(item, lang) for item in payload["definitions"]],
+            "example_sentence": payload["example_sentence"],
+            "synonyms": payload["synonyms"],
+            "notes": word["notes"] or "",
+        },
+    }
+
+
+def mobile_learning_result_payload(conn: sqlite3.Connection, session_id: int, lang: str) -> dict:
+    finish_learning_session(conn, session_id)
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    if session is None:
+        raise HTTPException(status_code=404, detail="Learning session not found")
+    rows = conn.execute(
+        """
+        SELECT question_type, SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) AS correct, COUNT(*) AS total
+        FROM learning_questions
+        WHERE session_id = ?
+        GROUP BY question_type
+        ORDER BY question_type
+        """,
+        (session_id,),
+    ).fetchall()
+    enriched_words = conn.execute("SELECT COUNT(*) FROM word_enrichment").fetchone()[0]
+    total = sum(row["total"] for row in rows)
+    percent = round((session["score"] / total) * 100) if total else 0
+    return {
+        "session_id": session_id,
+        "status": "completed",
+        "progress": {
+            "current": total,
+            "answered": total,
+            "total": total,
+            "percent": 100 if total else 0,
+        },
+        "result": {
+            "score": session["score"],
+            "total": total,
+            "percent": percent,
+            "recommendation": learning_recommendation(session["score"], total, enriched_words, lang),
+            "breakdown": [
+                {
+                    "question_type": row["question_type"],
+                    "question_type_label": translate_question_type(row["question_type"], lang),
+                    "correct": row["correct"],
+                    "total": row["total"],
+                }
+                for row in rows
+            ],
+        },
+    }
+
+
+@app.post("/api/mobile/learning/start")
+def mobile_learning_start(lang: str = Query("en")) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    session_id = create_learning_session(conn)
+    question = current_learning_question(conn, session_id)
+    if question is None:
+        return mobile_learning_result_payload(conn, session_id, safe_lang)
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    return {
+        "session_id": session_id,
+        "status": "question",
+        "progress": learning_progress(conn, session),
+        "question": mobile_learning_question_payload(conn, question, safe_lang),
+    }
+
+
+@app.post("/api/mobile/learning/{session_id}/retry-incorrect")
+def mobile_learning_retry_incorrect(session_id: int, lang: str = Query("en")) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    source_session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    if source_session is None:
+        raise HTTPException(status_code=404, detail="Learning session not found")
+    retry_session_id = create_learning_retry_session(conn, session_id)
+    question = current_learning_question(conn, retry_session_id)
+    if question is None:
+        return mobile_learning_result_payload(conn, retry_session_id, safe_lang)
+    retry_session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (retry_session_id,)).fetchone()
+    return {
+        "session_id": retry_session_id,
+        "status": "question",
+        "progress": learning_progress(conn, retry_session),
+        "question": mobile_learning_question_payload(conn, question, safe_lang),
+    }
+
+
+@app.get("/api/mobile/learning/{session_id}")
+def mobile_learning_state(session_id: int, lang: str = Query("en")) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    if session is None:
+        raise HTTPException(status_code=404, detail="Learning session not found")
+    question = current_learning_question(conn, session_id)
+    if question is None:
+        return mobile_learning_result_payload(conn, session_id, safe_lang)
+    return {
+        "session_id": session_id,
+        "status": "question",
+        "progress": learning_progress(conn, session),
+        "question": mobile_learning_question_payload(conn, question, safe_lang),
+    }
+
+
+@app.post("/api/mobile/learning/{session_id}/answer")
+def mobile_learning_answer(
+    session_id: int,
+    lang: str = Query("en"),
+    answer: str = Body(..., embed=True),
+) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    question = current_learning_question(conn, session_id)
+    if session is None or question is None:
+        return mobile_learning_result_payload(conn, session_id, safe_lang)
+    is_correct = int(answer == question["correct_option"])
+    conn.execute(
+        """
+        UPDATE learning_questions
+        SET user_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (answer, is_correct, question["id"]),
+    )
+    conn.execute(
+        """
+        UPDATE learning_sessions
+        SET current_index = current_index + 1,
+            score = score + ?
+        WHERE id = ?
+        """,
+        (is_correct, session_id),
+    )
+    conn.execute(
+        """
+        UPDATE study_cards
+        SET correct_count = correct_count + ?,
+            wrong_count = wrong_count + ?,
+            status = CASE WHEN ? = 1 THEN 'learning' ELSE status END,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE word_id = ?
+        """,
+        (is_correct, 1 - is_correct, is_correct, question["word_id"]),
+    )
+    conn.commit()
+    updated_session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    reviewed_question = previous_learning_question(conn, session_id)
+    progress = learning_progress(conn, updated_session)
+    return {
+        "session_id": session_id,
+        "status": "review",
+        "progress": progress,
+        "is_last": progress["answered"] >= progress["total"],
+        "review": mobile_learning_review_payload(conn, reviewed_question, safe_lang),
+    }
+
+
+@app.get("/api/mobile/ai-power/categories")
+def mobile_ai_power_categories(lang: str = Query("en")) -> dict:
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    track = ai_power_track(safe_lang)
+    categories = [
+        {
+            "slug": category["slug"],
+            "title": category["title"],
+            "english_title": category["english_title"],
+            "description": category["description"],
+            "starter_count": category["starter_count"],
+            "completed_count": category["completed_count"],
+        }
+        for category in track["categories"]
+    ]
+    return {
+        "summary": {
+            "target_count": track["target_count"],
+            "completed_count": track["completed_count"],
+            "progress_label": track["progress_label"],
+        },
+        "categories": categories,
+    }
+
+
+@app.get("/api/mobile/ai-power/category/{category_slug}")
+def mobile_ai_power_category(category_slug: str, lang: str = Query("en")) -> dict:
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    track = ai_power_track(safe_lang)
+    category = ai_power_category_by_slug(track, category_slug)
+    if category is None:
+        raise HTTPException(status_code=404, detail="AI Power category not found")
+    return {
+        "category": {
+            "slug": category["slug"],
+            "title": category["title"],
+            "english_title": category["english_title"],
+            "description": category["description"],
+            "starter_count": category["starter_count"],
+            "completed_count": category["completed_count"],
+        },
+        "entries": [
+            {
+                "english": entry["english"],
+                "slug": entry["slug"],
+                "type_of_word": entry["type_of_word"],
+                "traditional_chinese": localize_chinese_text(entry["traditional_chinese"], safe_lang),
+                "simplified_chinese": entry["simplified_chinese"],
+                "english_definition": entry["english_definition"],
+                "ipa": entry["ipa"],
+            }
+            for entry in category["entries"]
+        ],
+    }
+
+
+@app.get("/api/mobile/ai-power/category/{category_slug}/{entry_slug}")
+def mobile_ai_power_word(category_slug: str, entry_slug: str, lang: str = Query("en")) -> dict:
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    track = ai_power_track(safe_lang)
+    category = ai_power_category_by_slug(track, category_slug)
+    if category is None:
+        raise HTTPException(status_code=404, detail="AI Power category not found")
+    entry = ai_power_entry_by_slug(category, entry_slug)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="AI Power word not found")
+    return {
+        "category": {
+            "slug": category["slug"],
+            "title": category["title"],
+            "english_title": category["english_title"],
+        },
+        "entry": {
+            "english": entry["english"],
+            "slug": entry["slug"],
+            "type_of_word": entry["type_of_word"],
+            "english_definition": entry["english_definition"],
+            "traditional_chinese": localize_chinese_text(entry["traditional_chinese"], safe_lang),
+            "simplified_chinese": entry["simplified_chinese"],
+            "example_sentence": entry["example_sentence"],
+            "ipa": entry["ipa"],
+            "prompt_sections": ai_prompt_sections(entry, safe_lang),
+        },
+    }
 
 
 @app.get("/dictionary/band/{band_rank}", response_class=HTMLResponse)

@@ -79,6 +79,11 @@
               <small>{{ t("topbar_project") }}</small>
             </div>
           </div>
+          {% if registered_user %}
+          <form method="post" action="/auth/logout{% if lang != 'en' %}?lang={{ lang }}{% endif %}">
+            <button class="topbar-action topbar-action-text" type="submit">{{ t("auth_logout") }}</button>
+          </form>
+          {% endif %}
         </div>
       </header>
 
