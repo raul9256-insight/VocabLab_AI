@@ -63,7 +63,7 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 USER_ID = 1
-TEST_QUESTION_COUNT = 15
+TEST_VOCAB_COUNT = 8
 LEARNING_WORD_COUNT = 5
 SUPPORTED_LANGS = {"en", "zh-Hant", "zh-Hans"}
 SUPPORTED_PERSONAS = {
@@ -680,7 +680,7 @@ TRANSLATIONS["en"].update(
         "total_label": "Total",
         "level_test_title": "Level Test",
         "find_starting_band": "Find your starting band.",
-        "test_intro_lede": "This placement test uses {count} multiple-choice questions from different frequency bands to estimate your current vocabulary level.",
+        "test_intro_lede": "This placement test uses {count} multiple-choice questions across meaning and usage to estimate your current vocabulary level.",
         "questions_label": "Questions",
         "definition_based_items": "definition-based items",
         "what_it_measures": "What It Measures",
@@ -695,8 +695,9 @@ TRANSLATIONS["en"].update(
         "what_this_means": "What this means",
         "sampled_from_band": "This question is sampled from the {band} frequency band.",
         "goal_label": "Goal",
-        "test_goal_fast": "Choose the best definition and keep moving. The test is designed to be fast and reliable.",
-        "hidden_test_note": "Definitions and full word details appear only after you submit, so the placement result stays fair.",
+        "test_goal_fast": "First choose the correct meaning, then choose the sentence that uses the word naturally. The test stays fast while checking deeper understanding.",
+        "hidden_test_note": "Definitions, usage clues, and full word details appear only after you submit, so the placement result stays fair.",
+        "meaning_and_usage_items": "Meaning + usage",
         "recognized_correctly": "You recognized this word correctly.",
         "revisit_later_note": "This is a useful word to revisit later in learning mode.",
         "see_test_result": "See Test Result",
@@ -963,7 +964,7 @@ TRANSLATIONS["zh-Hant"].update(
         "total_label": "總數",
         "level_test_title": "程度檢測",
         "find_starting_band": "找出適合你的詞彙程度。",
-        "test_intro_lede": "這個程度檢測會從不同常見程度的詞彙中抽出 {count} 題選擇題，幫你估算目前的詞彙程度。",
+        "test_intro_lede": "這個程度檢測會透過 {count} 題選擇題，從詞義理解與實際用法兩個層面，幫你估算目前的詞彙程度。",
         "questions_label": "題目數",
         "definition_based_items": "以定義為主的題目",
         "what_it_measures": "這份檢測在看什麼",
@@ -978,8 +979,9 @@ TRANSLATIONS["zh-Hant"].update(
         "what_this_means": "這代表什麼",
         "sampled_from_band": "這一題是從 {band} 這一組詞彙抽出的。",
         "goal_label": "目標",
-        "test_goal_fast": "選出最合適的定義後繼續往下。這份檢測設計成快速、直接，而且有一致性。",
-        "hidden_test_note": "在你送出答案前，完整定義和詞彙細節都不會先顯示，這樣結果才比較準。",
+        "test_goal_fast": "先選出正確詞義，再判斷哪個句子最自然地使用這個詞。這份檢測維持精簡，但能更深入測到理解程度。",
+        "hidden_test_note": "在你送出答案前，完整定義、用法線索和詞彙細節都不會先顯示，這樣結果才比較準。",
+        "meaning_and_usage_items": "詞義＋用法",
         "recognized_correctly": "你正確辨認了這個詞彙。",
         "revisit_later_note": "這是之後很適合放回學習模式再加強的詞彙。",
         "see_test_result": "查看檢測結果",
@@ -1499,7 +1501,7 @@ TRANSLATIONS["zh-Hans"].update(
         "total_label": "总数",
         "level_test_title": "程度检测",
         "find_starting_band": "找出适合你的词汇程度。",
-        "test_intro_lede": "这个程度检测会从不同常见程度的词汇中抽出 {count} 道选择题，帮你估算目前的词汇程度。",
+        "test_intro_lede": "这个程度检测会通过 {count} 道选择题，从词义理解与实际用法两个层面，帮你估算目前的词汇程度。",
         "questions_label": "题目数",
         "definition_based_items": "以定义为主的题目",
         "what_it_measures": "这份检测在看什么",
@@ -1514,8 +1516,9 @@ TRANSLATIONS["zh-Hans"].update(
         "what_this_means": "这代表什么",
         "sampled_from_band": "这一题是从 {band} 这一组词汇抽出的。",
         "goal_label": "目标",
-        "test_goal_fast": "选出最合适的定义后继续往下。这份检测设计成快速、直接，而且有一致性。",
-        "hidden_test_note": "在你提交答案前，完整定义和词汇细节都不会先显示，这样结果才更准确。",
+        "test_goal_fast": "先选出正确词义，再判断哪个句子最自然地使用这个词。这份检测保持精简，但能更深入测到理解程度。",
+        "hidden_test_note": "在你提交答案前，完整定义、用法线索和词汇细节都不会先显示，这样结果才更准确。",
+        "meaning_and_usage_items": "词义＋用法",
         "recognized_correctly": "你正确辨认了这个词汇。",
         "revisit_later_note": "这是之后很适合放回学习模式再加强的词汇。",
         "see_test_result": "查看检测结果",
@@ -2715,6 +2718,31 @@ def previous_learning_question(conn: sqlite3.Connection, session_id: int) -> sql
 
 
 def distractor_definitions(conn: sqlite3.Connection, *, band_rank: int, word_id: int, limit: int = 3) -> list[str]:
+    target_pos = parts_of_speech_for_word(conn, word_id)
+    options: list[str] = []
+
+    if target_pos:
+        placeholders = ",".join("?" for _ in target_pos)
+        rows = conn.execute(
+            f"""
+            SELECT DISTINCT source_entries.word_id, source_entries.meanings_json
+            FROM source_entries
+            WHERE source_entries.band_rank = ?
+              AND source_entries.word_id != ?
+              AND source_entries.meanings_json <> '[]'
+              AND source_entries.pos IN ({placeholders})
+            ORDER BY RANDOM()
+            LIMIT 40
+            """,
+            (band_rank, word_id, *target_pos),
+        ).fetchall()
+        for row in rows:
+            for meaning in json_loads(row["meanings_json"]):
+                if meaning not in options:
+                    options.append(meaning)
+                if len(options) >= limit:
+                    return options
+
     rows = conn.execute(
         """
         SELECT word_id, meanings_json
@@ -2725,7 +2753,6 @@ def distractor_definitions(conn: sqlite3.Connection, *, band_rank: int, word_id:
         """,
         (band_rank, word_id),
     ).fetchall()
-    options: list[str] = []
     for row in rows:
         for meaning in json_loads(row["meanings_json"]):
             if meaning not in options:
@@ -2749,6 +2776,73 @@ def distractor_definitions(conn: sqlite3.Connection, *, band_rank: int, word_id:
                     options.append(meaning)
                 if len(options) >= limit:
                     return options
+    return options
+
+
+def blank_word_in_sentence(sentence: str, lemma: str) -> str | None:
+    clean_sentence = (sentence or "").strip()
+    clean_lemma = (lemma or "").strip()
+    if not clean_sentence or not clean_lemma:
+        return None
+    parts = [re.escape(part) for part in clean_lemma.split()]
+    if not parts:
+        return None
+    pattern = r"\b" + r"\s+".join(parts) + r"\b"
+    blanked = re.sub(pattern, "____", clean_sentence, count=1, flags=re.IGNORECASE)
+    if blanked == clean_sentence:
+        return None
+    return blanked
+
+
+def sentence_distractor_options(conn: sqlite3.Connection, word: sqlite3.Row, limit: int = 3) -> list[str]:
+    options: list[str] = []
+    enrichment = conn.execute(
+        """
+        SELECT sentence_distractors_json
+        FROM word_enrichment
+        WHERE word_id = ?
+        """,
+        (word["id"],),
+    ).fetchone()
+    if enrichment is not None:
+        for sentence in json_loads(enrichment["sentence_distractors_json"]):
+            clean = blank_word_in_sentence(sentence, word["lemma"])
+            if clean and clean not in options:
+                options.append(clean)
+            if len(options) >= limit:
+                return options
+
+    target_pos = parts_of_speech_for_word(conn, word["id"])
+    pos_clause = ""
+    params: list[object] = [word["id"]]
+    if target_pos:
+        placeholders = ",".join("?" for _ in target_pos)
+        pos_clause = f"AND source_entries.pos IN ({placeholders})"
+        params.extend(target_pos)
+
+    rows = conn.execute(
+        f"""
+        SELECT DISTINCT
+            words.id AS other_word_id,
+            words.lemma AS other_lemma,
+            COALESCE(NULLIF(word_enrichment.example_sentence, ''), '') AS stored_example
+        FROM words
+        LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
+        LEFT JOIN source_entries ON source_entries.word_id = words.id
+        WHERE words.id != ?
+          {pos_clause}
+        ORDER BY RANDOM()
+        LIMIT 80
+        """,
+        tuple(params),
+    ).fetchall()
+    for row in rows:
+        example_sentence = row["stored_example"] or source_fallback_for_word(conn, row["other_word_id"])["example_sentence"]
+        clean = blank_word_in_sentence(example_sentence, row["other_lemma"])
+        if clean and clean not in options:
+            options.append(clean)
+        if len(options) >= limit:
+            return options
     return options
 
 
@@ -2827,16 +2921,18 @@ def build_sentence_question(conn: sqlite3.Connection, word: sqlite3.Row, positio
         """,
         (word["id"],),
     ).fetchone()
-    if enrichment is None or not enrichment["example_sentence"]:
+    source_fallback = source_fallback_for_word(conn, word["id"])
+    example_sentence = ""
+    if enrichment is not None and enrichment["example_sentence"]:
+        example_sentence = enrichment["example_sentence"].strip()
+    elif source_fallback["example_sentence"]:
+        example_sentence = source_fallback["example_sentence"].strip()
+    if not example_sentence:
         return None
-    correct = enrichment["example_sentence"].strip()
-    options = [correct]
-    for sentence in json_loads(enrichment["sentence_distractors_json"]):
-        clean = sentence.strip()
-        if clean and clean not in options:
-            options.append(clean)
-        if len(options) >= 4:
-            break
+    correct = blank_word_in_sentence(example_sentence, word["lemma"])
+    if not correct:
+        return None
+    options = [correct] + sentence_distractor_options(conn, word, limit=3)
     if len(options) < 4:
         return None
     random.shuffle(options)
@@ -2844,10 +2940,12 @@ def build_sentence_question(conn: sqlite3.Connection, word: sqlite3.Row, positio
         "position": position,
         "word_id": word["id"],
         "question_type": "sentence",
+        "band_rank": word["best_band_rank"],
+        "band_label": word["best_band_label"],
         "prompt_text": word["lemma"],
         "correct_option": correct,
         "options_json": json.dumps(options[:4], ensure_ascii=False),
-        "explanation": "Choose the sentence that uses the word naturally.",
+        "explanation": "Choose the sentence where this word fits naturally in the blank.",
     }
 
 
@@ -2855,7 +2953,9 @@ def create_test_session(conn: sqlite3.Connection) -> int:
     band_rows = band_summary(conn)
     questions: list[dict] = []
     position = 1
-    per_band = max(1, TEST_QUESTION_COUNT // max(1, len(band_rows)))
+    per_band = max(1, TEST_VOCAB_COUNT // max(1, len(band_rows)))
+    used_word_ids: set[int] = set()
+    band_word_counts: dict[int, int] = defaultdict(int)
     for band in band_rows:
         rows = conn.execute(
             """
@@ -2868,22 +2968,35 @@ def create_test_session(conn: sqlite3.Connection) -> int:
             (band["best_band_rank"], per_band + 2),
         ).fetchall()
         for word in rows:
-            question = build_definition_question(conn, word, position)
-            if question is None:
+            if word["id"] in used_word_ids:
                 continue
-            questions.append(question)
-            position += 1
-            if len([q for q in questions if q["band_rank"] == band["best_band_rank"]]) >= per_band:
+            definition_question = build_definition_question(conn, word, position)
+            sentence_question = build_sentence_question(conn, word, position + 1)
+            if definition_question is None or sentence_question is None:
+                continue
+            questions.extend([definition_question, sentence_question])
+            position += 2
+            used_word_ids.add(word["id"])
+            band_word_counts[band["best_band_rank"]] += 1
+            if band_word_counts[band["best_band_rank"]] >= per_band:
                 break
-    while len(questions) < TEST_QUESTION_COUNT:
+    attempts = 0
+    while len(used_word_ids) < TEST_VOCAB_COUNT and attempts < 500:
+        attempts += 1
         word = conn.execute(
             "SELECT * FROM words ORDER BY RANDOM() LIMIT 1"
         ).fetchone()
-        question = build_definition_question(conn, word, position)
-        if question is None:
+        if word["id"] in used_word_ids:
             continue
-        questions.append(question)
-        position += 1
+        definition_question = build_definition_question(conn, word, position)
+        sentence_question = build_sentence_question(conn, word, position + 1)
+        if definition_question is None or sentence_question is None:
+            continue
+        questions.extend([definition_question, sentence_question])
+        position += 2
+        used_word_ids.add(word["id"])
+    if not questions:
+        raise HTTPException(status_code=400, detail="Not enough enriched words to build a test session")
 
     cursor = conn.execute(
         """
@@ -2893,7 +3006,7 @@ def create_test_session(conn: sqlite3.Connection) -> int:
         (USER_ID,),
     )
     session_id = cursor.lastrowid
-    for question in questions[:TEST_QUESTION_COUNT]:
+    for question in questions:
         conn.execute(
             """
             INSERT INTO assessment_questions (
@@ -3012,9 +3125,9 @@ def create_learning_retry_session(conn: sqlite3.Connection, source_session_id: i
 
 
 def test_progress(session: sqlite3.Row) -> dict:
+    total = int(session["question_total"]) if "question_total" in session.keys() else TEST_VOCAB_COUNT * 2
     current = session["current_index"] + 1
     answered = session["current_index"]
-    total = TEST_QUESTION_COUNT
     return {
         "current": min(current, total),
         "answered": answered,
@@ -3298,7 +3411,7 @@ def auth_logout(request: Request) -> RedirectResponse:
 @app.get("/test", response_class=HTMLResponse)
 def test_intro(request: Request) -> HTMLResponse:
     conn = db_conn()
-    return render(request, "test_intro.html", bands=decorate_band_rows(band_summary(conn)), question_count=TEST_QUESTION_COUNT)
+    return render(request, "test_intro.html", bands=decorate_band_rows(band_summary(conn)), question_count=TEST_VOCAB_COUNT * 2)
 
 
 @app.post("/test/start")
@@ -3311,7 +3424,16 @@ def test_start() -> RedirectResponse:
 @app.get("/test/{session_id}", response_class=HTMLResponse)
 def test_question(request: Request, session_id: int) -> HTMLResponse:
     conn = db_conn()
-    session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ?", (session_id,)).fetchone()
+    session = conn.execute(
+        """
+        SELECT assessment_sessions.*, COUNT(assessment_questions.id) AS question_total
+        FROM assessment_sessions
+        LEFT JOIN assessment_questions ON assessment_questions.session_id = assessment_sessions.id
+        WHERE assessment_sessions.id = ?
+        GROUP BY assessment_sessions.id
+        """,
+        (session_id,),
+    ).fetchone()
     if session is None:
         raise HTTPException(status_code=404, detail="Test session not found")
     question = current_test_question(conn, session_id)
@@ -3360,14 +3482,23 @@ def test_answer(session_id: int, answer: str = Form(...)) -> RedirectResponse:
 @app.get("/test/{session_id}/review", response_class=HTMLResponse)
 def test_review(request: Request, session_id: int) -> HTMLResponse:
     conn = db_conn()
-    session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ?", (session_id,)).fetchone()
+    session = conn.execute(
+        """
+        SELECT assessment_sessions.*, COUNT(assessment_questions.id) AS question_total
+        FROM assessment_sessions
+        LEFT JOIN assessment_questions ON assessment_questions.session_id = assessment_sessions.id
+        WHERE assessment_sessions.id = ?
+        GROUP BY assessment_sessions.id
+        """,
+        (session_id,),
+    ).fetchone()
     if session is None:
         raise HTTPException(status_code=404, detail="Test session not found")
     question = previous_test_question(conn, session_id)
     if question is None:
         return RedirectResponse(url=f"/test/{session_id}", status_code=303)
     payload = word_payload(conn, question["word_id"], getattr(request.state, "lang", get_lang(request)))
-    is_last = session["current_index"] >= TEST_QUESTION_COUNT
+    is_last = session["current_index"] >= session["question_total"]
     return render(
         request,
         "test_review.html",
