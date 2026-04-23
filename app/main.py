@@ -701,7 +701,7 @@ TRANSLATIONS["en"].update(
         "recognized_correctly": "You recognized this word correctly.",
         "revisit_later_note": "This is a useful word to revisit later in learning mode.",
         "see_test_result": "See Test Result",
-        "view_test_history": "View Test History",
+        "view_statistics": "Statistics",
         "result_label": "Result",
         "getting_started": "Getting Started",
         "test_result_lede": "You answered {score} correctly in this placement test. This result estimates where you should start learning next.",
@@ -711,6 +711,11 @@ TRANSLATIONS["en"].update(
         "completed_on": "Completed",
         "score_label": "Score",
         "accuracy_short": "Accuracy",
+        "statistics_title": "Statistics",
+        "statistics_lede": "Review your saved learning data in one place, then open the section you want to inspect in detail.",
+        "statistics_test_history_title": "Test History",
+        "statistics_test_history_body": "Review past placement results, compare scores, and track how your starting band changes over time.",
+        "statistics_more_coming": "More statistics modules coming soon.",
         "estimated_band_chip": "Estimated band: {band}",
         "correct_chip": "Correct: {score}",
         "weighted_chip": "Weighted: {percent}%",
@@ -992,7 +997,7 @@ TRANSLATIONS["zh-Hant"].update(
         "recognized_correctly": "你正確辨認了這個詞彙。",
         "revisit_later_note": "這是之後很適合放回學習模式再加強的詞彙。",
         "see_test_result": "查看檢測結果",
-        "view_test_history": "查看測驗紀錄",
+        "view_statistics": "統計數據",
         "result_label": "結果",
         "getting_started": "起步中",
         "test_result_lede": "你在這次程度檢測中答對了 {score} 題。根據結果，系統會建議你下一步適合從哪一組詞彙開始。",
@@ -1002,6 +1007,11 @@ TRANSLATIONS["zh-Hant"].update(
         "completed_on": "完成時間",
         "score_label": "分數",
         "accuracy_short": "正確率",
+        "statistics_title": "統計數據",
+        "statistics_lede": "把目前累積的學習資料集中在同一頁，再進入你想細看的統計功能。",
+        "statistics_test_history_title": "測驗紀錄",
+        "statistics_test_history_body": "回看過往程度檢測結果，比較分數，追蹤建議起始範圍如何變化。",
+        "statistics_more_coming": "之後會再加入更多統計模組。",
         "estimated_band_chip": "建議起點：{band}",
         "correct_chip": "答對：{score}",
         "weighted_chip": "加權：{percent}%",
@@ -1536,7 +1546,7 @@ TRANSLATIONS["zh-Hans"].update(
         "recognized_correctly": "你正确辨认了这个词汇。",
         "revisit_later_note": "这是之后很适合放回学习模式再加强的词汇。",
         "see_test_result": "查看检测结果",
-        "view_test_history": "查看检测记录",
+        "view_statistics": "统计数据",
         "result_label": "结果",
         "getting_started": "起步中",
         "test_result_lede": "你在这次程度检测中答对了 {score} 题。根据结果，系统会建议你下一步适合从哪一组词汇开始。",
@@ -1546,6 +1556,11 @@ TRANSLATIONS["zh-Hans"].update(
         "completed_on": "完成时间",
         "score_label": "分数",
         "accuracy_short": "正确率",
+        "statistics_title": "统计数据",
+        "statistics_lede": "把目前积累的学习资料集中在同一页，再进入你想细看的统计功能。",
+        "statistics_test_history_title": "检测记录",
+        "statistics_test_history_body": "回看过往程度检测结果，比较分数，追踪建议起始范围如何变化。",
+        "statistics_more_coming": "之后会再加入更多统计模块。",
         "estimated_band_chip": "建议起点：{band}",
         "correct_chip": "答对：{score}",
         "weighted_chip": "加权：{percent}%",
@@ -3484,6 +3499,14 @@ def test_intro(request: Request) -> HTMLResponse:
 def test_history(request: Request) -> HTMLResponse:
     conn = db_conn()
     return render(request, "test_history.html", history=test_history_rows(conn))
+
+
+@app.get("/statistics", response_class=HTMLResponse)
+def statistics_page(request: Request) -> HTMLResponse:
+    conn = db_conn()
+    history = test_history_rows(conn, limit=5)
+    latest = history[0] if history else None
+    return render(request, "statistics.html", history=history, latest_test_history=latest)
 
 
 @app.post("/test/start")
