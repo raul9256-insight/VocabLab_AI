@@ -21,6 +21,13 @@ CREATE TABLE IF NOT EXISTS word_enrichment (
     synonyms_json TEXT NOT NULL DEFAULT '[]',
     example_sentence TEXT NOT NULL DEFAULT '',
     sentence_distractors_json TEXT NOT NULL DEFAULT '[]',
+    ai_simple_explanation_en TEXT NOT NULL DEFAULT '',
+    ai_simple_explanation_zh TEXT NOT NULL DEFAULT '',
+    ai_nuance_note TEXT NOT NULL DEFAULT '',
+    ai_compare_words_json TEXT NOT NULL DEFAULT '[]',
+    ai_business_example TEXT NOT NULL DEFAULT '',
+    ai_prompt_example TEXT NOT NULL DEFAULT '',
+    ai_usage_warning TEXT NOT NULL DEFAULT '',
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -135,6 +142,13 @@ def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
     conn.executescript(WEB_SCHEMA)
     ensure_column(conn, "word_enrichment", "english_definition", "TEXT NOT NULL DEFAULT ''")
     ensure_column(conn, "word_enrichment", "pronunciation", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "word_enrichment", "ai_simple_explanation_en", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "word_enrichment", "ai_simple_explanation_zh", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "word_enrichment", "ai_nuance_note", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "word_enrichment", "ai_compare_words_json", "TEXT NOT NULL DEFAULT '[]'")
+    ensure_column(conn, "word_enrichment", "ai_business_example", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "word_enrichment", "ai_prompt_example", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "word_enrichment", "ai_usage_warning", "TEXT NOT NULL DEFAULT ''")
     ensure_column(conn, "users", "email", "TEXT")
     ensure_column(conn, "users", "password_hash", "TEXT NOT NULL DEFAULT ''")
     ensure_column(conn, "users", "display_name", "TEXT NOT NULL DEFAULT ''")

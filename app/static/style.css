@@ -2358,7 +2358,8 @@ input[type="file"] {
 }
 
 .progression-summary-grid,
-.progression-notes-grid {
+.progression-notes-grid,
+.ai-insight-grid {
   margin-bottom: 1rem;
 }
 
@@ -2429,6 +2430,13 @@ input[type="file"] {
 .progression-relation-card.simple {
   gap: 0.35rem;
   background: white;
+}
+
+.ai-compare-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.85rem;
 }
 
 .soft-chip {

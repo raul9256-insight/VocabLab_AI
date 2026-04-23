@@ -36,7 +36,7 @@ from app.enrichment_io import (
     import_taxonomy_rows,
     iter_import_rows,
 )
-from app.openai_enrichment import generate_enrichment_batch, load_env_file
+from app.openai_enrichment import generate_ai_insight_for_word, generate_enrichment_batch, load_env_file
 from app.openai_speech import speech_api_ready, synthesize_pronunciation_audio
 from economist_vocab import DEFAULT_DB_PATH
 
@@ -552,6 +552,28 @@ TRANSLATIONS["en"].update(
         "no_example_sentence": "No example sentence added yet.",
         "synonyms_label": "Synonyms",
         "no_synonyms": "No synonyms added yet.",
+        "ai_insight_section": "AI Insight",
+        "ai_insight_title": "Learn this word more intelligently",
+        "ai_explain_simply": "Explain simply",
+        "ai_nuance_comparison": "Nuance and comparison",
+        "ai_use_it_better": "Use it better",
+        "ai_simple_explanation_zh": "Chinese explanation",
+        "ai_business_example_label": "Business example",
+        "ai_prompt_example_label": "AI prompt example",
+        "ai_usage_warning_label": "Usage warning",
+        "ai_nuance_note_label": "Nuance note",
+        "ai_compare_words_label": "Compare words",
+        "ai_compare_words_hint": "One per line: word | note",
+        "ai_simple_explanation_zh_placeholder": "Add a short Chinese explanation",
+        "ai_nuance_note_placeholder": "Explain the nuance or difference from nearby words",
+        "ai_business_example_placeholder": "Add one business example sentence",
+        "ai_prompt_example_placeholder": "Add one AI prompt example",
+        "ai_usage_warning_placeholder": "Add one short usage warning",
+        "no_ai_insight": "No AI insight added yet.",
+        "generate_ai_insight": "Generate AI Insight",
+        "ai_insight_generate_note": "Use OpenAI to draft the explanation, nuance, comparison, business example, and AI prompt example for this word.",
+        "ai_insight_generated": "AI Insight generated.",
+        "ai_insight_error": "AI Insight generation failed",
         "progression_section": "Progression",
         "vocabulary_progression": "Vocabulary Progression",
         "meaning_family": "Meaning family",
@@ -813,6 +835,28 @@ TRANSLATIONS["zh-Hant"].update(
         "no_example_sentence": "尚未加入例句。",
         "synonyms_label": "同義詞",
         "no_synonyms": "尚未加入同義詞。",
+        "ai_insight_section": "AI 重點提示",
+        "ai_insight_title": "用更聰明的方式理解這個詞",
+        "ai_explain_simply": "簡單理解",
+        "ai_nuance_comparison": "語感與比較",
+        "ai_use_it_better": "更好地用出來",
+        "ai_simple_explanation_zh": "中文解釋",
+        "ai_business_example_label": "商務例句",
+        "ai_prompt_example_label": "AI 提示範例",
+        "ai_usage_warning_label": "使用提醒",
+        "ai_nuance_note_label": "語感說明",
+        "ai_compare_words_label": "比較詞",
+        "ai_compare_words_hint": "每行一筆：詞彙 | 說明",
+        "ai_simple_explanation_zh_placeholder": "加入一段簡短中文解釋",
+        "ai_nuance_note_placeholder": "說明這個詞和相近詞的語感差異",
+        "ai_business_example_placeholder": "加入一句商務場景例句",
+        "ai_prompt_example_placeholder": "加入一句 AI 提示範例",
+        "ai_usage_warning_placeholder": "加入一句簡短使用提醒",
+        "no_ai_insight": "尚未加入 AI 重點提示。",
+        "generate_ai_insight": "生成 AI 重點提示",
+        "ai_insight_generate_note": "使用 OpenAI 為這個詞草擬簡單解釋、語感比較、商務例句與 AI 提示範例。",
+        "ai_insight_generated": "AI 重點提示已生成。",
+        "ai_insight_error": "AI 重點提示生成失敗",
         "progression_section": "進階路徑",
         "vocabulary_progression": "詞彙進階路徑",
         "meaning_family": "核心語義群組",
@@ -1328,6 +1372,28 @@ TRANSLATIONS["zh-Hans"].update(
         "no_example_sentence": "尚未加入例句。",
         "synonyms_label": "同义词",
         "no_synonyms": "尚未加入同义词。",
+        "ai_insight_section": "AI 重点提示",
+        "ai_insight_title": "用更聪明的方式理解这个词",
+        "ai_explain_simply": "简单理解",
+        "ai_nuance_comparison": "语感与比较",
+        "ai_use_it_better": "更好地用出来",
+        "ai_simple_explanation_zh": "中文解释",
+        "ai_business_example_label": "商务例句",
+        "ai_prompt_example_label": "AI 提示范例",
+        "ai_usage_warning_label": "使用提醒",
+        "ai_nuance_note_label": "语感说明",
+        "ai_compare_words_label": "比较词",
+        "ai_compare_words_hint": "每行一笔：词汇 | 说明",
+        "ai_simple_explanation_zh_placeholder": "加入一段简短中文解释",
+        "ai_nuance_note_placeholder": "说明这个词和相近词的语感差异",
+        "ai_business_example_placeholder": "加入一句商务场景例句",
+        "ai_prompt_example_placeholder": "加入一句 AI 提示范例",
+        "ai_usage_warning_placeholder": "加入一句简短使用提醒",
+        "no_ai_insight": "尚未加入 AI 重点提示。",
+        "generate_ai_insight": "生成 AI 重点提示",
+        "ai_insight_generate_note": "使用 OpenAI 为这个词草拟简单解释、语感比较、商务例句与 AI 提示范例。",
+        "ai_insight_generated": "AI 重点提示已生成。",
+        "ai_insight_error": "AI 重点提示生成失败",
         "progression_section": "进阶路径",
         "vocabulary_progression": "词汇进阶路径",
         "meaning_family": "核心语义群组",
@@ -2323,7 +2389,19 @@ def word_payload(conn: sqlite3.Connection, word_id: int, lang: str = "en") -> di
                 definitions.append(meaning)
     enrichment = conn.execute(
         """
-        SELECT english_definition, pronunciation, synonyms_json, example_sentence, sentence_distractors_json
+        SELECT
+            english_definition,
+            pronunciation,
+            synonyms_json,
+            example_sentence,
+            sentence_distractors_json,
+            ai_simple_explanation_en,
+            ai_simple_explanation_zh,
+            ai_nuance_note,
+            ai_compare_words_json,
+            ai_business_example,
+            ai_prompt_example,
+            ai_usage_warning
         FROM word_enrichment
         WHERE word_id = ?
         """,
@@ -2344,6 +2422,15 @@ def word_payload(conn: sqlite3.Connection, word_id: int, lang: str = "en") -> di
         "synonyms": synonyms,
         "example_sentence": example_sentence,
         "sentence_distractors": json_loads(enrichment["sentence_distractors_json"]) if enrichment else [],
+        "ai_insight": {
+            "simple_explanation_en": enrichment["ai_simple_explanation_en"] if enrichment else "",
+            "simple_explanation_zh": enrichment["ai_simple_explanation_zh"] if enrichment else "",
+            "nuance_note": enrichment["ai_nuance_note"] if enrichment else "",
+            "compare_words": json_loads(enrichment["ai_compare_words_json"]) if enrichment else [],
+            "business_example": enrichment["ai_business_example"] if enrichment else "",
+            "prompt_example": enrichment["ai_prompt_example"] if enrichment else "",
+            "usage_warning": enrichment["ai_usage_warning"] if enrichment else "",
+        },
         "progression": {
             **progression,
             "relationship_groups": relationship_groups,
@@ -4202,7 +4289,9 @@ def missed_words_page(request: Request) -> HTMLResponse:
 @app.get("/word/{word_id}", response_class=HTMLResponse)
 def word_detail(request: Request, word_id: int) -> HTMLResponse:
     conn = db_conn()
+    load_env_file()
     payload = word_payload(conn, word_id, getattr(request.state, "lang", get_lang(request)))
+    payload["ai_key_ready"] = bool(os.environ.get("OPENAI_API_KEY", "").strip())
     return render(request, "word_detail.html", **payload)
 
 
@@ -4229,11 +4318,28 @@ def update_word(
     synonyms: str = Form(""),
     example_sentence: str = Form(""),
     sentence_distractors: str = Form(""),
+    ai_simple_explanation_en: str = Form(""),
+    ai_simple_explanation_zh: str = Form(""),
+    ai_nuance_note: str = Form(""),
+    ai_compare_words: str = Form(""),
+    ai_business_example: str = Form(""),
+    ai_prompt_example: str = Form(""),
+    ai_usage_warning: str = Form(""),
 ) -> RedirectResponse:
     conn = db_conn()
     word = word_row(conn, word_id)
     synonym_items = [item.strip() for item in synonyms.splitlines() if item.strip()]
     distractor_items = [item.strip() for item in sentence_distractors.splitlines() if item.strip()]
+    compare_word_items = []
+    for line in ai_compare_words.splitlines():
+        cleaned = line.strip()
+        if not cleaned:
+            continue
+        if "|" in cleaned:
+            word_text, note_text = cleaned.split("|", 1)
+            compare_word_items.append({"word": word_text.strip(), "note": note_text.strip()})
+        else:
+            compare_word_items.append({"word": cleaned, "note": ""})
     conn.execute(
         """
         UPDATE study_cards
@@ -4244,14 +4350,35 @@ def update_word(
     )
     conn.execute(
         """
-        INSERT INTO word_enrichment (word_id, english_definition, pronunciation, synonyms_json, example_sentence, sentence_distractors_json)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO word_enrichment (
+            word_id,
+            english_definition,
+            pronunciation,
+            synonyms_json,
+            example_sentence,
+            sentence_distractors_json,
+            ai_simple_explanation_en,
+            ai_simple_explanation_zh,
+            ai_nuance_note,
+            ai_compare_words_json,
+            ai_business_example,
+            ai_prompt_example,
+            ai_usage_warning
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(word_id) DO UPDATE SET
             english_definition = excluded.english_definition,
             pronunciation = excluded.pronunciation,
             synonyms_json = excluded.synonyms_json,
             example_sentence = excluded.example_sentence,
             sentence_distractors_json = excluded.sentence_distractors_json,
+            ai_simple_explanation_en = excluded.ai_simple_explanation_en,
+            ai_simple_explanation_zh = excluded.ai_simple_explanation_zh,
+            ai_nuance_note = excluded.ai_nuance_note,
+            ai_compare_words_json = excluded.ai_compare_words_json,
+            ai_business_example = excluded.ai_business_example,
+            ai_prompt_example = excluded.ai_prompt_example,
+            ai_usage_warning = excluded.ai_usage_warning,
             updated_at = CURRENT_TIMESTAMP
         """,
         (
@@ -4261,7 +4388,26 @@ def update_word(
             json.dumps(synonym_items, ensure_ascii=False),
             example_sentence.strip(),
             json.dumps(distractor_items, ensure_ascii=False),
+            ai_simple_explanation_en.strip(),
+            ai_simple_explanation_zh.strip(),
+            ai_nuance_note.strip(),
+            json.dumps(compare_word_items, ensure_ascii=False),
+            ai_business_example.strip(),
+            ai_prompt_example.strip(),
+            ai_usage_warning.strip(),
         ),
     )
     conn.commit()
     return RedirectResponse(url=f"/word/{word['id']}", status_code=303)
+
+
+@app.post("/word/{word_id}/generate-ai-insight")
+def generate_word_ai_insight(word_id: int) -> RedirectResponse:
+    conn = db_conn()
+    try:
+        generate_ai_insight_for_word(conn, word_id=word_id)
+    except RuntimeError as exc:
+        return RedirectResponse(url=f"/word/{word_id}?ai_error={str(exc)}", status_code=303)
+    except Exception as exc:
+        return RedirectResponse(url=f"/word/{word_id}?ai_error={str(exc)}", status_code=303)
+    return RedirectResponse(url=f"/word/{word_id}?ai_generated=1", status_code=303)

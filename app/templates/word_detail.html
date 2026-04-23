@@ -108,6 +108,62 @@
       <article class="panel dashboard-v2-card word-section-card">
         <div class="card-head tight">
           <div>
+            <p class="eyebrow">{{ t("ai_insight_section") }}</p>
+            <h2>{{ t("ai_insight_title") }}</h2>
+          </div>
+        </div>
+        {% if ai_insight.simple_explanation_en or ai_insight.simple_explanation_zh or ai_insight.nuance_note or ai_insight.compare_words or ai_insight.business_example or ai_insight.prompt_example or ai_insight.usage_warning %}
+        <div class="word-definition-grid ai-insight-grid">
+          <section class="word-info-card primary">
+            <span class="focus-label">{{ t("ai_explain_simply") }}</span>
+            <p>{{ ai_insight.simple_explanation_en or t("no_ai_insight") }}</p>
+            {% if ai_insight.simple_explanation_zh %}
+            <p class="section-note">{{ t("ai_simple_explanation_zh") }}: {{ zh_text(ai_insight.simple_explanation_zh) }}</p>
+            {% endif %}
+          </section>
+
+          <section class="word-info-card">
+            <span class="focus-label">{{ t("ai_nuance_comparison") }}</span>
+            <p>{{ ai_insight.nuance_note or t("no_ai_insight") }}</p>
+            {% if ai_insight.compare_words %}
+            <div class="word-chip-row ai-compare-row">
+              {% for item in ai_insight.compare_words %}
+              <div class="progression-relation-card simple">
+                <strong>{{ item.word }}</strong>
+                {% if item.note %}
+                <p>{{ item.note }}</p>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </section>
+        </div>
+
+        {% if ai_insight.business_example or ai_insight.prompt_example or ai_insight.usage_warning %}
+        <div class="word-definition-grid ai-insight-grid">
+          <section class="word-info-card">
+            <span class="focus-label">{{ t("ai_use_it_better") }}</span>
+            {% if ai_insight.business_example %}
+            <p><strong>{{ t("ai_business_example_label") }}:</strong> {{ ai_insight.business_example }}</p>
+            {% endif %}
+            {% if ai_insight.prompt_example %}
+            <p><strong>{{ t("ai_prompt_example_label") }}:</strong> {{ ai_insight.prompt_example }}</p>
+            {% endif %}
+            {% if ai_insight.usage_warning %}
+            <p class="section-note"><strong>{{ t("ai_usage_warning_label") }}:</strong> {{ ai_insight.usage_warning }}</p>
+            {% endif %}
+          </section>
+        </div>
+        {% endif %}
+        {% else %}
+        <p>{{ t("no_ai_insight") }}</p>
+        {% endif %}
+      </article>
+
+      <article class="panel dashboard-v2-card word-section-card">
+        <div class="card-head tight">
+          <div>
             <p class="eyebrow">{{ t("progression_section") }}</p>
             <h2>{{ t("vocabulary_progression") }}</h2>
           </div>
@@ -205,7 +261,21 @@
             <h2>{{ t("improve_word") }}</h2>
           </div>
         </div>
+        {% if request.query_params.get('ai_generated') %}
+        <div class="callout">
+          <strong>{{ t("ai_insight_generated") }}</strong>
+        </div>
+        {% endif %}
+        {% if request.query_params.get('ai_error') %}
+        <div class="callout">
+          <strong>{{ t("ai_insight_error") }}:</strong> {{ request.query_params.get('ai_error') }}
+        </div>
+        {% endif %}
         <p class="section-note">{{ t("improve_word_note") }}</p>
+        <form method="post" action="/word/{{ word.id }}/generate-ai-insight" class="stack-form refined-form">
+          <p class="section-note">{{ t("ai_insight_generate_note") }}</p>
+          <button class="button secondary" type="submit" {% if not ai_key_ready %}disabled{% endif %}>{{ t("generate_ai_insight") }}</button>
+        </form>
         <form method="post" action="/word/{{ word.id }}/update" class="stack-form refined-form">
           <label>
             <span>{{ t("notes_label") }}</span>
@@ -214,6 +284,23 @@
           <label>
             <span>{{ t("english_definition") }}</span>
             <textarea name="english_definition" rows="4" placeholder="{{ t('add_concise_english_definition') }}">{{ english_definition }}</textarea>
+          </label>
+          <label>
+            <span>{{ t("ai_explain_simply") }} EN</span>
+            <textarea name="ai_simple_explanation_en" rows="3" placeholder="{{ t('add_concise_english_definition') }}">{{ ai_insight.simple_explanation_en }}</textarea>
+          </label>
+          <label>
+            <span>{{ t("ai_simple_explanation_zh") }}</span>
+            <textarea name="ai_simple_explanation_zh" rows="3" placeholder="{{ t('ai_simple_explanation_zh_placeholder') }}">{{ ai_insight.simple_explanation_zh }}</textarea>
+          </label>
+          <label>
+            <span>{{ t("ai_nuance_note_label") }}</span>
+            <textarea name="ai_nuance_note" rows="3" placeholder="{{ t('ai_nuance_note_placeholder') }}">{{ ai_insight.nuance_note }}</textarea>
+          </label>
+          <label>
+            <span>{{ t("ai_compare_words_label") }}</span>
+            <textarea name="ai_compare_words" rows="4" placeholder="{{ t('ai_compare_words_hint') }}">{% for item in ai_insight.compare_words %}{{ item.word }}{% if item.note %} | {{ item.note }}{% endif %}{% if not loop.last %}
+{% endif %}{% endfor %}</textarea>
           </label>
           <label>
             <span>{{ t("ipa_label") }}</span>
@@ -226,6 +313,18 @@
           <label>
             <span>{{ t("example_sentence") }}</span>
             <textarea name="example_sentence" rows="4" placeholder="{{ t('add_natural_sentence') }}">{{ example_sentence }}</textarea>
+          </label>
+          <label>
+            <span>{{ t("ai_business_example_label") }}</span>
+            <textarea name="ai_business_example" rows="3" placeholder="{{ t('ai_business_example_placeholder') }}">{{ ai_insight.business_example }}</textarea>
+          </label>
+          <label>
+            <span>{{ t("ai_prompt_example_label") }}</span>
+            <textarea name="ai_prompt_example" rows="3" placeholder="{{ t('ai_prompt_example_placeholder') }}">{{ ai_insight.prompt_example }}</textarea>
+          </label>
+          <label>
+            <span>{{ t("ai_usage_warning_label") }}</span>
+            <textarea name="ai_usage_warning" rows="2" placeholder="{{ t('ai_usage_warning_placeholder') }}">{{ ai_insight.usage_warning }}</textarea>
           </label>
           <label>
             <span>{{ t("wrong_sentence_options") }}</span>

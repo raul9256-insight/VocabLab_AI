@@ -103,12 +103,63 @@ RESPONSE_SCHEMA = {
     },
 }
 
+AI_INSIGHT_RESPONSE_SCHEMA = {
+    "type": "json_schema",
+    "name": "word_ai_insight",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "simple_explanation_en": {"type": "string"},
+            "simple_explanation_zh": {"type": "string"},
+            "nuance_note": {"type": "string"},
+            "compare_words": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "word": {"type": "string"},
+                        "note": {"type": "string"},
+                    },
+                    "required": ["word", "note"],
+                    "additionalProperties": False,
+                },
+            },
+            "business_example": {"type": "string"},
+            "prompt_example": {"type": "string"},
+            "usage_warning": {"type": "string"},
+        },
+        "required": [
+            "simple_explanation_en",
+            "simple_explanation_zh",
+            "nuance_note",
+            "compare_words",
+            "business_example",
+            "prompt_example",
+            "usage_warning",
+        ],
+        "additionalProperties": False,
+    },
+}
+
 
 SYSTEM_PROMPT = (
     "You are enriching an English vocabulary database for a learner. "
     "For each word, produce a concise learner-friendly English definition, one natural example sentence, "
     "and 2 to 4 clear synonyms. Keep the meaning aligned with the provided Chinese definitions and part of speech. "
     "Prefer contemporary, neutral English. The example sentence should use the target word naturally and clearly. "
+    "Return structured JSON only."
+)
+
+AI_INSIGHT_SYSTEM_PROMPT = (
+    "You are helping build an intelligent vocabulary learning platform. "
+    "For one English word, produce short learner-friendly AI insight fields: "
+    "a plain English explanation, a short Traditional Chinese explanation, "
+    "a nuance note about how the word feels or differs from nearby words, "
+    "2 comparison words with brief notes, one business-use example sentence, "
+    "one AI prompt example using the word naturally, and one short usage warning. "
+    "Keep all outputs concise, practical, and clear for learners. "
+    "Use Traditional Chinese for the Chinese explanation. "
     "Return structured JSON only."
 )
 
@@ -155,3 +206,108 @@ def generate_enrichment_batch(conn: sqlite3.Connection, *, limit: int, band_rank
         updated += 1
     conn.commit()
     return {"selected": len(rows), "updated": updated}
+
+
+def generate_ai_insight_for_word(conn: sqlite3.Connection, *, word_id: int) -> dict[str, object]:
+    row = conn.execute(
+        """
+        SELECT id, lemma, best_band_label
+        FROM words
+        WHERE id = ?
+        """,
+        (word_id,),
+    ).fetchone()
+    if row is None:
+        raise RuntimeError(f"Word {word_id} not found")
+
+    source_rows = conn.execute(
+        """
+        SELECT meanings_json, extra_json
+        FROM source_entries
+        WHERE word_id = ?
+        ORDER BY band_rank, workbook_name, row_number
+        """,
+        (word_id,),
+    ).fetchall()
+    chinese_definitions: list[str] = []
+    for source_row in source_rows:
+        meanings = definitions_for_word(conn, word_id)
+        for meaning in meanings:
+            if meaning not in chinese_definitions:
+                chinese_definitions.append(meaning)
+        if chinese_definitions:
+            break
+
+    enrichment = conn.execute(
+        """
+        SELECT english_definition, example_sentence, synonyms_json
+        FROM word_enrichment
+        WHERE word_id = ?
+        """,
+        (word_id,),
+    ).fetchone()
+
+    payload = {
+        "lemma": row["lemma"],
+        "band_label": row["best_band_label"],
+        "parts_of_speech": parts_of_speech_for_word(conn, word_id),
+        "chinese_definitions": chinese_definitions[:5],
+        "english_definition": enrichment["english_definition"] if enrichment else "",
+        "example_sentence": enrichment["example_sentence"] if enrichment else "",
+        "synonyms": json.loads(enrichment["synonyms_json"]) if enrichment and enrichment["synonyms_json"] else [],
+    }
+
+    client = openai_client()
+    response = client.responses.create(
+        model=openai_model(),
+        instructions=AI_INSIGHT_SYSTEM_PROMPT,
+        input=json.dumps(payload, ensure_ascii=False),
+        text={"format": AI_INSIGHT_RESPONSE_SCHEMA},
+    )
+    parsed = json.loads(response.output_text)
+
+    compare_words = [
+        {
+            "word": str(item.get("word", "")).strip(),
+            "note": str(item.get("note", "")).strip(),
+        }
+        for item in parsed.get("compare_words", [])
+        if str(item.get("word", "")).strip()
+    ]
+
+    conn.execute(
+        """
+        INSERT INTO word_enrichment (
+            word_id,
+            ai_simple_explanation_en,
+            ai_simple_explanation_zh,
+            ai_nuance_note,
+            ai_compare_words_json,
+            ai_business_example,
+            ai_prompt_example,
+            ai_usage_warning
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(word_id) DO UPDATE SET
+            ai_simple_explanation_en = excluded.ai_simple_explanation_en,
+            ai_simple_explanation_zh = excluded.ai_simple_explanation_zh,
+            ai_nuance_note = excluded.ai_nuance_note,
+            ai_compare_words_json = excluded.ai_compare_words_json,
+            ai_business_example = excluded.ai_business_example,
+            ai_prompt_example = excluded.ai_prompt_example,
+            ai_usage_warning = excluded.ai_usage_warning,
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        (
+            word_id,
+            str(parsed.get("simple_explanation_en", "")).strip(),
+            str(parsed.get("simple_explanation_zh", "")).strip(),
+            str(parsed.get("nuance_note", "")).strip(),
+            json.dumps(compare_words, ensure_ascii=False),
+            str(parsed.get("business_example", "")).strip(),
+            str(parsed.get("prompt_example", "")).strip(),
+            str(parsed.get("usage_warning", "")).strip(),
+        ),
+    )
+    conn.commit()
+    return parsed
