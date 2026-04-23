@@ -42,9 +42,9 @@
           <span class="nav-icon">AI</span>
           <span>{{ t("nav_ai_power") }}</span>
         </a>
-        <a href="/bulk-import" class="{% if request.url.path.startswith('/bulk-import') %}active{% endif %}">
-          <span class="nav-icon">⇪</span>
-          <span>{{ t("nav_bulk") }}</span>
+        <a href="/statistics" class="{% if request.url.path.startswith('/statistics') or request.url.path.startswith('/test/history') %}active{% endif %}">
+          <span class="nav-icon">◔</span>
+          <span>{{ t("nav_statistics") }}</span>
         </a>
       </nav>
 
@@ -72,6 +72,7 @@
           </div>
           <a class="topbar-action topbar-action-text" href="/test" aria-label="Open level test">Level Test</a>
           <a class="topbar-action topbar-action-text" href="/ai-power-vocabulary" aria-label="Open AI power vocabulary">{{ t("nav_ai_power") }}</a>
+          <a class="topbar-action topbar-action-text" href="/statistics" aria-label="Open statistics">{{ t("nav_statistics") }}</a>
           <div class="topbar-user">
             <span class="user-badge">{{ profile_initials }}</span>
             <div>
