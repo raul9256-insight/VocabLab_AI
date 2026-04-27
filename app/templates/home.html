@@ -3,9 +3,14 @@
 {% block content %}
 <section class="panel dashboard-v2-card motto-hero">
   <div class="motto-hero-grid">
-    <blockquote class="motto-quote">
-      “{{ t("motto_quote") }}”
-    </blockquote>
+    <div>
+      <blockquote class="motto-quote">
+        “{{ dashboard_quote.text }}”
+      </blockquote>
+      <p class="section-subtle">
+        {{ dashboard_quote.author }}{% if dashboard_quote.cite %}, {{ dashboard_quote.cite }}{% endif %}
+      </p>
+    </div>
 
     <aside class="motto-chart-card">
       <div class="motto-chart-head">

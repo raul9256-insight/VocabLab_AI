@@ -74,6 +74,19 @@ SUPPORTED_PERSONAS = {
     "lifelong_learner",
 }
 
+HOME_QUOTES = [
+    {
+        "text": "Without grammar very little can be conveyed, without vocabulary nothing can be conveyed.",
+        "author": "Wilkins",
+        "cite": "1972, p. 111",
+    },
+    {
+        "text": "The most powerful programming language of the future isn’t C++ or Python. It’s English.",
+        "author": "Jensen Huang",
+        "cite": "",
+    },
+]
+
 AI_POWER_TRACK = [
     {
         "slug": "core-instruction",
@@ -3497,6 +3510,7 @@ def home(request: Request) -> HTMLResponse:
         }
         for band in bands[:5]
     ]
+    dashboard_quote = random.choice(HOME_QUOTES)
     return render(
         request,
         "home.html",
@@ -3512,6 +3526,7 @@ def home(request: Request) -> HTMLResponse:
         missed_words_count=len(missed_words(conn, limit=10)),
         spotlight_words=dashboard_spotlight_words(conn),
         hero_band_chart=hero_band_chart,
+        dashboard_quote=dashboard_quote,
         ai_power=ai_power_track(lang),
     )
 
