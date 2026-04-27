@@ -53,6 +53,7 @@ app.add_middleware(
         "http://localhost:8081",
         "http://127.0.0.1:8081",
         "https://economist-vocab.onrender.com",
+        "https://vocablab-ai-mobile.onrender.com",
     ],
     allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
