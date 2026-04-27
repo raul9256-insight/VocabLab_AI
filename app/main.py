@@ -2236,6 +2236,15 @@ def accuracy_color(percent: int | float | None) -> dict[str, str]:
     }
 
 
+TEST_BAND_LABELS = {
+    50: "50~99 (3924)",
+    100: "100~199 (3180)",
+    200: "200~499 (3176)",
+    500: "500~1999 (3000)",
+    2000: "2000~ (2330)",
+}
+
+
 def easier_band_label_from_rank(band_rank: int | None) -> str | None:
     if band_rank is None:
         return None
@@ -2246,7 +2255,7 @@ def easier_band_label_from_rank(band_rank: int | None) -> str | None:
     if idx >= len(ordered) - 1:
         return None
     next_rank = ordered[idx + 1]
-    return BAND_LABELS.get(next_rank)
+    return TEST_BAND_LABELS.get(next_rank)
 
 
 def level_recommendation(estimated_band_label: str | None, estimated_band_rank: int | None, percent: float, lang: str = "en") -> str:
@@ -3811,13 +3820,31 @@ def test_result(request: Request, session_id: int) -> HTMLResponse:
         summary = {
             "accuracy_percent": None,
             "weighted_percent": None,
+            "estimated_rank": session["estimated_band_rank"],
+            "estimated_label": session["estimated_band_label"] or "Getting Started",
         }
         has_detailed_results = False
+    if has_detailed_results and (
+        session["estimated_band_rank"] != summary["estimated_rank"]
+        or session["estimated_band_label"] != summary["estimated_label"]
+    ):
+        conn.execute(
+            """
+            UPDATE assessment_sessions
+            SET estimated_band_rank = ?, estimated_band_label = ?
+            WHERE id = ?
+            """,
+            (summary["estimated_rank"], summary["estimated_label"], session_id),
+        )
+        conn.commit()
+        session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ?", (session_id,)).fetchone()
     band_rows = band_accuracy_rows(conn, session_id)
     lang = getattr(request.state, "lang", get_lang(request))
     accuracy_ratio = (summary["accuracy_percent"] / 100) if summary["accuracy_percent"] is not None else 0
     level_name = progress_label(accuracy_ratio, lang)
-    recommendation = level_recommendation(session["estimated_band_label"], session["estimated_band_rank"], accuracy_ratio, lang)
+    display_band_label = summary["estimated_label"] if has_detailed_results else (session["estimated_band_label"] or "Getting Started")
+    display_band_rank = summary["estimated_rank"] if has_detailed_results else session["estimated_band_rank"]
+    recommendation = level_recommendation(display_band_label, display_band_rank, accuracy_ratio, lang)
     return render(
         request,
         "test_result.html",
@@ -3826,6 +3853,7 @@ def test_result(request: Request, session_id: int) -> HTMLResponse:
         summary=summary,
         has_detailed_results=has_detailed_results,
         level_name=level_name,
+        display_band_label=display_band_label,
         recommendation=recommendation,
         result_color=accuracy_color(summary["accuracy_percent"] if summary["accuracy_percent"] is not None else session["score"]),
     )

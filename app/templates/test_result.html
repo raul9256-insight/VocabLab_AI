@@ -4,7 +4,7 @@
 <section class="test-shell">
   <article class="panel dashboard-v2-card test-result-hero">
     <p class="eyebrow">{{ t("result_label") }}</p>
-    <h1>{{ level_name }}: {{ session.estimated_band_label or t("getting_started") }}</h1>
+    <h1>{{ level_name }}: {{ display_band_label or t("getting_started") }}</h1>
     <p class="lede">{{ t("test_result_lede", score=session.score) }}</p>
 
     <div class="test-result-summary-grid">
@@ -18,7 +18,7 @@
       </div>
       <div class="test-result-info-card">
         <div class="info-badges">
-          <span class="info-chip">{{ t("estimated_band_chip", band=session.estimated_band_label or t("getting_started")) }}</span>
+          <span class="info-chip">{{ t("estimated_band_chip", band=display_band_label or t("getting_started")) }}</span>
           <span class="info-chip">{{ t("correct_chip", score=session.score) }}</span>
           {% if has_detailed_results %}
           <span class="info-chip">{{ t("weighted_chip", percent=summary.weighted_percent) }}</span>
