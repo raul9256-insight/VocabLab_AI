@@ -157,7 +157,22 @@ def prepare_database_file(db_path: Path) -> None:
         db_path.parent.mkdir(parents=True, exist_ok=True)
     bundled_path = DEFAULT_DB_PATH.resolve()
     target_path = db_path.resolve()
-    if target_path != bundled_path and not db_path.exists() and DEFAULT_DB_PATH.exists():
+    if target_path == bundled_path or not DEFAULT_DB_PATH.exists():
+        return
+    should_seed = not db_path.exists() or db_path.stat().st_size == 0
+    if not should_seed:
+        try:
+            probe = sqlite3.connect(db_path)
+            word_count = probe.execute("SELECT COUNT(*) FROM words").fetchone()[0]
+            should_seed = word_count == 0
+        except sqlite3.Error:
+            should_seed = True
+        finally:
+            try:
+                probe.close()
+            except UnboundLocalError:
+                pass
+    if should_seed:
         shutil.copy2(DEFAULT_DB_PATH, db_path)
 
 
