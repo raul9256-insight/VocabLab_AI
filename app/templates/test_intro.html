@@ -7,7 +7,7 @@
       <div>
         <p class="eyebrow">{{ t("level_test_title") }}</p>
         <h1>{{ t("find_starting_band") }}</h1>
-        <p class="lede">{{ t("test_intro_lede", count=question_count) }}</p>
+        <p class="lede">{{ t("test_intro_lede", count=question_count, vocab_count=vocab_count, words_per_band=words_per_band, layers_per_word=layers_per_word) }}</p>
       </div>
       <div class="test-hero-badge">
         <span>{{ t("questions_label") }}</span>
@@ -26,7 +26,7 @@
         </div>
         <div class="mini-kicker-row">
           <span class="mini-kicker active">{{ t("frequency_short") }}</span>
-          <span class="mini-kicker">{{ t("recognition_short") }}</span>
+          <span class="mini-kicker">{{ t("meaning_and_usage_items") }}</span>
           <span class="mini-kicker">{{ t("placement_short") }}</span>
         </div>
         <p class="goal-note">{{ t("test_goal_note") }}</p>

@@ -64,7 +64,10 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 USER_ID = 1
-TEST_VOCAB_COUNT = 8
+TEST_VOCAB_COUNT = 20
+TEST_WORDS_PER_BAND = 4
+TEST_LAYERS_PER_WORD = 5
+TEST_QUESTION_COUNT = TEST_VOCAB_COUNT * TEST_LAYERS_PER_WORD
 LEARNING_WORD_COUNT = 5
 SUPPORTED_LANGS = {"en", "zh-Hant", "zh-Hans"}
 SUPPORTED_PERSONAS = {
@@ -87,6 +90,114 @@ HOME_QUOTES = [
         "cite": "",
     },
 ]
+
+LEVEL_TEST_SYNONYMS = {
+    "abandon": "leave",
+    "abhor": "hate",
+    "abide": "tolerate",
+    "abnormal": "unusual",
+    "abound": "flourish",
+    "abrupt": "sudden",
+    "absolute": "complete",
+    "absolve": "exonerate",
+    "absurd": "ridiculous",
+    "abundant": "plentiful",
+    "abysmal": "terrible",
+    "accede": "agree",
+    "acceptable": "satisfactory",
+    "accessible": "reachable",
+    "acclaim": "praise",
+    "accomplish": "achieve",
+    "accurate": "precise",
+    "acquiesce": "comply",
+    "active": "energetic",
+    "acute": "severe",
+    "adamant": "firm",
+    "adapt": "adjust",
+    "adept": "skilled",
+    "admire": "respect",
+    "admit": "confess",
+    "advantage": "benefit",
+    "advantageous": "beneficial",
+    "adverse": "unfavorable",
+    "affable": "friendly",
+    "affluent": "wealthy",
+    "aggravate": "worsen",
+    "agile": "nimble",
+    "agree": "consent",
+    "alert": "watchful",
+    "alienate": "estrange",
+    "allay": "soothe",
+    "alleviate": "ease",
+    "allow": "permit",
+    "aloof": "distant",
+    "alter": "change",
+    "altruism": "selflessness",
+    "always": "forever",
+    "ambiguous": "unclear",
+    "ameliorate": "improve",
+    "amicable": "friendly",
+    "amplify": "enlarge",
+    "ancient": "old",
+    "anxious": "worried",
+    "appear": "emerge",
+    "appreciate": "value",
+    "arbitrary": "random",
+}
+
+LEVEL_TEST_ANTONYMS = {
+    "abandon": "keep",
+    "abhor": "love",
+    "abide": "reject",
+    "abnormal": "normal",
+    "abound": "lack",
+    "abrupt": "gradual",
+    "absolute": "partial",
+    "absolve": "condemn",
+    "absurd": "reasonable",
+    "abundant": "scarce",
+    "abysmal": "excellent",
+    "accede": "refuse",
+    "acceptable": "unacceptable",
+    "accessible": "inaccessible",
+    "acclaim": "criticize",
+    "accomplish": "fail",
+    "accurate": "inaccurate",
+    "acquiesce": "resist",
+    "active": "passive",
+    "acute": "mild",
+    "adamant": "flexible",
+    "adapt": "resist",
+    "adept": "inept",
+    "admire": "despise",
+    "admit": "deny",
+    "advantage": "disadvantage",
+    "advantageous": "detrimental",
+    "adverse": "favorable",
+    "affable": "unfriendly",
+    "affluent": "poor",
+    "aggravate": "alleviate",
+    "agile": "clumsy",
+    "agree": "disagree",
+    "alert": "inattentive",
+    "alienate": "unite",
+    "allay": "aggravate",
+    "alleviate": "worsen",
+    "allow": "forbid",
+    "aloof": "friendly",
+    "alter": "preserve",
+    "altruism": "selfishness",
+    "always": "never",
+    "ambiguous": "clear",
+    "ameliorate": "worsen",
+    "amicable": "hostile",
+    "amplify": "reduce",
+    "ancient": "modern",
+    "anxious": "calm",
+    "appear": "disappear",
+    "appreciate": "depreciate",
+    "arbitrary": "systematic",
+}
 
 AI_POWER_TRACK = [
     {
@@ -698,7 +809,7 @@ TRANSLATIONS["en"].update(
         "total_label": "Total",
         "level_test_title": "Level Test",
         "find_starting_band": "Find your starting band.",
-        "test_intro_lede": "This placement test uses {count} multiple-choice questions across meaning and usage to estimate your current vocabulary level.",
+        "test_intro_lede": "This placement test uses {count} points: {vocab_count} vocabulary items, 4 from each band, tested through 5 layers of meaning, usage, similarity, and contrast.",
         "questions_label": "Questions",
         "definition_based_items": "definition-based items",
         "what_it_measures": "What It Measures",
@@ -706,16 +817,16 @@ TRANSLATIONS["en"].update(
         "frequency_short": "Frequency",
         "recognition_short": "Recognition",
         "placement_short": "Placement",
-        "test_goal_note": "The result combines your total accuracy with how well you handled harder frequency bands.",
+        "test_goal_note": "Level Test is a fixed assessment, separate from Learning. It measures breadth across all five bands and gives a score out of 100.",
         "begin_test": "Begin Test",
         "band_coverage": "Band Coverage",
         "sampled_ranges": "Sampled ranges",
         "what_this_means": "What this means",
         "sampled_from_band": "This question is sampled from the {band} frequency band.",
         "goal_label": "Goal",
-        "test_goal_fast": "First choose the correct meaning, then choose the sentence that uses the word naturally. The test stays fast while checking deeper understanding.",
+        "test_goal_fast": "Each vocabulary item appears in five layers: Chinese definition, English definition, example use, similar word, and opposite word.",
         "hidden_test_note": "Definitions, usage clues, and full word details appear only after you submit, so the placement result stays fair.",
-        "meaning_and_usage_items": "Meaning + usage",
+        "meaning_and_usage_items": "5 layers / 100 points",
         "recognized_correctly": "You recognized this word correctly.",
         "revisit_later_note": "This is a useful word to revisit later in learning mode.",
         "see_test_result": "See Test Result",
@@ -1007,7 +1118,7 @@ TRANSLATIONS["zh-Hant"].update(
         "total_label": "總數",
         "level_test_title": "程度檢測",
         "find_starting_band": "找出適合你的詞彙程度。",
-        "test_intro_lede": "這個程度檢測會透過 {count} 題選擇題，從詞義理解與實際用法兩個層面，幫你估算目前的詞彙程度。",
+        "test_intro_lede": "這個程度檢測共 {count} 分：20 個詞彙、每個 band 4 個，並透過中文意思、英文定義、例句應用、相近詞與相反詞 5 層題型評估。",
         "questions_label": "題目數",
         "definition_based_items": "以定義為主的題目",
         "what_it_measures": "這份檢測在看什麼",
@@ -1015,16 +1126,16 @@ TRANSLATIONS["zh-Hant"].update(
         "frequency_short": "常見度",
         "recognition_short": "辨識",
         "placement_short": "定位",
-        "test_goal_note": "結果會同時參考你的整體正確率，以及你在較難詞彙上的表現。",
+        "test_goal_note": "Level Test 是固定評量，和 Learning 分開。它會橫跨五個 band 測你的廣度，總分 100。",
         "begin_test": "開始測驗",
         "band_coverage": "出題範圍",
         "sampled_ranges": "抽樣分類",
         "what_this_means": "這代表什麼",
         "sampled_from_band": "這一題是從 {band} 這一組詞彙抽出的。",
         "goal_label": "目標",
-        "test_goal_fast": "先選出正確詞義，再判斷哪個句子最自然地使用這個詞。這份檢測維持精簡，但能更深入測到理解程度。",
+        "test_goal_fast": "每個詞會出現五層題型：中文意思、英文定義、例句應用、相近英文詞與相反英文詞。",
         "hidden_test_note": "在你送出答案前，完整定義、用法線索和詞彙細節都不會先顯示，這樣結果才比較準。",
-        "meaning_and_usage_items": "詞義＋用法",
+        "meaning_and_usage_items": "5 層題型 / 100 分",
         "recognized_correctly": "你正確辨認了這個詞彙。",
         "revisit_later_note": "這是之後很適合放回學習模式再加強的詞彙。",
         "see_test_result": "查看檢測結果",
@@ -1571,7 +1682,7 @@ TRANSLATIONS["zh-Hans"].update(
         "total_label": "总数",
         "level_test_title": "程度检测",
         "find_starting_band": "找出适合你的词汇程度。",
-        "test_intro_lede": "这个程度检测会通过 {count} 道选择题，从词义理解与实际用法两个层面，帮你估算目前的词汇程度。",
+        "test_intro_lede": "这个程度检测共 {count} 分：20 个词汇、每个 band 4 个，并通过中文意思、英文定义、例句应用、相近词与相反词 5 层题型评估。",
         "questions_label": "题目数",
         "definition_based_items": "以定义为主的题目",
         "what_it_measures": "这份检测在看什么",
@@ -1579,16 +1690,16 @@ TRANSLATIONS["zh-Hans"].update(
         "frequency_short": "常见度",
         "recognition_short": "识别",
         "placement_short": "定位",
-        "test_goal_note": "结果会同时参考你的整体正确率，以及你在较难词汇上的表现。",
+        "test_goal_note": "Level Test 是固定评量，和 Learning 分开。它会横跨五个 band 测你的广度，满分 100。",
         "begin_test": "开始检测",
         "band_coverage": "出题范围",
         "sampled_ranges": "抽样分类",
         "what_this_means": "这代表什么",
         "sampled_from_band": "这一题是从 {band} 这一组词汇抽出的。",
         "goal_label": "目标",
-        "test_goal_fast": "先选出正确词义，再判断哪个句子最自然地使用这个词。这份检测保持精简，但能更深入测到理解程度。",
+        "test_goal_fast": "每个词会出现五层题型：中文意思、英文定义、例句应用、相近英文词与相反英文词。",
         "hidden_test_note": "在你提交答案前，完整定义、用法线索和词汇细节都不会先显示，这样结果才更准确。",
-        "meaning_and_usage_items": "词义＋用法",
+        "meaning_and_usage_items": "5 层题型 / 100 分",
         "recognized_correctly": "你正确辨认了这个词汇。",
         "revisit_later_note": "这是之后很适合放回学习模式再加强的词汇。",
         "see_test_result": "查看检测结果",
@@ -1711,9 +1822,36 @@ def translate(lang: str, key: str, **kwargs) -> str:
 
 def translate_question_type(value: str, lang: str = "en") -> str:
     labels = {
-        "en": {"definition": "Definition", "synonym": "Synonym", "sentence": "Sentence"},
-        "zh-Hant": {"definition": "定義", "synonym": "同義詞", "sentence": "例句"},
-        "zh-Hans": {"definition": "定义", "synonym": "同义词", "sentence": "例句"},
+        "en": {
+            "definition": "Definition",
+            "synonym": "Synonym",
+            "sentence": "Sentence",
+            "chinese_definition": "Chinese Definition",
+            "english_definition": "English Definition",
+            "example_application": "Example Application",
+            "similar_word": "Similar Word",
+            "opposite_word": "Opposite Word",
+        },
+        "zh-Hant": {
+            "definition": "定義",
+            "synonym": "同義詞",
+            "sentence": "例句",
+            "chinese_definition": "中文意思",
+            "english_definition": "英文定義",
+            "example_application": "例句應用",
+            "similar_word": "相近英文詞",
+            "opposite_word": "相反英文詞",
+        },
+        "zh-Hans": {
+            "definition": "定义",
+            "synonym": "同义词",
+            "sentence": "例句",
+            "chinese_definition": "中文意思",
+            "english_definition": "英文定义",
+            "example_application": "例句应用",
+            "similar_word": "相近英文词",
+            "opposite_word": "相反英文词",
+        },
     }
     return labels.get(lang, labels["en"]).get(value, value)
 
@@ -3001,6 +3139,219 @@ def distractor_definitions(conn: sqlite3.Connection, *, band_rank: int, word_id:
     return options
 
 
+def english_definition_for_word(conn: sqlite3.Connection, word_id: int) -> str:
+    enrichment = conn.execute(
+        "SELECT english_definition FROM word_enrichment WHERE word_id = ?",
+        (word_id,),
+    ).fetchone()
+    if enrichment is not None and enrichment["english_definition"]:
+        return enrichment["english_definition"].strip()
+    return source_fallback_for_word(conn, word_id)["english_definition"].strip()
+
+
+def example_sentence_for_word(conn: sqlite3.Connection, word_id: int) -> str:
+    enrichment = conn.execute(
+        "SELECT example_sentence FROM word_enrichment WHERE word_id = ?",
+        (word_id,),
+    ).fetchone()
+    if enrichment is not None and enrichment["example_sentence"]:
+        return enrichment["example_sentence"].strip()
+    return source_fallback_for_word(conn, word_id)["example_sentence"].strip()
+
+
+def option_words(conn: sqlite3.Connection, word_id: int, correct: str, limit: int = 3) -> list[str]:
+    options: list[str] = []
+    rows = conn.execute(
+        """
+        SELECT lemma
+        FROM words
+        WHERE id != ?
+          AND lower(lemma) != lower(?)
+        ORDER BY RANDOM()
+        LIMIT 80
+        """,
+        (word_id, correct),
+    ).fetchall()
+    for row in rows:
+        value = row["lemma"].strip()
+        if value and value.lower() != correct.lower() and value not in options:
+            options.append(value)
+        if len(options) >= limit:
+            return options
+    return options
+
+
+def english_definition_distractors(conn: sqlite3.Connection, word_id: int, limit: int = 3) -> list[str]:
+    options: list[str] = []
+    rows = conn.execute(
+        """
+        SELECT DISTINCT words.id
+        FROM words
+        JOIN source_entries ON source_entries.word_id = words.id
+        WHERE words.id != ?
+        ORDER BY RANDOM()
+        LIMIT 100
+        """,
+        (word_id,),
+    ).fetchall()
+    for row in rows:
+        definition = english_definition_for_word(conn, row["id"])
+        if definition and definition not in options:
+            options.append(definition)
+        if len(options) >= limit:
+            return options
+    return options
+
+
+def example_sentence_distractors(conn: sqlite3.Connection, word_id: int, limit: int = 3) -> list[str]:
+    options: list[str] = []
+    rows = conn.execute(
+        """
+        SELECT DISTINCT words.id
+        FROM words
+        JOIN source_entries ON source_entries.word_id = words.id
+        WHERE words.id != ?
+        ORDER BY RANDOM()
+        LIMIT 120
+        """,
+        (word_id,),
+    ).fetchall()
+    for row in rows:
+        sentence = example_sentence_for_word(conn, row["id"])
+        if sentence and sentence not in options:
+            options.append(sentence)
+        if len(options) >= limit:
+            return options
+    return options
+
+
+def build_level_test_options(correct: str, distractors: list[str]) -> list[str] | None:
+    options = [correct]
+    for value in distractors:
+        clean = str(value).strip()
+        if clean and clean not in options:
+            options.append(clean)
+        if len(options) >= 4:
+            break
+    if len(options) < 4:
+        return None
+    random.shuffle(options)
+    return options[:4]
+
+
+def build_chinese_definition_question(conn: sqlite3.Connection, word: sqlite3.Row, position: int) -> dict | None:
+    meanings = definitions_for_word(conn, word["id"])
+    if not meanings:
+        return None
+    correct = meanings[0]
+    options = build_level_test_options(
+        correct,
+        distractor_definitions(conn, band_rank=word["best_band_rank"], word_id=word["id"]),
+    )
+    if options is None:
+        return None
+    return {
+        "position": position,
+        "word_id": word["id"],
+        "band_rank": word["best_band_rank"],
+        "band_label": word["best_band_label"],
+        "question_type": "chinese_definition",
+        "prompt_text": word["lemma"],
+        "correct_option": correct,
+        "options_json": json.dumps(options, ensure_ascii=False),
+        "explanation": "Layer 1: select the correct Chinese definition.",
+    }
+
+
+def build_english_definition_question(conn: sqlite3.Connection, word: sqlite3.Row, position: int) -> dict | None:
+    correct = english_definition_for_word(conn, word["id"])
+    if not correct:
+        return None
+    options = build_level_test_options(correct, english_definition_distractors(conn, word["id"]))
+    if options is None:
+        return None
+    return {
+        "position": position,
+        "word_id": word["id"],
+        "band_rank": word["best_band_rank"],
+        "band_label": word["best_band_label"],
+        "question_type": "english_definition",
+        "prompt_text": word["lemma"],
+        "correct_option": correct,
+        "options_json": json.dumps(options, ensure_ascii=False),
+        "explanation": "Layer 2: select the correct English definition.",
+    }
+
+
+def build_example_application_question(conn: sqlite3.Connection, word: sqlite3.Row, position: int) -> dict | None:
+    correct = example_sentence_for_word(conn, word["id"])
+    if not correct:
+        return None
+    options = build_level_test_options(correct, example_sentence_distractors(conn, word["id"]))
+    if options is None:
+        return None
+    return {
+        "position": position,
+        "word_id": word["id"],
+        "band_rank": word["best_band_rank"],
+        "band_label": word["best_band_label"],
+        "question_type": "example_application",
+        "prompt_text": word["lemma"],
+        "correct_option": correct,
+        "options_json": json.dumps(options, ensure_ascii=False),
+        "explanation": "Layer 3: select the sentence that uses the word correctly.",
+    }
+
+
+def build_similar_word_question(conn: sqlite3.Connection, word: sqlite3.Row, position: int) -> dict | None:
+    correct = LEVEL_TEST_SYNONYMS.get(word["lemma"].strip().lower(), "")
+    if not correct:
+        return None
+    options = build_level_test_options(correct, option_words(conn, word["id"], correct))
+    if options is None:
+        return None
+    return {
+        "position": position,
+        "word_id": word["id"],
+        "band_rank": word["best_band_rank"],
+        "band_label": word["best_band_label"],
+        "question_type": "similar_word",
+        "prompt_text": word["lemma"],
+        "correct_option": correct,
+        "options_json": json.dumps(options, ensure_ascii=False),
+        "explanation": "Layer 4: select the most similar English word.",
+    }
+
+
+def build_opposite_word_question(conn: sqlite3.Connection, word: sqlite3.Row, position: int) -> dict | None:
+    correct = LEVEL_TEST_ANTONYMS.get(word["lemma"].strip().lower(), "")
+    if not correct:
+        return None
+    options = build_level_test_options(correct, option_words(conn, word["id"], correct))
+    if options is None:
+        return None
+    return {
+        "position": position,
+        "word_id": word["id"],
+        "band_rank": word["best_band_rank"],
+        "band_label": word["best_band_label"],
+        "question_type": "opposite_word",
+        "prompt_text": word["lemma"],
+        "correct_option": correct,
+        "options_json": json.dumps(options, ensure_ascii=False),
+        "explanation": "Layer 5: select the opposite English word.",
+    }
+
+
+LEVEL_TEST_BUILDERS = (
+    build_chinese_definition_question,
+    build_english_definition_question,
+    build_example_application_question,
+    build_similar_word_question,
+    build_opposite_word_question,
+)
+
+
 def blank_word_in_sentence(sentence: str, lemma: str) -> str | None:
     clean_sentence = (sentence or "").strip()
     clean_lemma = (lemma or "").strip()
@@ -3175,7 +3526,6 @@ def create_test_session(conn: sqlite3.Connection) -> int:
     band_rows = band_summary(conn)
     questions: list[dict] = []
     position = 1
-    per_band = max(1, TEST_VOCAB_COUNT // max(1, len(band_rows)))
     used_word_ids: set[int] = set()
     band_word_counts: dict[int, int] = defaultdict(int)
     for band in band_rows:
@@ -3185,40 +3535,37 @@ def create_test_session(conn: sqlite3.Connection) -> int:
             FROM words
             WHERE best_band_rank = ?
             ORDER BY RANDOM()
-            LIMIT ?
             """,
-            (band["best_band_rank"], per_band + 2),
+            (band["best_band_rank"],),
         ).fetchall()
         for word in rows:
             if word["id"] in used_word_ids:
                 continue
-            definition_question = build_definition_question(conn, word, position)
-            sentence_question = build_sentence_question(conn, word, position + 1)
-            if definition_question is None or sentence_question is None:
+            lemma_key = word["lemma"].strip().lower()
+            if lemma_key not in LEVEL_TEST_SYNONYMS or lemma_key not in LEVEL_TEST_ANTONYMS:
                 continue
-            questions.extend([definition_question, sentence_question])
-            position += 2
+            word_questions: list[dict] = []
+            for offset, builder in enumerate(LEVEL_TEST_BUILDERS):
+                question = builder(conn, word, position + offset)
+                if question is None:
+                    word_questions = []
+                    break
+                word_questions.append(question)
+            if len(word_questions) != TEST_LAYERS_PER_WORD:
+                continue
+            questions.extend(word_questions)
+            position += TEST_LAYERS_PER_WORD
             used_word_ids.add(word["id"])
             band_word_counts[band["best_band_rank"]] += 1
-            if band_word_counts[band["best_band_rank"]] >= per_band:
+            if band_word_counts[band["best_band_rank"]] >= TEST_WORDS_PER_BAND:
                 break
-    attempts = 0
-    while len(used_word_ids) < TEST_VOCAB_COUNT and attempts < 500:
-        attempts += 1
-        word = conn.execute(
-            "SELECT * FROM words ORDER BY RANDOM() LIMIT 1"
-        ).fetchone()
-        if word["id"] in used_word_ids:
-            continue
-        definition_question = build_definition_question(conn, word, position)
-        sentence_question = build_sentence_question(conn, word, position + 1)
-        if definition_question is None or sentence_question is None:
-            continue
-        questions.extend([definition_question, sentence_question])
-        position += 2
-        used_word_ids.add(word["id"])
-    if not questions:
-        raise HTTPException(status_code=400, detail="Not enough enriched words to build a test session")
+        if band_word_counts[band["best_band_rank"]] < TEST_WORDS_PER_BAND:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Not enough level-test-ready words in band {band['best_band_label']}",
+            )
+    if len(questions) != TEST_QUESTION_COUNT:
+        raise HTTPException(status_code=400, detail="Not enough level-test-ready words to build a 100-point test")
 
     cursor = conn.execute(
         """
@@ -3347,7 +3694,7 @@ def create_learning_retry_session(conn: sqlite3.Connection, source_session_id: i
 
 
 def test_progress(session: sqlite3.Row) -> dict:
-    total = int(session["question_total"]) if "question_total" in session.keys() else TEST_VOCAB_COUNT * 2
+    total = int(session["question_total"]) if "question_total" in session.keys() else TEST_QUESTION_COUNT
     current = session["current_index"] + 1
     answered = session["current_index"]
     return {
@@ -3666,7 +4013,10 @@ def test_intro(request: Request) -> HTMLResponse:
         request,
         "test_intro.html",
         bands=decorate_band_rows(band_summary(conn)),
-        question_count=TEST_VOCAB_COUNT * 2,
+        question_count=TEST_QUESTION_COUNT,
+        vocab_count=TEST_VOCAB_COUNT,
+        words_per_band=TEST_WORDS_PER_BAND,
+        layers_per_word=TEST_LAYERS_PER_WORD,
         has_test_history=latest_test_result(conn) is not None,
     )
 
