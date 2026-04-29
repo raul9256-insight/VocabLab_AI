@@ -106,6 +106,31 @@ CREATE TABLE IF NOT EXISTS learning_questions (
     answered_at TEXT
 );
 
+CREATE TABLE IF NOT EXISTS user_study_cards (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    word_id INTEGER NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'new',
+    correct_count INTEGER NOT NULL DEFAULT 0,
+    wrong_count INTEGER NOT NULL DEFAULT 0,
+    streak INTEGER NOT NULL DEFAULT 0,
+    ease REAL NOT NULL DEFAULT 2.5,
+    interval_days REAL NOT NULL DEFAULT 0,
+    notes TEXT NOT NULL DEFAULT '',
+    last_reviewed_at TEXT,
+    next_review_at TEXT,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, word_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_review_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    word_id INTEGER NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+    reviewed_at TEXT NOT NULL,
+    prompt_mode TEXT NOT NULL,
+    grade TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS vocab_clusters (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     slug TEXT NOT NULL UNIQUE,
@@ -231,20 +256,36 @@ def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
         WHERE id = 1
         """
     )
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO user_study_cards (
+            user_id, word_id, status, correct_count, wrong_count, streak, ease,
+            interval_days, notes, last_reviewed_at, next_review_at, updated_at
+        )
+        SELECT
+            1, word_id, status, correct_count, wrong_count, streak, ease,
+            interval_days, notes, last_reviewed_at, next_review_at, updated_at
+        FROM study_cards
+        """
+    )
     conn.commit()
     return conn
 
 
-def fetch_stats(conn: sqlite3.Connection) -> dict:
+def fetch_stats(conn: sqlite3.Connection, user_id: int | None = None) -> dict:
+    test_clause = "WHERE user_id = ?" if user_id is not None else ""
+    learning_clause = "WHERE user_id = ?" if user_id is not None else ""
+    params: tuple[object, ...] = (user_id, user_id) if user_id is not None else ()
     row = conn.execute(
-        """
+        f"""
         SELECT
             (SELECT COUNT(*) FROM words) AS total_words,
             (SELECT COUNT(*) FROM word_enrichment WHERE json_array_length(synonyms_json) > 0) AS words_with_synonyms,
             (SELECT COUNT(*) FROM word_enrichment WHERE example_sentence <> '') AS words_with_examples,
-            (SELECT COUNT(*) FROM assessment_sessions) AS tests_taken,
-            (SELECT COUNT(*) FROM learning_sessions) AS learning_runs
-        """
+            (SELECT COUNT(*) FROM assessment_sessions {test_clause}) AS tests_taken,
+            (SELECT COUNT(*) FROM learning_sessions {learning_clause}) AS learning_runs
+        """,
+        params,
     ).fetchone()
     return dict(row)
 

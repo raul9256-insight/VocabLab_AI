@@ -2421,6 +2421,11 @@ def registered_user_row(request: Request) -> sqlite3.Row | None:
     return conn.execute("SELECT * FROM users WHERE id = ?", (int(raw),)).fetchone()
 
 
+def current_user_id(request: Request) -> int:
+    user = registered_user_row(request)
+    return int(user["id"]) if user is not None else USER_ID
+
+
 def get_profile_name(request: Request) -> str:
     user = registered_user_row(request)
     if user is not None:
@@ -3049,16 +3054,44 @@ def learning_recommendation(correct: int, total: int, enriched_words: int, lang:
     return "Review the missed words, add clearer notes, and keep building more enriched entries in the dictionary."
 
 
-def word_row(conn: sqlite3.Connection, word_id: int) -> sqlite3.Row:
+def ensure_user_study_card(conn: sqlite3.Connection, user_id: int, word_id: int) -> None:
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO user_study_cards (
+            user_id, word_id, status, correct_count, wrong_count, streak, ease,
+            interval_days, notes, last_reviewed_at, next_review_at
+        )
+        SELECT
+            ?, study_cards.word_id, study_cards.status, study_cards.correct_count,
+            study_cards.wrong_count, study_cards.streak, study_cards.ease,
+            study_cards.interval_days, study_cards.notes, study_cards.last_reviewed_at,
+            study_cards.next_review_at
+        FROM study_cards
+        WHERE study_cards.word_id = ?
+        """,
+        (user_id, word_id),
+    )
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO user_study_cards (user_id, word_id)
+        VALUES (?, ?)
+        """,
+        (user_id, word_id),
+    )
+    conn.commit()
+
+
+def word_row(conn: sqlite3.Connection, word_id: int, user_id: int = USER_ID) -> sqlite3.Row:
+    ensure_user_study_card(conn, user_id, word_id)
     row = conn.execute(
         """
-        SELECT words.*, study_cards.notes, study_cards.correct_count, study_cards.wrong_count,
-               study_cards.status, study_cards.last_reviewed_at, study_cards.next_review_at
+        SELECT words.*, user_study_cards.notes, user_study_cards.correct_count, user_study_cards.wrong_count,
+               user_study_cards.status, user_study_cards.last_reviewed_at, user_study_cards.next_review_at
         FROM words
-        JOIN study_cards ON study_cards.word_id = words.id
-        WHERE words.id = ?
+        JOIN user_study_cards ON user_study_cards.word_id = words.id
+        WHERE words.id = ? AND user_study_cards.user_id = ?
         """,
-        (word_id,),
+        (word_id, user_id),
     ).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="Word not found")
@@ -3185,8 +3218,8 @@ def parts_of_speech_map_for_words(conn: sqlite3.Connection, word_ids: list[int])
     return result
 
 
-def word_payload(conn: sqlite3.Connection, word_id: int, lang: str = "en") -> dict:
-    row = word_row(conn, word_id)
+def word_payload(conn: sqlite3.Connection, word_id: int, lang: str = "en", user_id: int = USER_ID) -> dict:
+    row = word_row(conn, word_id, user_id)
     parts_of_speech = parts_of_speech_for_word(conn, word_id)
     progression = progression_profile_for_word(conn, word_id)
     relationship_groups = [
@@ -3364,7 +3397,7 @@ def layer_accuracy_rows(conn: sqlite3.Connection, session_id: int, lang: str = "
     return result
 
 
-def word_report_rows(conn: sqlite3.Connection, session_id: int, lang: str = "en") -> list[dict]:
+def word_report_rows(conn: sqlite3.Connection, session_id: int, lang: str = "en", user_id: int = USER_ID) -> list[dict]:
     rows = conn.execute(
         """
         SELECT
@@ -3394,7 +3427,7 @@ def word_report_rows(conn: sqlite3.Connection, session_id: int, lang: str = "en"
     for row in rows:
         word_id = row["word_id"]
         if word_id not in buckets:
-            payload = word_payload(conn, word_id, lang)
+            payload = word_payload(conn, word_id, lang, user_id)
             identity = band_display_identity(row["band_label"], lang)
             buckets[word_id] = {
                 "word_id": word_id,
@@ -3499,7 +3532,7 @@ def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4, lang: st
     return items
 
 
-def latest_test_result(conn: sqlite3.Connection, full_only: bool = True) -> sqlite3.Row | None:
+def latest_test_result(conn: sqlite3.Connection, full_only: bool = True, user_id: int = USER_ID) -> sqlite3.Row | None:
     min_questions_clause = "AND COALESCE(question_count, 0) >= ?" if full_only else ""
     params: tuple[object, ...] = (TEST_QUESTION_COUNT,) if full_only else ()
     return conn.execute(
@@ -3507,17 +3540,18 @@ def latest_test_result(conn: sqlite3.Connection, full_only: bool = True) -> sqli
         SELECT *
         FROM assessment_sessions
         WHERE status = 'completed'
+          AND user_id = ?
           {min_questions_clause}
         ORDER BY id DESC
         LIMIT 1
         """,
-        params,
+        (user_id, *params),
     ).fetchone()
 
 
-def test_history_rows(conn: sqlite3.Connection, limit: int = 50, full_only: bool = False) -> list[dict]:
+def test_history_rows(conn: sqlite3.Connection, limit: int = 50, full_only: bool = False, user_id: int = USER_ID) -> list[dict]:
     full_only_clause = "HAVING total_questions >= ?" if full_only else ""
-    params: tuple[object, ...] = (TEST_QUESTION_COUNT, limit) if full_only else (limit,)
+    params: tuple[object, ...] = (user_id, TEST_QUESTION_COUNT, limit) if full_only else (user_id, limit)
     rows = conn.execute(
         f"""
         SELECT
@@ -3531,6 +3565,7 @@ def test_history_rows(conn: sqlite3.Connection, limit: int = 50, full_only: bool
         FROM assessment_sessions
         LEFT JOIN assessment_questions ON assessment_questions.session_id = assessment_sessions.id
         WHERE assessment_sessions.status = 'completed'
+          AND assessment_sessions.user_id = ?
         GROUP BY assessment_sessions.id
         {full_only_clause}
         ORDER BY assessment_sessions.id DESC
@@ -3560,19 +3595,20 @@ def test_history_rows(conn: sqlite3.Connection, limit: int = 50, full_only: bool
     return history
 
 
-def latest_learning_result(conn: sqlite3.Connection) -> sqlite3.Row | None:
+def latest_learning_result(conn: sqlite3.Connection, user_id: int = USER_ID) -> sqlite3.Row | None:
     return conn.execute(
         """
         SELECT *
         FROM learning_sessions
-        WHERE status = 'completed'
+        WHERE status = 'completed' AND user_id = ?
         ORDER BY id DESC
         LIMIT 1
-        """
+        """,
+        (user_id,),
     ).fetchone()
 
 
-def learning_history_rows(conn: sqlite3.Connection, limit: int = 5) -> list[dict]:
+def learning_history_rows(conn: sqlite3.Connection, limit: int = 5, user_id: int = USER_ID) -> list[dict]:
     rows = conn.execute(
         """
         SELECT
@@ -3585,11 +3621,12 @@ def learning_history_rows(conn: sqlite3.Connection, limit: int = 5) -> list[dict
         FROM learning_sessions
         LEFT JOIN learning_questions ON learning_questions.session_id = learning_sessions.id
         WHERE learning_sessions.status = 'completed'
+          AND learning_sessions.user_id = ?
         GROUP BY learning_sessions.id
         ORDER BY learning_sessions.id DESC
         LIMIT ?
         """,
-        (limit,),
+        (user_id, limit),
     ).fetchall()
     history: list[dict] = []
     for row in rows:
@@ -3653,9 +3690,12 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def update_study_card_schedule(conn: sqlite3.Connection, word_id: int, is_correct: bool, source: str) -> None:
-    conn.execute("INSERT INTO study_cards (word_id) VALUES (?) ON CONFLICT(word_id) DO NOTHING", (word_id,))
-    card = conn.execute("SELECT * FROM study_cards WHERE word_id = ?", (word_id,)).fetchone()
+def update_study_card_schedule(conn: sqlite3.Connection, word_id: int, is_correct: bool, source: str, user_id: int = USER_ID) -> None:
+    ensure_user_study_card(conn, user_id, word_id)
+    card = conn.execute(
+        "SELECT * FROM user_study_cards WHERE user_id = ? AND word_id = ?",
+        (user_id, word_id),
+    ).fetchone()
     now = datetime.now(timezone.utc)
     ease = float(card["ease"] or 2.5)
     interval = float(card["interval_days"] or 0)
@@ -3681,10 +3721,10 @@ def update_study_card_schedule(conn: sqlite3.Connection, word_id: int, is_correc
     next_review_at = (now + timedelta(days=interval)).isoformat()
     conn.execute(
         """
-        UPDATE study_cards
+        UPDATE user_study_cards
         SET status = ?, correct_count = ?, wrong_count = ?, streak = ?, ease = ?,
             interval_days = ?, last_reviewed_at = ?, next_review_at = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE word_id = ?
+        WHERE user_id = ? AND word_id = ?
         """,
         (
             status,
@@ -3695,15 +3735,16 @@ def update_study_card_schedule(conn: sqlite3.Connection, word_id: int, is_correc
             interval,
             now.isoformat(),
             next_review_at,
+            user_id,
             word_id,
         ),
     )
     conn.execute(
         """
-        INSERT INTO review_log (word_id, reviewed_at, prompt_mode, grade)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO user_review_log (user_id, word_id, reviewed_at, prompt_mode, grade)
+        VALUES (?, ?, ?, ?, ?)
         """,
-        (word_id, now.isoformat(), source, grade),
+        (user_id, word_id, now.isoformat(), source, grade),
     )
 
 
@@ -3780,17 +3821,21 @@ def search_result_cards(
     return cards
 
 
-def missed_words(conn: sqlite3.Connection, limit: int = 100, lang: str = "en") -> list[sqlite3.Row]:
+def missed_words(conn: sqlite3.Connection, limit: int = 100, lang: str = "en", user_id: int = USER_ID) -> list[sqlite3.Row]:
     rows = conn.execute(
         """
         WITH wrong_answers AS (
-            SELECT word_id, answered_at AS seen_at, 'test' AS source
+            SELECT assessment_questions.word_id, assessment_questions.answered_at AS seen_at, 'test' AS source
             FROM assessment_questions
-            WHERE is_correct = 0
+            JOIN assessment_sessions ON assessment_sessions.id = assessment_questions.session_id
+            WHERE assessment_questions.is_correct = 0
+              AND assessment_sessions.user_id = ?
             UNION ALL
-            SELECT word_id, answered_at AS seen_at, 'learning' AS source
+            SELECT learning_questions.word_id, learning_questions.answered_at AS seen_at, 'learning' AS source
             FROM learning_questions
-            WHERE is_correct = 0
+            JOIN learning_sessions ON learning_sessions.id = learning_questions.session_id
+            WHERE learning_questions.is_correct = 0
+              AND learning_sessions.user_id = ?
         )
         SELECT
             words.id,
@@ -3798,25 +3843,25 @@ def missed_words(conn: sqlite3.Connection, limit: int = 100, lang: str = "en") -
             words.best_band_label,
             COUNT(*) AS miss_count,
             MAX(wrong_answers.seen_at) AS last_seen,
-            study_cards.status,
-            study_cards.next_review_at,
-            study_cards.streak,
+            user_study_cards.status,
+            user_study_cards.next_review_at,
+            user_study_cards.streak,
             COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
             COALESCE(word_enrichment.english_definition, '') AS english_definition,
             COALESCE(word_enrichment.example_sentence, '') AS example_sentence
         FROM wrong_answers
         JOIN words ON words.id = wrong_answers.word_id
-        JOIN study_cards ON study_cards.word_id = words.id
+        JOIN user_study_cards ON user_study_cards.word_id = words.id AND user_study_cards.user_id = ?
         LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
-        GROUP BY words.id, words.lemma, words.best_band_label, study_cards.status, study_cards.next_review_at, study_cards.streak,
+        GROUP BY words.id, words.lemma, words.best_band_label, user_study_cards.status, user_study_cards.next_review_at, user_study_cards.streak,
                  word_enrichment.pronunciation, word_enrichment.english_definition, word_enrichment.example_sentence
         ORDER BY
-            CASE WHEN study_cards.next_review_at IS NOT NULL AND study_cards.next_review_at <= ? THEN 0 ELSE 1 END,
+            CASE WHEN user_study_cards.next_review_at IS NOT NULL AND user_study_cards.next_review_at <= ? THEN 0 ELSE 1 END,
             miss_count DESC,
             last_seen DESC
         LIMIT ?
         """,
-        (utc_now_iso(), limit),
+        (user_id, user_id, user_id, utc_now_iso(), limit),
     ).fetchall()
     word_ids = [row["id"] for row in rows]
     definitions_map = definitions_map_for_words(conn, word_ids, lang)
@@ -4551,7 +4596,7 @@ def build_sentence_question(conn: sqlite3.Connection, word: sqlite3.Row, positio
     }
 
 
-def create_test_session(conn: sqlite3.Connection) -> int:
+def create_test_session(conn: sqlite3.Connection, user_id: int = USER_ID) -> int:
     band_rows = band_summary(conn)
     questions: list[dict] = []
     position = 1
@@ -4602,7 +4647,7 @@ def create_test_session(conn: sqlite3.Connection) -> int:
         INSERT INTO assessment_sessions (user_id)
         VALUES (?)
         """,
-        (USER_ID,),
+        (user_id,),
     )
     session_id = cursor.lastrowid
     for question in questions:
@@ -4631,15 +4676,15 @@ def create_test_session(conn: sqlite3.Connection) -> int:
     return session_id
 
 
-def recommended_learning_band_rank(conn: sqlite3.Connection) -> int:
-    latest_test = latest_test_result(conn)
+def recommended_learning_band_rank(conn: sqlite3.Connection, user_id: int = USER_ID) -> int:
+    latest_test = latest_test_result(conn, user_id=user_id)
     if latest_test is not None and latest_test["estimated_band_rank"] in TEST_BAND_EASIEST_TO_HARDEST:
         return int(latest_test["estimated_band_rank"])
     return 2000
 
 
-def learning_band_cards(conn: sqlite3.Connection, lang: str = "en") -> list[dict]:
-    recommended_rank = recommended_learning_band_rank(conn)
+def learning_band_cards(conn: sqlite3.Connection, lang: str = "en", user_id: int = USER_ID) -> list[dict]:
+    recommended_rank = recommended_learning_band_rank(conn, user_id)
     cards = []
     for band in decorate_band_rows(band_summary(conn)):
         identity = band_display_identity(band["best_band_label"], lang)
@@ -4654,8 +4699,8 @@ def learning_band_cards(conn: sqlite3.Connection, lang: str = "en") -> list[dict
     return cards
 
 
-def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = None) -> int:
-    selected_rank = band_rank if band_rank in TEST_BAND_EASIEST_TO_HARDEST else recommended_learning_band_rank(conn)
+def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = None, user_id: int = USER_ID) -> int:
+    selected_rank = band_rank if band_rank in TEST_BAND_EASIEST_TO_HARDEST else recommended_learning_band_rank(conn, user_id)
     band = conn.execute(
         """
         SELECT best_band_rank, best_band_label
@@ -4667,19 +4712,42 @@ def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = No
     ).fetchone()
     if band is None:
         raise HTTPException(status_code=400, detail="Selected learning band was not found")
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO user_study_cards (
+            user_id, word_id, status, correct_count, wrong_count, streak, ease,
+            interval_days, notes, last_reviewed_at, next_review_at
+        )
+        SELECT
+            ?, words.id,
+            COALESCE(study_cards.status, 'new'),
+            COALESCE(study_cards.correct_count, 0),
+            COALESCE(study_cards.wrong_count, 0),
+            COALESCE(study_cards.streak, 0),
+            COALESCE(study_cards.ease, 2.5),
+            COALESCE(study_cards.interval_days, 0),
+            COALESCE(study_cards.notes, ''),
+            study_cards.last_reviewed_at,
+            study_cards.next_review_at
+        FROM words
+        LEFT JOIN study_cards ON study_cards.word_id = words.id
+        WHERE words.best_band_rank = ?
+        """,
+        (user_id, band["best_band_rank"]),
+    )
     cursor = conn.execute(
         """
         INSERT INTO learning_sessions (user_id, band_rank, band_label)
         VALUES (?, ?, ?)
         """,
-        (USER_ID, band["best_band_rank"], band["best_band_label"]),
+        (user_id, band["best_band_rank"], band["best_band_label"]),
     )
     session_id = cursor.lastrowid
     words = conn.execute(
         """
         SELECT DISTINCT words.*, COUNT(learning_questions.id) AS learning_use_count
         FROM words
-        JOIN study_cards ON study_cards.word_id = words.id
+        JOIN user_study_cards ON user_study_cards.word_id = words.id AND user_study_cards.user_id = ?
         JOIN source_entries ON source_entries.word_id = words.id
         LEFT JOIN learning_questions ON learning_questions.word_id = words.id
         WHERE source_entries.meanings_json <> '[]'
@@ -4687,18 +4755,18 @@ def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = No
         GROUP BY words.id
         ORDER BY
             CASE
-                WHEN study_cards.next_review_at IS NOT NULL AND study_cards.next_review_at <= ? THEN 0
-                WHEN study_cards.wrong_count > 0 THEN 1
-                WHEN study_cards.status = 'learning' THEN 2
-                WHEN study_cards.status = 'new' THEN 3
+                WHEN user_study_cards.next_review_at IS NOT NULL AND user_study_cards.next_review_at <= ? THEN 0
+                WHEN user_study_cards.wrong_count > 0 THEN 1
+                WHEN user_study_cards.status = 'learning' THEN 2
+                WHEN user_study_cards.status = 'new' THEN 3
                 ELSE 4
             END,
-            study_cards.wrong_count DESC,
-            study_cards.next_review_at,
+            user_study_cards.wrong_count DESC,
+            user_study_cards.next_review_at,
             learning_use_count ASC,
             RANDOM()
         """,
-        (band["best_band_rank"], utc_now_iso()),
+        (user_id, band["best_band_rank"], utc_now_iso()),
     ).fetchall()
     populate_learning_session(conn, session_id, words)
     total_questions = conn.execute(
@@ -4769,7 +4837,7 @@ def create_learning_retry_session(conn: sqlite3.Connection, source_session_id: i
         VALUES (?, ?, ?)
         """,
         (
-            USER_ID,
+            source_session["user_id"] if source_session else USER_ID,
             source_session["band_rank"] if source_session else None,
             source_session["band_label"] if source_session else None,
         ),
@@ -4960,9 +5028,10 @@ def home(request: Request) -> HTMLResponse:
         profile_persona = get_profile_persona(request)
         if profile_persona is None:
             return RedirectResponse(url=build_home_url(lang), status_code=303)
-        stats = fetch_stats(conn)
-        latest_test = latest_test_result(conn)
-        latest_learning = latest_learning_result(conn)
+        user_id = current_user_id(request)
+        stats = fetch_stats(conn, user_id)
+        latest_test = latest_test_result(conn, user_id=user_id)
+        latest_learning = latest_learning_result(conn, user_id)
         recommended_band = latest_test["estimated_band_label"] if latest_test else "50~99 (3924)"
         bands = decorate_band_rows(band_summary(conn))
         max_band_total = max((band["workbook_total"] for band in bands), default=1)
@@ -4977,7 +5046,7 @@ def home(request: Request) -> HTMLResponse:
             }
             for band in bands[:5]
         ]
-        missed_words_count = len(missed_words(conn, limit=10))
+        missed_words_count = len(missed_words(conn, limit=10, user_id=user_id))
         spotlight_words = dashboard_spotlight_words(conn)
     except Exception:
         profile_name = (request.cookies.get("profile_name") or "Lawrence").strip()[:40] or "Lawrence"
@@ -5085,7 +5154,7 @@ def auth_signup(
     conn.commit()
     user_id = cursor.lastrowid
     response = RedirectResponse(url=(f"/dashboard?lang={lang}" if lang != "en" else "/dashboard"), status_code=303)
-    response.set_cookie("registered_user_id", str(user_id), max_age=60 * 60 * 24 * 365)
+    response.set_cookie("registered_user_id", str(user_id), max_age=60 * 60 * 24 * 365, httponly=True, samesite="lax")
     response.set_cookie("profile_name", safe_name, max_age=60 * 60 * 24 * 365)
     response.set_cookie("profile_persona", safe_persona, max_age=60 * 60 * 24 * 365)
     return response
@@ -5104,7 +5173,7 @@ def auth_login(
     if user is None or not verify_password(password, user["password_hash"]):
         return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_invalid_login"), status_code=303)
     response = RedirectResponse(url=(f"/dashboard?lang={lang}" if lang != "en" else "/dashboard"), status_code=303)
-    response.set_cookie("registered_user_id", str(user["id"]), max_age=60 * 60 * 24 * 365)
+    response.set_cookie("registered_user_id", str(user["id"]), max_age=60 * 60 * 24 * 365, httponly=True, samesite="lax")
     response.set_cookie("profile_name", (user["display_name"] or "Lawrence")[:40], max_age=60 * 60 * 24 * 365)
     response.set_cookie("profile_persona", (user["persona"] or "lifelong_learner"), max_age=60 * 60 * 24 * 365)
     return response
@@ -5123,6 +5192,7 @@ def auth_logout(request: Request) -> RedirectResponse:
 @app.get("/test", response_class=HTMLResponse)
 def test_intro(request: Request) -> HTMLResponse:
     conn = db_conn()
+    user_id = current_user_id(request)
     return render(
         request,
         "test_intro.html",
@@ -5131,14 +5201,14 @@ def test_intro(request: Request) -> HTMLResponse:
         vocab_count=TEST_VOCAB_COUNT,
         words_per_band=TEST_WORDS_PER_BAND,
         layers_per_word=TEST_LAYERS_PER_WORD,
-        has_test_history=latest_test_result(conn) is not None,
+        has_test_history=latest_test_result(conn, user_id=user_id) is not None,
     )
 
 
 @app.get("/test/history", response_class=HTMLResponse)
 def test_history(request: Request) -> HTMLResponse:
     conn = db_conn()
-    return render(request, "test_history.html", history=test_history_rows(conn))
+    return render(request, "test_history.html", history=test_history_rows(conn, user_id=current_user_id(request)))
 
 
 @app.get("/quality/feedback", response_class=HTMLResponse)
@@ -5259,12 +5329,13 @@ def statistics_page(request: Request) -> HTMLResponse:
 
 def statistics_page_impl(request: Request) -> HTMLResponse:
     conn = db_conn()
+    user_id = current_user_id(request)
     try:
-        history = test_history_rows(conn, limit=5, full_only=True)
+        history = test_history_rows(conn, limit=5, full_only=True, user_id=user_id)
     except sqlite3.Error:
         history = []
     try:
-        learning_history = learning_history_rows(conn, limit=5)
+        learning_history = learning_history_rows(conn, limit=5, user_id=user_id)
     except sqlite3.Error:
         learning_history = []
     latest = history[0] if history else None
@@ -5360,24 +5431,25 @@ def statistics_page_impl(request: Request) -> HTMLResponse:
 
 
 @app.post("/test/start")
-def test_start() -> RedirectResponse:
+def test_start(request: Request) -> RedirectResponse:
     conn = db_conn()
-    session_id = create_test_session(conn)
+    session_id = create_test_session(conn, current_user_id(request))
     return RedirectResponse(url=f"/test/{session_id}", status_code=303)
 
 
 @app.get("/test/{session_id}", response_class=HTMLResponse)
 def test_question(request: Request, session_id: int) -> HTMLResponse:
     conn = db_conn()
+    user_id = current_user_id(request)
     session = conn.execute(
         """
         SELECT assessment_sessions.*, COUNT(assessment_questions.id) AS question_total
         FROM assessment_sessions
         LEFT JOIN assessment_questions ON assessment_questions.session_id = assessment_sessions.id
-        WHERE assessment_sessions.id = ?
+        WHERE assessment_sessions.id = ? AND assessment_sessions.user_id = ?
         GROUP BY assessment_sessions.id
         """,
-        (session_id,),
+        (session_id, user_id),
     ).fetchone()
     if session is None:
         raise HTTPException(status_code=404, detail="Test session not found")
@@ -5392,7 +5464,7 @@ def test_question(request: Request, session_id: int) -> HTMLResponse:
         "test_question.html",
         session=session,
         question=question,
-        word=word_payload(conn, question["word_id"], lang)["word"],
+        word=word_payload(conn, question["word_id"], lang, user_id)["word"],
         band_identity=band_identity,
         options=json_loads(question["options_json"]),
         progress=test_progress(session),
@@ -5400,9 +5472,10 @@ def test_question(request: Request, session_id: int) -> HTMLResponse:
 
 
 @app.post("/test/{session_id}/answer")
-def test_answer(session_id: int, answer: str = Form(...)) -> RedirectResponse:
+def test_answer(request: Request, session_id: int, answer: str = Form(...)) -> RedirectResponse:
     conn = db_conn()
-    session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ?", (session_id,)).fetchone()
+    user_id = current_user_id(request)
+    session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
     question = current_test_question(conn, session_id)
     if session is None or question is None:
         return RedirectResponse(url=f"/test/{session_id}/result", status_code=303)
@@ -5424,7 +5497,7 @@ def test_answer(session_id: int, answer: str = Form(...)) -> RedirectResponse:
         """,
         (is_correct, session_id),
     )
-    update_study_card_schedule(conn, question["word_id"], bool(is_correct), "level_test")
+    update_study_card_schedule(conn, question["word_id"], bool(is_correct), "level_test", user_id)
     conn.commit()
     total_questions = conn.execute(
         "SELECT COUNT(*) FROM assessment_questions WHERE session_id = ?",
@@ -5447,6 +5520,10 @@ def test_feedback(
     comment: str = Form(""),
 ) -> RedirectResponse:
     conn = db_conn()
+    user_id = current_user_id(request)
+    session = conn.execute("SELECT id FROM assessment_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
+    if session is None:
+        raise HTTPException(status_code=404, detail="Test session not found")
     question = test_question_by_id(conn, session_id, question_id)
     lang = getattr(request.state, "lang", get_lang(request))
     if question is None:
@@ -5477,15 +5554,16 @@ def test_feedback(
 @app.get("/test/{session_id}/review", response_class=HTMLResponse)
 def test_review(request: Request, session_id: int, question_id: int | None = Query(None)) -> HTMLResponse:
     conn = db_conn()
+    user_id = current_user_id(request)
     session = conn.execute(
         """
         SELECT assessment_sessions.*, COUNT(assessment_questions.id) AS question_total
         FROM assessment_sessions
         LEFT JOIN assessment_questions ON assessment_questions.session_id = assessment_sessions.id
-        WHERE assessment_sessions.id = ?
+        WHERE assessment_sessions.id = ? AND assessment_sessions.user_id = ?
         GROUP BY assessment_sessions.id
         """,
-        (session_id,),
+        (session_id, user_id),
     ).fetchone()
     if session is None:
         raise HTTPException(status_code=404, detail="Test session not found")
@@ -5493,7 +5571,7 @@ def test_review(request: Request, session_id: int, question_id: int | None = Que
     if question is None:
         return RedirectResponse(url=f"/test/{session_id}", status_code=303)
     lang = getattr(request.state, "lang", get_lang(request))
-    payload = word_payload(conn, question["word_id"], lang)
+    payload = word_payload(conn, question["word_id"], lang, user_id)
     band_identity = band_display_identity(question["band_label"], lang)
     is_last = session["current_index"] >= session["question_total"]
     return render(
@@ -5517,7 +5595,8 @@ def test_review(request: Request, session_id: int, question_id: int | None = Que
 @app.get("/test/{session_id}/result", response_class=HTMLResponse)
 def test_result(request: Request, session_id: int) -> HTMLResponse:
     conn = db_conn()
-    session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ?", (session_id,)).fetchone()
+    user_id = current_user_id(request)
+    session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
     if session is None:
         raise HTTPException(status_code=404, detail="Test session not found")
     question_count = conn.execute(
@@ -5526,7 +5605,7 @@ def test_result(request: Request, session_id: int) -> HTMLResponse:
     ).fetchone()[0]
     if session["status"] != "completed":
         summary = finish_test_session(conn, session_id)
-        session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ?", (session_id,)).fetchone()
+        session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
         has_detailed_results = question_count > 0
     elif question_count > 0:
         summary = summarize_test_session(conn, session_id)
@@ -5563,11 +5642,11 @@ def test_result(request: Request, session_id: int) -> HTMLResponse:
             ),
         )
         conn.commit()
-        session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ?", (session_id,)).fetchone()
+        session = conn.execute("SELECT * FROM assessment_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
     lang = getattr(request.state, "lang", get_lang(request))
     band_rows = band_accuracy_rows(conn, session_id, lang)
     layer_rows = layer_accuracy_rows(conn, session_id, lang)
-    word_rows = word_report_rows(conn, session_id, lang) if has_detailed_results else []
+    word_rows = word_report_rows(conn, session_id, lang, user_id) if has_detailed_results else []
     focus_rows = report_focus_rows(layer_rows)
     display_total_questions = summary["question_count"] if summary.get("question_count") else session["question_count"]
     display_accuracy_percent = summary["accuracy_percent"] if summary["accuracy_percent"] is not None else session["accuracy_percent"]
@@ -5603,6 +5682,7 @@ def test_result(request: Request, session_id: int) -> HTMLResponse:
 def learning_intro(request: Request) -> HTMLResponse:
     conn = db_conn()
     lang = getattr(request.state, "lang", get_lang(request))
+    user_id = current_user_id(request)
     enrichment = conn.execute(
         """
         SELECT
@@ -5612,17 +5692,17 @@ def learning_intro(request: Request) -> HTMLResponse:
         FROM word_enrichment
         """
     ).fetchone()
-    latest_learning = latest_learning_result(conn)
-    recommended_rank = recommended_learning_band_rank(conn)
+    latest_learning = latest_learning_result(conn, user_id)
+    recommended_rank = recommended_learning_band_rank(conn, user_id)
     recommended_band = TEST_BAND_LABELS.get(recommended_rank, "2000~ (2330)")
     recommended_identity = band_display_identity(recommended_band, lang)
     return render(
         request,
         "learning_intro.html",
-        stats=fetch_stats(conn),
+        stats=fetch_stats(conn, user_id),
         enrichment=enrichment,
         latest_learning=latest_learning,
-        bands=learning_band_cards(conn, lang),
+        bands=learning_band_cards(conn, lang, user_id),
         recommended_band_rank=recommended_rank,
         recommended_band_identity=recommended_identity,
         learning_word_count=LEARNING_WORD_COUNT,
@@ -5632,16 +5712,17 @@ def learning_intro(request: Request) -> HTMLResponse:
 
 
 @app.post("/learning/start")
-def learning_start(band_rank: int | None = Form(None)) -> RedirectResponse:
+def learning_start(request: Request, band_rank: int | None = Form(None)) -> RedirectResponse:
     conn = db_conn()
-    session_id = create_learning_session(conn, band_rank)
+    session_id = create_learning_session(conn, band_rank, current_user_id(request))
     return RedirectResponse(url=f"/learning/{session_id}", status_code=303)
 
 
 @app.get("/learning/{session_id}", response_class=HTMLResponse)
 def learning_question(request: Request, session_id: int) -> HTMLResponse:
     conn = db_conn()
-    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    user_id = current_user_id(request)
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
     if session is None:
         raise HTTPException(status_code=404, detail="Learning session not found")
     question = current_learning_question(conn, session_id)
@@ -5649,7 +5730,7 @@ def learning_question(request: Request, session_id: int) -> HTMLResponse:
         finish_learning_session(conn, session_id)
         return RedirectResponse(url=f"/learning/{session_id}/result", status_code=303)
     lang = getattr(request.state, "lang", get_lang(request))
-    payload = word_payload(conn, question["word_id"], lang)
+    payload = word_payload(conn, question["word_id"], lang, user_id)
     return render(
         request,
         "learning_question.html",
@@ -5669,9 +5750,10 @@ def learning_question(request: Request, session_id: int) -> HTMLResponse:
 
 
 @app.post("/learning/{session_id}/answer")
-def learning_answer(session_id: int, answer: str = Form(...)) -> RedirectResponse:
+def learning_answer(request: Request, session_id: int, answer: str = Form(...)) -> RedirectResponse:
     conn = db_conn()
-    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    user_id = current_user_id(request)
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
     question = current_learning_question(conn, session_id)
     if session is None or question is None:
         return RedirectResponse(url=f"/learning/{session_id}/result", status_code=303)
@@ -5693,7 +5775,7 @@ def learning_answer(session_id: int, answer: str = Form(...)) -> RedirectRespons
         """,
         (is_correct, session_id),
     )
-    update_study_card_schedule(conn, question["word_id"], bool(is_correct), "learning")
+    update_study_card_schedule(conn, question["word_id"], bool(is_correct), "learning", user_id)
     conn.commit()
     total_questions = conn.execute(
         "SELECT COUNT(*) FROM learning_questions WHERE session_id = ?",
@@ -5710,14 +5792,15 @@ def learning_answer(session_id: int, answer: str = Form(...)) -> RedirectRespons
 @app.get("/learning/{session_id}/review", response_class=HTMLResponse)
 def learning_review(request: Request, session_id: int) -> HTMLResponse:
     conn = db_conn()
-    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    user_id = current_user_id(request)
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
     if session is None:
         raise HTTPException(status_code=404, detail="Learning session not found")
     question = previous_learning_question(conn, session_id)
     if question is None:
         return RedirectResponse(url=f"/learning/{session_id}", status_code=303)
     lang = getattr(request.state, "lang", get_lang(request))
-    payload = word_payload(conn, question["word_id"], lang)
+    payload = word_payload(conn, question["word_id"], lang, user_id)
     progress = learning_progress(conn, session)
     is_last = progress["answered"] >= progress["total"]
     return render(
@@ -5742,10 +5825,12 @@ def learning_review(request: Request, session_id: int) -> HTMLResponse:
 @app.get("/learning/{session_id}/result", response_class=HTMLResponse)
 def learning_result(request: Request, session_id: int) -> HTMLResponse:
     conn = db_conn()
-    finish_learning_session(conn, session_id)
-    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    user_id = current_user_id(request)
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
     if session is None:
         raise HTTPException(status_code=404, detail="Learning session not found")
+    finish_learning_session(conn, session_id)
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ? AND user_id = ?", (session_id, user_id)).fetchone()
     rows = conn.execute(
         """
         SELECT question_type, SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) AS correct, COUNT(*) AS total
@@ -5776,11 +5861,12 @@ def learning_result(request: Request, session_id: int) -> HTMLResponse:
 def dictionary_home(request: Request) -> HTMLResponse:
     conn = db_conn()
     bands = decorate_band_rows(band_summary(conn))
+    user_id = current_user_id(request)
     return render(
         request,
         "dictionary_home.html",
         bands=bands,
-        missed_count=len(missed_words(conn, limit=10, lang=getattr(request.state, "lang", get_lang(request)))),
+        missed_count=len(missed_words(conn, limit=10, lang=getattr(request.state, "lang", get_lang(request)), user_id=user_id)),
     )
 
 
@@ -5973,11 +6059,11 @@ def mobile_word_note_update(
     cleaned = notes.strip()
     conn.execute(
         """
-        UPDATE study_cards
+        UPDATE user_study_cards
         SET notes = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE word_id = ?
+        WHERE user_id = ? AND word_id = ?
         """,
-        (cleaned, word_id),
+        (cleaned, USER_ID, word_id),
     )
     conn.commit()
     payload = word_payload(conn, word_id, safe_lang)
@@ -6482,7 +6568,7 @@ def bulk_generate_ai(
 @app.get("/review/missed", response_class=HTMLResponse)
 def missed_words_page(request: Request) -> HTMLResponse:
     conn = db_conn()
-    rows = missed_words(conn, lang=getattr(request.state, "lang", get_lang(request)))
+    rows = missed_words(conn, lang=getattr(request.state, "lang", get_lang(request)), user_id=current_user_id(request))
     return render(request, "missed_words.html", rows=rows)
 
 
@@ -6490,7 +6576,7 @@ def missed_words_page(request: Request) -> HTMLResponse:
 def word_detail(request: Request, word_id: int) -> HTMLResponse:
     conn = db_conn()
     load_env_file()
-    payload = word_payload(conn, word_id, getattr(request.state, "lang", get_lang(request)))
+    payload = word_payload(conn, word_id, getattr(request.state, "lang", get_lang(request)), current_user_id(request))
     payload["ai_key_ready"] = bool(os.environ.get("OPENAI_API_KEY", "").strip())
     return render(request, "word_detail.html", **payload)
 
@@ -6511,6 +6597,7 @@ def pronounce_word_audio(text: str = Query(..., min_length=1, max_length=80)) ->
 
 @app.post("/word/{word_id}/update")
 def update_word(
+    request: Request,
     word_id: int,
     notes: str = Form(""),
     english_definition: str = Form(""),
@@ -6527,7 +6614,8 @@ def update_word(
     ai_usage_warning: str = Form(""),
 ) -> RedirectResponse:
     conn = db_conn()
-    word = word_row(conn, word_id)
+    user_id = current_user_id(request)
+    word = word_row(conn, word_id, user_id)
     synonym_items = [item.strip() for item in synonyms.splitlines() if item.strip()]
     distractor_items = [item.strip() for item in sentence_distractors.splitlines() if item.strip()]
     compare_word_items = []
@@ -6542,11 +6630,11 @@ def update_word(
             compare_word_items.append({"word": cleaned, "note": ""})
     conn.execute(
         """
-        UPDATE study_cards
+        UPDATE user_study_cards
         SET notes = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE word_id = ?
+        WHERE user_id = ? AND word_id = ?
         """,
-        (notes.strip(), word_id),
+        (notes.strip(), user_id, word_id),
     )
     conn.execute(
         """
