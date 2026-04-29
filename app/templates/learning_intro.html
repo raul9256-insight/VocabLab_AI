@@ -20,17 +20,21 @@
       <article class="learning-focus-card">
         <div class="card-head tight">
           <div>
-            <p class="eyebrow">{{ t("session_goal") }}</p>
-            <h2>{{ t("build_consistency") }}</h2>
+            <p class="eyebrow">{{ t("recommended_learning_band") }}</p>
+            <h2 class="band-identity-title band-card-tone-{{ recommended_band_identity.tone }}">
+              <span class="band-type-subtitle">{{ recommended_band_identity.subtitle }}</span>
+              <span class="band-type-name">{{ recommended_band_identity.title }}</span>
+            </h2>
           </div>
         </div>
         <div class="mini-kicker-row">
-          <span class="mini-kicker active">{{ t("definition_short") }}</span>
-          <span class="mini-kicker">{{ t("synonym_short") }}</span>
-          <span class="mini-kicker">{{ t("sentence_short") }}</span>
+          <span class="mini-kicker active">{{ learning_word_count }} vocab</span>
+          <span class="mini-kicker">{{ learning_question_count }} questions</span>
+          <span class="mini-kicker">{{ t("learning_session_structure") }}</span>
         </div>
-        <p class="goal-note">{{ t("definition_available_note") }}</p>
+        <p class="goal-note">{{ t("learning_band_note") }}</p>
         <form method="post" action="/learning/start">
+          <input type="hidden" name="band_rank" value="{{ recommended_band_rank }}">
           <button class="button learning-start-button" type="submit">{{ t("start_learning_session") }}</button>
         </form>
       </article>
@@ -65,6 +69,23 @@
   </article>
 
   <section class="learning-support-grid">
+    <article class="panel dashboard-v2-card learning-support-card learning-band-choice-card">
+      <p class="eyebrow">{{ t("choose_learning_band") }}</p>
+      <h2>{{ t("frequency_bands") }}</h2>
+      <div class="learning-band-choice-grid">
+        {% for band in bands %}
+        <form method="post" action="/learning/start">
+          <input type="hidden" name="band_rank" value="{{ band.best_band_rank }}">
+          <button class="learning-band-choice band-card-tone-{{ band.tone }}" type="submit">
+            <span class="band-type-subtitle">{{ band.subtitle }}</span>
+            <strong class="band-type-name">{{ band.title }}</strong>
+            <small>{{ band.range_label }}{% if band.recommended %} · {{ t("recommended_badge") }}{% endif %}</small>
+          </button>
+        </form>
+        {% endfor %}
+      </div>
+    </article>
+
     <article class="panel dashboard-v2-card learning-support-card">
       <p class="eyebrow">{{ t("how_it_works") }}</p>
       <h2>{{ t("what_mode_gives_you") }}</h2>

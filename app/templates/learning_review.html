@@ -5,15 +5,21 @@
   <div class="learning-session-meta">
     <span class="session-meta-pill active">{{ t("learning_title") }}</span>
     <span class="session-meta-pill">{{ t("answered_counter", answered=progress.answered, total=progress.total) }}</span>
-    <span class="session-meta-pill">{{ qtype_label(question.question_type) }}</span>
+    <span class="session-meta-pill band-identity-pill band-card-tone-{{ band_identity.tone }}">
+      <span class="band-type-name">{{ band_identity.display_label }}</span>
+    </span>
   </div>
 
   <section class="learning-session-grid">
     <article class="panel dashboard-v2-card learning-question-card">
-      <p class="eyebrow">{% if question.is_correct %}{{ t("correct_review") }}{% else %}{{ t("review_label") }}{% endif %}</p>
-      <h1>{{ question.prompt_text }}</h1>
+      <p class="eyebrow">{{ t("word_round_complete") }}</p>
+      <div class="word-heading-row compact">
+        <h1>{{ question.prompt_text }}</h1>
+        <button class="pronounce-button small" type="button" data-pronounce="{{ word.lemma }}" aria-label="{{ t('pronunciation_label') }} {{ word.lemma }}">🔊</button>
+      </div>
 
       <div class="feedback-card learning-feedback {% if question.is_correct %}feedback-good{% else %}feedback-bad{% endif %}">
+        <p><strong>{{ t("word_round_score") }}</strong> {{ word_score.correct }} / 5</p>
         <p><strong>{{ t("your_answer") }}</strong> {{ question.user_answer }}</p>
         <p><strong>{{ t("correct_answer") }}</strong> {{ question.correct_option }}</p>
         {% if question.is_correct %}

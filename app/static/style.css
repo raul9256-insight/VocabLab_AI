@@ -3064,6 +3064,48 @@ input[type="file"] {
   width: 100%;
 }
 
+.learning-band-choice-card {
+  grid-column: 1 / -1;
+}
+
+.learning-band-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.learning-band-choice-grid form {
+  margin: 0;
+}
+
+.learning-band-choice {
+  width: 100%;
+  min-height: 8.4rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.45rem;
+  padding: 1rem;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 16px 35px rgba(43, 55, 85, 0.08);
+}
+
+.learning-band-choice:hover {
+  transform: translateY(-2px);
+  border-color: rgba(93, 103, 239, 0.35);
+}
+
+.learning-band-choice small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .learning-stats-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -4331,6 +4373,7 @@ input[type="file"] {
   .dictionary-refined-actions,
   .dictionary-results-grid,
   .dictionary-band-results,
+  .learning-band-choice-grid,
   .review-grid,
   .test-band-breakdown-grid,
   .learning-stats-grid,
@@ -4408,6 +4451,10 @@ input[type="file"] {
 
   .band-grid-v2.compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .learning-band-choice-grid {
+    grid-template-columns: 1fr;
   }
 
   .review-hero-actions {

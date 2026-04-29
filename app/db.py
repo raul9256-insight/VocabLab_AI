@@ -82,6 +82,8 @@ CREATE TABLE IF NOT EXISTS question_feedback (
 CREATE TABLE IF NOT EXISTS learning_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    band_rank INTEGER,
+    band_label TEXT,
     status TEXT NOT NULL DEFAULT 'active',
     started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     completed_at TEXT,
@@ -207,6 +209,8 @@ def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
     ensure_column(conn, "assessment_sessions", "question_count", "INTEGER")
     ensure_column(conn, "assessment_sessions", "accuracy_percent", "INTEGER")
     ensure_column(conn, "assessment_sessions", "weighted_percent", "INTEGER")
+    ensure_column(conn, "learning_sessions", "band_rank", "INTEGER")
+    ensure_column(conn, "learning_sessions", "band_label", "TEXT")
     ensure_column(conn, "users", "email", "TEXT")
     ensure_column(conn, "users", "password_hash", "TEXT NOT NULL DEFAULT ''")
     ensure_column(conn, "users", "display_name", "TEXT NOT NULL DEFAULT ''")

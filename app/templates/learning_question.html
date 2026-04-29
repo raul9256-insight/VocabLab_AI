@@ -7,6 +7,9 @@
     <span class="session-meta-pill">{{ t("question_counter", current=progress.current, total=progress.total) }}</span>
     <span class="session-meta-pill">{{ t("percent_complete", percent=progress.percent) }}</span>
     <span class="session-meta-pill">{{ qtype_label(question.question_type) }}</span>
+    <span class="session-meta-pill band-identity-pill band-card-tone-{{ band_identity.tone }}">
+      <span class="band-type-name">{{ band_identity.display_label }}</span>
+    </span>
   </div>
 
   <section class="learning-session-grid">

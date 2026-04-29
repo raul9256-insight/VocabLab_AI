@@ -69,7 +69,9 @@ TEST_VOCAB_COUNT = 20
 TEST_WORDS_PER_BAND = 4
 TEST_LAYERS_PER_WORD = 5
 TEST_QUESTION_COUNT = TEST_VOCAB_COUNT * TEST_LAYERS_PER_WORD
-LEARNING_WORD_COUNT = 5
+LEARNING_WORD_COUNT = 10
+LEARNING_LAYERS_PER_WORD = 5
+LEARNING_QUESTION_COUNT = LEARNING_WORD_COUNT * LEARNING_LAYERS_PER_WORD
 SUPPORTED_LANGS = {"en", "zh-Hant", "zh-Hans"}
 SUPPORTED_PERSONAS = {
     "student",
@@ -1057,6 +1059,11 @@ TRANSLATIONS["en"].update(
         "learning_title": "Learning",
         "learning_hero_title": "Train in short, focused loops.",
         "learning_hero_lede": "Each session gives you multiple-choice practice from your vocabulary database. As you enrich more words, learning becomes deeper and less repetitive.",
+        "recommended_learning_band": "Recommended learning band",
+        "choose_learning_band": "Choose a band",
+        "learning_band_note": "The suggestion comes from your latest Level Test, but you can choose any band for this session.",
+        "learning_session_structure": "10 vocabulary items from one band, tested through 5 layers each.",
+        "recommended_badge": "Recommended",
         "latest_label": "Latest",
         "ready_label": "Ready",
         "most_recent_session": "most recent session",
@@ -1066,7 +1073,7 @@ TRANSLATIONS["en"].update(
         "definition_short": "Definition",
         "synonym_short": "Synonym",
         "sentence_short": "Sentence",
-        "definition_available_note": "Definitions are available immediately. Synonym and sentence questions appear as more words gain enrichment.",
+        "definition_available_note": "Each session now uses the same five layers as the Level Test: Chinese meaning, English definition, example application, similar word, and opposite word.",
         "start_learning_session": "Start Learning Session",
         "coverage": "Coverage",
         "learning_bank": "Your learning bank",
@@ -1077,8 +1084,8 @@ TRANSLATIONS["en"].update(
         "study_rounds_note": "Short study rounds help you keep momentum without overloading yourself.",
         "definition_first": "Definition first",
         "definition_first_note": "Start with meaning-based questions even if enrichment is still limited.",
-        "review_after_answer": "Review after every answer",
-        "review_after_answer_note": "See the explanation and reopen the full word page when needed.",
+        "review_after_answer": "Review after each word",
+        "review_after_answer_note": "You answer all five layers first, then see the score and details for that vocabulary item.",
         "smarter_over_time": "Smarter over time",
         "smarter_over_time_note": "As you add notes, synonyms, and examples, practice becomes richer automatically.",
         "best_next_step": "Best Next Step",
@@ -1416,6 +1423,11 @@ TRANSLATIONS["zh-Hant"].update(
         "learning_title": "學習",
         "learning_hero_title": "用短時間，穩定把詞彙學起來。",
         "learning_hero_lede": "每次練習都會從你的詞彙庫出題。你補得越完整，之後的題目就會越實用、越不重複。",
+        "recommended_learning_band": "建議學習分類",
+        "choose_learning_band": "選擇詞彙分類",
+        "learning_band_note": "系統會根據最近一次 Level Test 建議起點，但你也可以自由選擇任何一組。",
+        "learning_session_structure": "每輪固定同一個 band 的 10 個詞彙，每個詞用 5 層題型練習。",
+        "recommended_badge": "建議",
         "latest_label": "最近",
         "ready_label": "準備好了",
         "most_recent_session": "最近一次練習",
@@ -1425,7 +1437,7 @@ TRANSLATIONS["zh-Hant"].update(
         "definition_short": "定義",
         "synonym_short": "同義詞",
         "sentence_short": "例句",
-        "definition_available_note": "一開始會先用定義題練習；之後詞彙內容越完整，系統就會慢慢加入同義詞和例句題。",
+        "definition_available_note": "每輪會使用和 Level Test 一樣的五層題型：中文意思、英文定義、例句應用、相近詞與相反詞。",
         "start_learning_session": "開始這輪練習",
         "coverage": "目前內容",
         "learning_bank": "你的詞彙庫",
@@ -1436,8 +1448,8 @@ TRANSLATIONS["zh-Hant"].update(
         "study_rounds_note": "每次做短一點，比較容易維持節奏，也不會一下子太累。",
         "definition_first": "先從定義開始",
         "definition_first_note": "即使內容還沒完全補齊，也能先用意思題建立基礎。",
-        "review_after_answer": "每答完就複習",
-        "review_after_answer_note": "每題之後都能看解釋，需要時也能打開完整詞彙頁。",
+        "review_after_answer": "每個詞後複習",
+        "review_after_answer_note": "先完成同一個詞的五層題型，再看這個詞的得分與完整細節。",
         "smarter_over_time": "越用越完整",
         "smarter_over_time_note": "當你加入筆記、同義詞與例句後，練習內容會自動變得更豐富。",
         "best_next_step": "下一步建議",
@@ -2030,6 +2042,11 @@ TRANSLATIONS["zh-Hans"].update(
         "learning_title": "学习",
         "learning_hero_title": "用短时间，稳稳地把词汇学起来。",
         "learning_hero_lede": "每次练习都会从你的词汇库出题。你补得越完整，之后的题目就会越实用、越不重复。",
+        "recommended_learning_band": "建议学习分类",
+        "choose_learning_band": "选择词汇分类",
+        "learning_band_note": "系统会根据最近一次 Level Test 建议起点，但你也可以自由选择任何一组。",
+        "learning_session_structure": "每轮固定同一个 band 的 10 个词汇，每个词用 5 层题型练习。",
+        "recommended_badge": "建议",
         "latest_label": "最近",
         "ready_label": "准备好了",
         "most_recent_session": "最近一次练习",
@@ -2039,7 +2056,7 @@ TRANSLATIONS["zh-Hans"].update(
         "definition_short": "定义",
         "synonym_short": "同义词",
         "sentence_short": "例句",
-        "definition_available_note": "一开始会先用定义题练习；之后词汇内容越完整，系统就会慢慢加入同义词和例句题。",
+        "definition_available_note": "每轮会使用和 Level Test 一样的五层题型：中文意思、英文定义、例句应用、相近词与相反词。",
         "start_learning_session": "开始这一轮练习",
         "coverage": "当前内容",
         "learning_bank": "你的词汇库",
@@ -2050,8 +2067,8 @@ TRANSLATIONS["zh-Hans"].update(
         "study_rounds_note": "每次做短一点，更容易维持节奏，也不会一下子太累。",
         "definition_first": "先从定义开始",
         "definition_first_note": "即使内容还没完全补齐，也能先用意思题建立基础。",
-        "review_after_answer": "每答完就复习",
-        "review_after_answer_note": "每题之后都能看解释，需要时也能打开完整词汇页。",
+        "review_after_answer": "每个词后复习",
+        "review_after_answer_note": "先完成同一个词的五层题型，再看这个词的得分与完整细节。",
         "smarter_over_time": "越用越完整",
         "smarter_over_time_note": "当你加入笔记、同义词和例句后，练习内容会自动变得更丰富。",
         "best_next_step": "下一步建议",
@@ -3857,6 +3874,22 @@ def test_word_score(conn: sqlite3.Connection, session_id: int, word_id: int) -> 
     return {"correct": correct, "total": total}
 
 
+def learning_word_score(conn: sqlite3.Connection, session_id: int, word_id: int) -> dict[str, int]:
+    row = conn.execute(
+        """
+        SELECT
+            SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) AS correct,
+            COUNT(*) AS total
+        FROM learning_questions
+        WHERE session_id = ? AND word_id = ? AND answered_at IS NOT NULL
+        """,
+        (session_id, word_id),
+    ).fetchone()
+    correct = int(row["correct"] or 0) if row else 0
+    total = int(row["total"] or 0) if row else 0
+    return {"correct": correct, "total": total}
+
+
 def test_question_by_id(conn: sqlite3.Connection, session_id: int, question_id: int) -> sqlite3.Row | None:
     return conn.execute(
         """
@@ -4598,22 +4631,60 @@ def create_test_session(conn: sqlite3.Connection) -> int:
     return session_id
 
 
-def create_learning_session(conn: sqlite3.Connection) -> int:
+def recommended_learning_band_rank(conn: sqlite3.Connection) -> int:
+    latest_test = latest_test_result(conn)
+    if latest_test is not None and latest_test["estimated_band_rank"] in TEST_BAND_EASIEST_TO_HARDEST:
+        return int(latest_test["estimated_band_rank"])
+    return 2000
+
+
+def learning_band_cards(conn: sqlite3.Connection, lang: str = "en") -> list[dict]:
+    recommended_rank = recommended_learning_band_rank(conn)
+    cards = []
+    for band in decorate_band_rows(band_summary(conn)):
+        identity = band_display_identity(band["best_band_label"], lang)
+        cards.append(
+            {
+                **band,
+                "display_label": identity["display_label"],
+                "tone": identity["tone"],
+                "recommended": band["best_band_rank"] == recommended_rank,
+            }
+        )
+    return cards
+
+
+def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = None) -> int:
+    selected_rank = band_rank if band_rank in TEST_BAND_EASIEST_TO_HARDEST else recommended_learning_band_rank(conn)
+    band = conn.execute(
+        """
+        SELECT best_band_rank, best_band_label
+        FROM words
+        WHERE best_band_rank = ?
+        GROUP BY best_band_rank, best_band_label
+        """,
+        (selected_rank,),
+    ).fetchone()
+    if band is None:
+        raise HTTPException(status_code=400, detail="Selected learning band was not found")
     cursor = conn.execute(
         """
-        INSERT INTO learning_sessions (user_id)
-        VALUES (?)
+        INSERT INTO learning_sessions (user_id, band_rank, band_label)
+        VALUES (?, ?, ?)
         """,
-        (USER_ID,),
+        (USER_ID, band["best_band_rank"], band["best_band_label"]),
     )
     session_id = cursor.lastrowid
     words = conn.execute(
         """
-        SELECT DISTINCT words.*
+        SELECT DISTINCT words.*, COUNT(learning_questions.id) AS learning_use_count
         FROM words
         JOIN study_cards ON study_cards.word_id = words.id
         JOIN source_entries ON source_entries.word_id = words.id
+        LEFT JOIN learning_questions ON learning_questions.word_id = words.id
         WHERE source_entries.meanings_json <> '[]'
+          AND words.best_band_rank = ?
+        GROUP BY words.id
         ORDER BY
             CASE
                 WHEN study_cards.next_review_at IS NOT NULL AND study_cards.next_review_at <= ? THEN 0
@@ -4624,13 +4695,24 @@ def create_learning_session(conn: sqlite3.Connection) -> int:
             END,
             study_cards.wrong_count DESC,
             study_cards.next_review_at,
-            words.best_band_rank,
+            learning_use_count ASC,
             RANDOM()
-        LIMIT 30
         """,
-        (utc_now_iso(),),
+        (band["best_band_rank"], utc_now_iso()),
     ).fetchall()
     populate_learning_session(conn, session_id, words)
+    total_questions = conn.execute(
+        "SELECT COUNT(*) FROM learning_questions WHERE session_id = ?",
+        (session_id,),
+    ).fetchone()[0]
+    if total_questions != LEARNING_QUESTION_COUNT:
+        conn.execute("DELETE FROM learning_questions WHERE session_id = ?", (session_id,))
+        conn.execute("DELETE FROM learning_sessions WHERE id = ?", (session_id,))
+        conn.commit()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Not enough learning-ready words in band {band['best_band_label']}",
+        )
     return session_id
 
 
@@ -4638,13 +4720,21 @@ def populate_learning_session(conn: sqlite3.Connection, session_id: int, words: 
     position = 1
     used_word_ids: set[int] = set()
     for word in words:
-        if len(used_word_ids) >= LEARNING_WORD_COUNT and position > LEARNING_WORD_COUNT:
+        if len(used_word_ids) >= LEARNING_WORD_COUNT:
             break
+        if not level_test_synonym_for_word(conn, word) or not level_test_antonym_for_word(conn, word):
+            continue
         added_for_word = 0
-        for builder in (build_definition_question, build_synonym_question, build_sentence_question):
-            question = builder(conn, word, position)
+        word_questions: list[dict] = []
+        for offset, builder in enumerate(LEVEL_TEST_BUILDERS):
+            question = builder(conn, word, position + offset)
             if question is None:
-                continue
+                word_questions = []
+                break
+            word_questions.append(question)
+        if len(word_questions) != LEARNING_LAYERS_PER_WORD:
+            continue
+        for question in word_questions:
             conn.execute(
                 """
                 INSERT INTO learning_questions (
@@ -4672,12 +4762,17 @@ def populate_learning_session(conn: sqlite3.Connection, session_id: int, words: 
 
 
 def create_learning_retry_session(conn: sqlite3.Connection, source_session_id: int) -> int:
+    source_session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (source_session_id,)).fetchone()
     cursor = conn.execute(
         """
-        INSERT INTO learning_sessions (user_id)
-        VALUES (?)
+        INSERT INTO learning_sessions (user_id, band_rank, band_label)
+        VALUES (?, ?, ?)
         """,
-        (USER_ID,),
+        (
+            USER_ID,
+            source_session["band_rank"] if source_session else None,
+            source_session["band_label"] if source_session else None,
+        ),
     )
     session_id = cursor.lastrowid
     rows = conn.execute(
@@ -5507,6 +5602,7 @@ def test_result(request: Request, session_id: int) -> HTMLResponse:
 @app.get("/learning", response_class=HTMLResponse)
 def learning_intro(request: Request) -> HTMLResponse:
     conn = db_conn()
+    lang = getattr(request.state, "lang", get_lang(request))
     enrichment = conn.execute(
         """
         SELECT
@@ -5517,19 +5613,28 @@ def learning_intro(request: Request) -> HTMLResponse:
         """
     ).fetchone()
     latest_learning = latest_learning_result(conn)
+    recommended_rank = recommended_learning_band_rank(conn)
+    recommended_band = TEST_BAND_LABELS.get(recommended_rank, "2000~ (2330)")
+    recommended_identity = band_display_identity(recommended_band, lang)
     return render(
         request,
         "learning_intro.html",
         stats=fetch_stats(conn),
         enrichment=enrichment,
         latest_learning=latest_learning,
+        bands=learning_band_cards(conn, lang),
+        recommended_band_rank=recommended_rank,
+        recommended_band_identity=recommended_identity,
+        learning_word_count=LEARNING_WORD_COUNT,
+        learning_layers_per_word=LEARNING_LAYERS_PER_WORD,
+        learning_question_count=LEARNING_QUESTION_COUNT,
     )
 
 
 @app.post("/learning/start")
-def learning_start() -> RedirectResponse:
+def learning_start(band_rank: int | None = Form(None)) -> RedirectResponse:
     conn = db_conn()
-    session_id = create_learning_session(conn)
+    session_id = create_learning_session(conn, band_rank)
     return RedirectResponse(url=f"/learning/{session_id}", status_code=303)
 
 
@@ -5543,13 +5648,15 @@ def learning_question(request: Request, session_id: int) -> HTMLResponse:
     if question is None:
         finish_learning_session(conn, session_id)
         return RedirectResponse(url=f"/learning/{session_id}/result", status_code=303)
-    payload = word_payload(conn, question["word_id"], getattr(request.state, "lang", get_lang(request)))
+    lang = getattr(request.state, "lang", get_lang(request))
+    payload = word_payload(conn, question["word_id"], lang)
     return render(
         request,
         "learning_question.html",
         session=session,
         question=question,
         word=payload["word"],
+        band_identity=band_display_identity(session["band_label"] or payload["word"]["best_band_label"], lang),
         options=json_loads(question["options_json"]),
         definitions=payload["definitions"],
         parts_of_speech=payload["parts_of_speech"],
@@ -5588,6 +5695,15 @@ def learning_answer(session_id: int, answer: str = Form(...)) -> RedirectRespons
     )
     update_study_card_schedule(conn, question["word_id"], bool(is_correct), "learning")
     conn.commit()
+    total_questions = conn.execute(
+        "SELECT COUNT(*) FROM learning_questions WHERE session_id = ?",
+        (session_id,),
+    ).fetchone()[0]
+    if int(question["position"] or 0) >= int(total_questions or 0):
+        finish_learning_session(conn, session_id)
+        return RedirectResponse(url=f"/learning/{session_id}/review", status_code=303)
+    if int(question["position"] or 0) % LEARNING_LAYERS_PER_WORD != 0:
+        return RedirectResponse(url=f"/learning/{session_id}", status_code=303)
     return RedirectResponse(url=f"/learning/{session_id}/review", status_code=303)
 
 
@@ -5600,7 +5716,8 @@ def learning_review(request: Request, session_id: int) -> HTMLResponse:
     question = previous_learning_question(conn, session_id)
     if question is None:
         return RedirectResponse(url=f"/learning/{session_id}", status_code=303)
-    payload = word_payload(conn, question["word_id"], getattr(request.state, "lang", get_lang(request)))
+    lang = getattr(request.state, "lang", get_lang(request))
+    payload = word_payload(conn, question["word_id"], lang)
     progress = learning_progress(conn, session)
     is_last = progress["answered"] >= progress["total"]
     return render(
@@ -5609,12 +5726,14 @@ def learning_review(request: Request, session_id: int) -> HTMLResponse:
         session=session,
         question=question,
         word=payload["word"],
+        band_identity=band_display_identity(session["band_label"] or payload["word"]["best_band_label"], lang),
         definitions=payload["definitions"],
         parts_of_speech=payload["parts_of_speech"],
         english_definition=payload["english_definition"],
         pronunciation=payload["pronunciation"],
         synonyms=payload["synonyms"],
         example_sentence=payload["example_sentence"],
+        word_score=learning_word_score(conn, session_id, question["word_id"]),
         progress=progress,
         is_last=is_last,
     )
@@ -5641,12 +5760,14 @@ def learning_result(request: Request, session_id: int) -> HTMLResponse:
     total = sum(row["total"] for row in rows)
     lang = getattr(request.state, "lang", get_lang(request))
     recommendation = learning_recommendation(session["score"], total, enriched_words, lang)
+    band_identity = band_display_identity(session["band_label"], lang) if session["band_label"] else None
     return render(
         request,
         "learning_result.html",
         session=session,
         question_results=rows,
         recommendation=recommendation,
+        band_identity=band_identity,
         percent=round((session["score"] / total) * 100) if total else 0,
     )
 
@@ -5972,10 +6093,10 @@ def mobile_learning_result_payload(conn: sqlite3.Connection, session_id: int, la
 
 
 @app.post("/api/mobile/learning/start")
-def mobile_learning_start(lang: str = Query("en")) -> dict:
+def mobile_learning_start(lang: str = Query("en"), band_rank: int | None = Query(None)) -> dict:
     conn = db_conn()
     safe_lang = lang if lang in SUPPORTED_LANGS else "en"
-    session_id = create_learning_session(conn)
+    session_id = create_learning_session(conn, band_rank)
     question = current_learning_question(conn, session_id)
     if question is None:
         return mobile_learning_result_payload(conn, session_id, safe_lang)

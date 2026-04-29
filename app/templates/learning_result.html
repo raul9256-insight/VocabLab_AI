@@ -5,6 +5,11 @@
   <article class="panel dashboard-v2-card learning-result-hero">
     <p class="eyebrow">{{ t("session_complete") }}</p>
     <h1>{{ t("learning_result_title", score=session.score) }}</h1>
+    {% if band_identity %}
+    <p class="band-inline-label band-card-tone-{{ band_identity.tone }}">
+      <span class="band-type-name">{{ band_identity.display_label }}</span>
+    </p>
+    {% endif %}
     <p class="lede">{{ t("learning_result_lede") }}</p>
 
     <div class="learning-result-grid">
