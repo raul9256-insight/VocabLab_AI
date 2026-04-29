@@ -1176,6 +1176,10 @@ TRANSLATIONS["en"].update(
         "placement_short": "Placement",
         "test_goal_note": "Level Test is a fixed assessment, separate from Learning. It measures breadth across all five bands and gives a score out of 100.",
         "begin_test": "Begin Test",
+        "continue_test": "Continue Test",
+        "start_new_test": "Start New Test",
+        "saved_incomplete_test": "Saved in-progress test",
+        "resume_test_note": "You have answered {answered}/{total} questions ({percent}%). Continue from where you stopped.",
         "band_coverage": "Band Coverage",
         "sampled_ranges": "Sampled ranges",
         "what_this_means": "What this means",
@@ -1540,6 +1544,10 @@ TRANSLATIONS["zh-Hant"].update(
         "placement_short": "定位",
         "test_goal_note": "Level Test 是固定評量，和 Learning 分開。它會橫跨五個 band 測你的廣度，總分 100。",
         "begin_test": "開始測驗",
+        "continue_test": "繼續測驗",
+        "start_new_test": "重新開始測驗",
+        "saved_incomplete_test": "已保存的未完成測驗",
+        "resume_test_note": "你已完成 {answered}/{total} 題（{percent}%）。可以從上次中斷的位置繼續。",
         "band_coverage": "出題範圍",
         "sampled_ranges": "抽樣分類",
         "what_this_means": "這代表什麼",
@@ -2177,6 +2185,10 @@ TRANSLATIONS["zh-Hans"].update(
         "placement_short": "定位",
         "test_goal_note": "Level Test 是固定评量，和 Learning 分开。它会横跨五个 band 测你的广度，满分 100。",
         "begin_test": "开始检测",
+        "continue_test": "继续检测",
+        "start_new_test": "重新开始检测",
+        "saved_incomplete_test": "已保存的未完成检测",
+        "resume_test_note": "你已完成 {answered}/{total} 题（{percent}%）。可以从上次中断的位置继续。",
         "band_coverage": "出题范围",
         "sampled_ranges": "抽样分类",
         "what_this_means": "这代表什么",
@@ -3600,6 +3612,24 @@ def latest_test_result(conn: sqlite3.Connection, full_only: bool = True, user_id
         LIMIT 1
         """,
         (user_id, *params),
+    ).fetchone()
+
+
+def active_test_session(conn: sqlite3.Connection, user_id: int = USER_ID) -> sqlite3.Row | None:
+    return conn.execute(
+        """
+        SELECT assessment_sessions.*, COUNT(assessment_questions.id) AS question_total
+        FROM assessment_sessions
+        LEFT JOIN assessment_questions ON assessment_questions.session_id = assessment_sessions.id
+        WHERE assessment_sessions.status = 'active'
+          AND assessment_sessions.user_id = ?
+        GROUP BY assessment_sessions.id
+        HAVING question_total > 0
+           AND assessment_sessions.current_index < question_total
+        ORDER BY assessment_sessions.id DESC
+        LIMIT 1
+        """,
+        (user_id,),
     ).fetchone()
 
 
@@ -5370,6 +5400,7 @@ def account_password_update(
 def test_intro(request: Request) -> HTMLResponse:
     conn = db_conn()
     user_id = current_user_id(request)
+    active_test = active_test_session(conn, user_id=user_id)
     return render(
         request,
         "test_intro.html",
@@ -5379,6 +5410,8 @@ def test_intro(request: Request) -> HTMLResponse:
         words_per_band=TEST_WORDS_PER_BAND,
         layers_per_word=TEST_LAYERS_PER_WORD,
         has_test_history=latest_test_result(conn, user_id=user_id) is not None,
+        active_test=active_test,
+        active_test_progress=test_progress(active_test) if active_test is not None else None,
     )
 
 
@@ -5608,9 +5641,14 @@ def statistics_page_impl(request: Request) -> HTMLResponse:
 
 
 @app.post("/test/start")
-def test_start(request: Request) -> RedirectResponse:
+def test_start(request: Request, force_new: int = Form(0)) -> RedirectResponse:
     conn = db_conn()
-    session_id = create_test_session(conn, current_user_id(request))
+    user_id = current_user_id(request)
+    if not force_new:
+        active_test = active_test_session(conn, user_id=user_id)
+        if active_test is not None:
+            return RedirectResponse(url=f"/test/{active_test['id']}", status_code=303)
+    session_id = create_test_session(conn, user_id)
     return RedirectResponse(url=f"/test/{session_id}", status_code=303)
 
 

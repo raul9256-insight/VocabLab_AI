@@ -30,10 +30,24 @@
           <span class="mini-kicker">{{ t("placement_short") }}</span>
         </div>
         <p class="goal-note">{{ t("test_goal_note") }}</p>
+        {% if active_test and active_test_progress %}
+        <div class="learning-info-block">
+          <span>{{ t("saved_incomplete_test") }}</span>
+          <strong>{{ t("resume_test_note", answered=active_test_progress.answered, total=active_test_progress.total, percent=active_test_progress.percent) }}</strong>
+        </div>
+        {% endif %}
         <div class="action-row">
+          {% if active_test %}
+          <a class="button learning-start-button" href="/test/{{ active_test.id }}">{{ t("continue_test") }}</a>
+          <form method="post" action="/test/start">
+            <input type="hidden" name="force_new" value="1">
+            <button class="button secondary" type="submit">{{ t("start_new_test") }}</button>
+          </form>
+          {% else %}
           <form method="post" action="/test/start">
             <button class="button learning-start-button" type="submit">{{ t("begin_test") }}</button>
           </form>
+          {% endif %}
           {% if has_test_history %}
           <a class="button secondary" href="/statistics">{{ t("view_statistics") }}</a>
           {% endif %}
