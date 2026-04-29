@@ -695,6 +695,8 @@ TRANSLATIONS = {
         "signup_email_placeholder": "you@example.com",
         "signup_password_label": "Password",
         "signup_password_placeholder": "Create a password",
+        "signup_confirm_password_label": "Confirm password",
+        "signup_confirm_password_placeholder": "Re-enter your password",
         "signup_submit": "Sign up",
         "login_title": "Log in",
         "login_email_label": "Email",
@@ -705,6 +707,7 @@ TRANSLATIONS = {
         "auth_error_email_taken": "This email is already registered.",
         "auth_error_invalid_login": "Email or password is incorrect.",
         "auth_error_password_short": "Password must be at least 8 characters.",
+        "auth_error_password_mismatch": "The two passwords do not match.",
         "auth_error_name_required": "Please add your display name.",
         "auth_error_email_required": "Please add a valid email.",
         "nav_account": "Account",
@@ -857,6 +860,8 @@ TRANSLATIONS = {
         "signup_email_placeholder": "you@example.com",
         "signup_password_label": "密碼",
         "signup_password_placeholder": "建立密碼",
+        "signup_confirm_password_label": "確認密碼",
+        "signup_confirm_password_placeholder": "再次輸入密碼",
         "signup_submit": "註冊",
         "login_title": "登入帳號",
         "login_email_label": "電子郵件",
@@ -867,6 +872,7 @@ TRANSLATIONS = {
         "auth_error_email_taken": "這個電子郵件已經註冊過了。",
         "auth_error_invalid_login": "電子郵件或密碼不正確。",
         "auth_error_password_short": "密碼至少需要 8 個字元。",
+        "auth_error_password_mismatch": "兩次輸入的密碼不一致。",
         "auth_error_name_required": "請填寫顯示名稱。",
         "auth_error_email_required": "請輸入有效的電子郵件。",
         "nav_account": "帳戶",
@@ -1869,6 +1875,8 @@ TRANSLATIONS["zh-Hans"].update(
         "signup_email_placeholder": "you@example.com",
         "signup_password_label": "密码",
         "signup_password_placeholder": "创建密码",
+        "signup_confirm_password_label": "确认密码",
+        "signup_confirm_password_placeholder": "再次输入密码",
         "signup_submit": "注册",
         "login_title": "登录账号",
         "login_email_label": "电子邮件",
@@ -1879,6 +1887,7 @@ TRANSLATIONS["zh-Hans"].update(
         "auth_error_email_taken": "这个电子邮件已经注册过了。",
         "auth_error_invalid_login": "电子邮件或密码不正确。",
         "auth_error_password_short": "密码至少需要 8 个字符。",
+        "auth_error_password_mismatch": "两次输入的密码不一致。",
         "auth_error_name_required": "请填写显示名称。",
         "auth_error_email_required": "请输入有效的电子邮件。",
         "nav_account": "账户",
@@ -5167,6 +5176,7 @@ def auth_signup(
     display_name: str = Form(""),
     email: str = Form(""),
     password: str = Form(""),
+    confirm_password: str = Form(""),
     persona: str = Form("lifelong_learner"),
 ) -> RedirectResponse:
     conn = db_conn()
@@ -5180,6 +5190,8 @@ def auth_signup(
         return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_email_required"), status_code=303)
     if len(password or "") < 8:
         return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_password_short"), status_code=303)
+    if password != confirm_password:
+        return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_password_mismatch"), status_code=303)
     existing = conn.execute("SELECT id FROM users WHERE lower(email) = ?", (safe_email,)).fetchone()
     if existing is not None:
         return RedirectResponse(url=auth_redirect_url(lang, error_key="auth_error_email_taken"), status_code=303)
