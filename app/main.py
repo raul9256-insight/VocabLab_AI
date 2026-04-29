@@ -15,7 +15,7 @@ from urllib.parse import urlencode
 
 from fastapi import Body, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -6881,18 +6881,144 @@ def ai_power_entry_page(request: Request, category_slug: str, entry_slug: str) -
     )
 
 
+MOBILE_AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+
+
+def mobile_cookie_kwargs(request: Request, httponly: bool = True) -> dict:
+    secure_cookie = request.url.scheme == "https" or request.headers.get("x-forwarded-proto", "").lower() == "https"
+    return {
+        "max_age": MOBILE_AUTH_COOKIE_MAX_AGE,
+        "httponly": httponly,
+        "samesite": "none" if secure_cookie else "lax",
+        "secure": secure_cookie,
+    }
+
+
+def mobile_user_response_payload(user: sqlite3.Row | None, lang: str) -> dict:
+    if user is None:
+        return {"authenticated": False, "user": None}
+    display_name = (user["display_name"] or user["username"] or "Student").strip()[:40]
+    persona = user["persona"] if user["persona"] in SUPPORTED_PERSONAS else "student"
+    role = user["role"] if "role" in user.keys() and user["role"] else role_for_persona(persona)
+    return {
+        "authenticated": True,
+        "user": {
+            "id": user["id"],
+            "display_name": display_name,
+            "email": user["email"] or "",
+            "persona": persona,
+            "role": role,
+            "profile": mobile_profile(display_name, persona, lang),
+        },
+    }
+
+
+def mobile_auth_json_response(request: Request, payload: dict, user: sqlite3.Row | None = None) -> JSONResponse:
+    response = JSONResponse(payload)
+    if user is None:
+        return response
+    persona = user["persona"] if user["persona"] in SUPPORTED_PERSONAS else "student"
+    display_name = (user["display_name"] or user["username"] or "Student").strip()[:40]
+    response.set_cookie("registered_user_id", str(user["id"]), **mobile_cookie_kwargs(request, httponly=True))
+    response.set_cookie("profile_name", display_name, **mobile_cookie_kwargs(request, httponly=False))
+    response.set_cookie("profile_persona", persona, **mobile_cookie_kwargs(request, httponly=False))
+    return response
+
+
+@app.get("/api/mobile/auth/me")
+def mobile_auth_me(request: Request, lang: str = Query("en")) -> JSONResponse:
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    user = registered_user_row(request)
+    return mobile_auth_json_response(request, mobile_user_response_payload(user, safe_lang), user)
+
+
+@app.post("/api/mobile/auth/signup")
+def mobile_auth_signup(
+    request: Request,
+    lang: str = Query("en"),
+    payload: dict = Body(...),
+) -> JSONResponse:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    safe_name = (str(payload.get("display_name") or payload.get("name") or "")).strip()[:40]
+    safe_email = normalized_email(str(payload.get("email") or ""))
+    password = str(payload.get("password") or "")
+    confirm_password = str(payload.get("confirm_password") or "")
+    persona = str(payload.get("persona") or "student")
+    safe_persona = persona if persona in SUPPORTED_PERSONAS else "student"
+    if not safe_name:
+        raise HTTPException(status_code=400, detail="Please enter your name.")
+    if not valid_email(safe_email):
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    if len(password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters.")
+    if password != confirm_password:
+        raise HTTPException(status_code=400, detail="Passwords do not match.")
+    existing = conn.execute("SELECT id FROM users WHERE lower(email) = ?", (safe_email,)).fetchone()
+    if existing is not None:
+        raise HTTPException(status_code=400, detail="This email is already registered.")
+    username_seed = re.sub(r"[^a-z0-9]+", "_", safe_email.split("@", 1)[0]).strip("_") or "user"
+    username = username_seed
+    suffix = 1
+    while conn.execute("SELECT 1 FROM users WHERE username = ?", (username,)).fetchone():
+        suffix += 1
+        username = f"{username_seed}_{suffix}"
+    cursor = conn.execute(
+        """
+        INSERT INTO users (username, email, password_hash, display_name, persona, role)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (username, safe_email, hash_password(password), safe_name, safe_persona, role_for_persona(safe_persona)),
+    )
+    conn.commit()
+    user = conn.execute("SELECT * FROM users WHERE id = ?", (cursor.lastrowid,)).fetchone()
+    return mobile_auth_json_response(request, mobile_user_response_payload(user, safe_lang), user)
+
+
+@app.post("/api/mobile/auth/login")
+def mobile_auth_login(
+    request: Request,
+    lang: str = Query("en"),
+    payload: dict = Body(...),
+) -> JSONResponse:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    safe_email = normalized_email(str(payload.get("email") or ""))
+    password = str(payload.get("password") or "")
+    user = conn.execute("SELECT * FROM users WHERE lower(email) = ?", (safe_email,)).fetchone()
+    if user is None or not verify_password(password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Email or password is incorrect.")
+    return mobile_auth_json_response(request, mobile_user_response_payload(user, safe_lang), user)
+
+
+@app.post("/api/mobile/auth/logout")
+def mobile_auth_logout(request: Request, lang: str = Query("en")) -> JSONResponse:
+    response = JSONResponse({"authenticated": False, "user": None})
+    secure_cookie = request.url.scheme == "https" or request.headers.get("x-forwarded-proto", "").lower() == "https"
+    response.delete_cookie("registered_user_id", samesite="none" if secure_cookie else "lax", secure=secure_cookie)
+    response.delete_cookie("profile_name", samesite="none" if secure_cookie else "lax", secure=secure_cookie)
+    response.delete_cookie("profile_persona", samesite="none" if secure_cookie else "lax", secure=secure_cookie)
+    return response
+
+
 @app.get("/api/mobile/bootstrap")
 def mobile_bootstrap(
+    request: Request,
     lang: str = Query("en"),
     name: str = Query(""),
     persona: str = Query("lifelong_learner"),
 ) -> dict:
     conn = db_conn()
     safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    user = registered_user_row(request)
+    user_id = int(user["id"]) if user is not None else USER_ID
+    if user is not None:
+        name = (user["display_name"] or user["username"] or name)
+        persona = user["persona"] or persona
     profile = mobile_profile(name, persona, safe_lang)
-    stats = fetch_stats(conn)
-    latest_test = latest_test_result(conn)
-    latest_learning = latest_learning_result(conn)
+    stats = fetch_stats(conn, user_id)
+    latest_test = latest_test_result(conn, user_id=user_id)
+    latest_learning = latest_learning_result(conn, user_id=user_id)
     bands = decorate_band_rows(band_summary(conn))
     max_band_total = max((band["workbook_total"] for band in bands), default=1)
     hero_band_chart = [
@@ -6959,10 +7085,10 @@ def mobile_dictionary_search(
 
 
 @app.get("/api/mobile/word/{word_id}")
-def mobile_word_detail(word_id: int, lang: str = Query("en")) -> dict:
+def mobile_word_detail(request: Request, word_id: int, lang: str = Query("en")) -> dict:
     conn = db_conn()
     safe_lang = lang if lang in SUPPORTED_LANGS else "en"
-    payload = word_payload(conn, word_id, safe_lang)
+    payload = word_payload(conn, word_id, safe_lang, current_user_id(request))
     word = payload["word"]
     return {
         "id": word["id"],
@@ -6984,13 +7110,15 @@ def mobile_word_detail(word_id: int, lang: str = Query("en")) -> dict:
 
 @app.post("/api/mobile/word/{word_id}/note")
 def mobile_word_note_update(
+    request: Request,
     word_id: int,
     lang: str = Query("en"),
     notes: str = Body("", embed=True),
 ) -> dict:
     conn = db_conn()
     safe_lang = lang if lang in SUPPORTED_LANGS else "en"
-    word_row(conn, word_id)
+    user_id = current_user_id(request)
+    word_row(conn, word_id, user_id)
     cleaned = notes.strip()
     conn.execute(
         """
@@ -6998,10 +7126,10 @@ def mobile_word_note_update(
         SET notes = ?, updated_at = CURRENT_TIMESTAMP
         WHERE user_id = ? AND word_id = ?
         """,
-        (cleaned, USER_ID, word_id),
+        (cleaned, user_id, word_id),
     )
     conn.commit()
-    payload = word_payload(conn, word_id, safe_lang)
+    payload = word_payload(conn, word_id, safe_lang, user_id)
     return {
         "word_id": word_id,
         "notes": payload["word"]["notes"] or "",
@@ -7009,8 +7137,8 @@ def mobile_word_note_update(
     }
 
 
-def mobile_learning_question_payload(conn: sqlite3.Connection, question: sqlite3.Row, lang: str) -> dict:
-    payload = word_payload(conn, question["word_id"], lang)
+def mobile_learning_question_payload(conn: sqlite3.Connection, question: sqlite3.Row, lang: str, user_id: int = USER_ID) -> dict:
+    payload = word_payload(conn, question["word_id"], lang, user_id)
     word = conn.execute(
         """
         SELECT id, lemma, best_band_label, best_band_rank
@@ -7037,8 +7165,8 @@ def mobile_learning_question_payload(conn: sqlite3.Connection, question: sqlite3
     }
 
 
-def mobile_learning_review_payload(conn: sqlite3.Connection, question: sqlite3.Row, lang: str) -> dict:
-    payload = word_payload(conn, question["word_id"], lang)
+def mobile_learning_review_payload(conn: sqlite3.Connection, question: sqlite3.Row, lang: str, user_id: int = USER_ID) -> dict:
+    payload = word_payload(conn, question["word_id"], lang, user_id)
     word = payload["word"]
     return {
         "id": question["id"],
@@ -7114,10 +7242,11 @@ def mobile_learning_result_payload(conn: sqlite3.Connection, session_id: int, la
 
 
 @app.post("/api/mobile/learning/start")
-def mobile_learning_start(lang: str = Query("en"), band_rank: int | None = Query(None)) -> dict:
+def mobile_learning_start(request: Request, lang: str = Query("en"), band_rank: int | None = Query(None)) -> dict:
     conn = db_conn()
     safe_lang = lang if lang in SUPPORTED_LANGS else "en"
-    session_id = create_learning_session(conn, band_rank)
+    user_id = current_user_id(request)
+    session_id = create_learning_session(conn, band_rank, user_id=user_id)
     question = current_learning_question(conn, session_id)
     if question is None:
         return mobile_learning_result_payload(conn, session_id, safe_lang)
@@ -7126,16 +7255,19 @@ def mobile_learning_start(lang: str = Query("en"), band_rank: int | None = Query
         "session_id": session_id,
         "status": "question",
         "progress": learning_progress(conn, session),
-        "question": mobile_learning_question_payload(conn, question, safe_lang),
+        "question": mobile_learning_question_payload(conn, question, safe_lang, user_id),
     }
 
 
 @app.post("/api/mobile/learning/{session_id}/retry-incorrect")
-def mobile_learning_retry_incorrect(session_id: int, lang: str = Query("en")) -> dict:
+def mobile_learning_retry_incorrect(request: Request, session_id: int, lang: str = Query("en")) -> dict:
     conn = db_conn()
     safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    user_id = current_user_id(request)
     source_session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
     if source_session is None:
+        raise HTTPException(status_code=404, detail="Learning session not found")
+    if source_session["user_id"] != user_id:
         raise HTTPException(status_code=404, detail="Learning session not found")
     retry_session_id = create_learning_retry_session(conn, session_id)
     question = current_learning_question(conn, retry_session_id)
@@ -7146,16 +7278,19 @@ def mobile_learning_retry_incorrect(session_id: int, lang: str = Query("en")) ->
         "session_id": retry_session_id,
         "status": "question",
         "progress": learning_progress(conn, retry_session),
-        "question": mobile_learning_question_payload(conn, question, safe_lang),
+        "question": mobile_learning_question_payload(conn, question, safe_lang, user_id),
     }
 
 
 @app.get("/api/mobile/learning/{session_id}")
-def mobile_learning_state(session_id: int, lang: str = Query("en")) -> dict:
+def mobile_learning_state(request: Request, session_id: int, lang: str = Query("en")) -> dict:
     conn = db_conn()
     safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    user_id = current_user_id(request)
     session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
     if session is None:
+        raise HTTPException(status_code=404, detail="Learning session not found")
+    if session["user_id"] != user_id:
         raise HTTPException(status_code=404, detail="Learning session not found")
     question = current_learning_question(conn, session_id)
     if question is None:
@@ -7164,21 +7299,27 @@ def mobile_learning_state(session_id: int, lang: str = Query("en")) -> dict:
         "session_id": session_id,
         "status": "question",
         "progress": learning_progress(conn, session),
-        "question": mobile_learning_question_payload(conn, question, safe_lang),
+        "question": mobile_learning_question_payload(conn, question, safe_lang, user_id),
     }
 
 
 @app.post("/api/mobile/learning/{session_id}/answer")
 def mobile_learning_answer(
+    request: Request,
     session_id: int,
     lang: str = Query("en"),
     answer: str = Body(..., embed=True),
 ) -> dict:
     conn = db_conn()
     safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    user_id = current_user_id(request)
     session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    if session is None:
+        raise HTTPException(status_code=404, detail="Learning session not found")
+    if session["user_id"] != user_id:
+        raise HTTPException(status_code=404, detail="Learning session not found")
     question = current_learning_question(conn, session_id)
-    if session is None or question is None:
+    if question is None:
         return mobile_learning_result_payload(conn, session_id, safe_lang)
     is_correct = int(answer == question["correct_option"])
     conn.execute(
@@ -7198,7 +7339,7 @@ def mobile_learning_answer(
         """,
         (is_correct, session_id),
     )
-    update_study_card_schedule(conn, question["word_id"], bool(is_correct), "mobile_learning")
+    update_study_card_schedule(conn, question["word_id"], bool(is_correct), "mobile_learning", user_id)
     conn.commit()
     updated_session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
     reviewed_question = previous_learning_question(conn, session_id)
@@ -7208,7 +7349,7 @@ def mobile_learning_answer(
         "status": "review",
         "progress": progress,
         "is_last": progress["answered"] >= progress["total"],
-        "review": mobile_learning_review_payload(conn, reviewed_question, safe_lang),
+        "review": mobile_learning_review_payload(conn, reviewed_question, safe_lang, user_id),
     }
 
 

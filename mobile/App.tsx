@@ -22,12 +22,17 @@ import {
   LearningCompletedState,
   LearningQuestionState,
   LearningReviewState,
+  MobileUser,
   fetchAiPowerCategories,
   fetchBootstrap,
   fetchDictionarySearch,
   fetchDictionaryWordDetail,
+  fetchMobileMe,
   fetchLearningStart,
   fetchLearningState,
+  mobileLogin,
+  mobileLogout,
+  mobileSignup,
   retryIncorrectLearning,
   saveWordNote,
   submitLearningAnswer,
@@ -71,6 +76,7 @@ const personaOptions: PersonaOption[] = [
 ];
 
 type TabKey = "home" | "learning" | "dictionary" | "ai" | "profile";
+type AuthMode = "login" | "signup";
 
 const bandColors: Record<string, string> = {
   foundation: colors.foundation,
@@ -133,6 +139,13 @@ export default function App() {
   const [name, setName] = useState("");
   const [lang, setLang] = useState("en");
   const [persona, setPersona] = useState("business_professional");
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [authUser, setAuthUser] = useState<MobileUser | null>(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [loadingAuth, setLoadingAuth] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("home");
   const [bootstrap, setBootstrap] = useState<BootstrapPayload | null>(null);
   const [dictionary, setDictionary] = useState<DictionaryPayload | null>(null);
@@ -157,6 +170,21 @@ export default function App() {
   const [noteNotice, setNoteNotice] = useState("");
 
   useEffect(() => {
+    setCheckingAuth(true);
+    fetchMobileMe(lang)
+      .then((payload) => {
+        if (payload.authenticated && payload.user) {
+          applyAuthenticatedUser(payload.user);
+        }
+      })
+      .catch(() => {
+        setAuthUser(null);
+        setStarted(false);
+      })
+      .finally(() => setCheckingAuth(false));
+  }, []);
+
+  useEffect(() => {
     if (!started) {
       return;
     }
@@ -167,6 +195,12 @@ export default function App() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoadingHome(false));
   }, [started, lang, name, persona]);
+
+  useEffect(() => {
+    if (authMode === "signup" && persona !== "student" && persona !== "teacher") {
+      setPersona("student");
+    }
+  }, [authMode, persona]);
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -227,9 +261,60 @@ export default function App() {
     [persona],
   );
 
-  function openDashboard() {
+  function applyAuthenticatedUser(user: MobileUser) {
+    setAuthUser(user);
+    setName(user.display_name || "");
+    setPersona(user.persona || "student");
     setStarted(true);
     setActiveTab("home");
+  }
+
+  function clearAuthForm() {
+    setAuthEmail("");
+    setAuthPassword("");
+    setAuthConfirmPassword("");
+  }
+
+  function submitAuthForm() {
+    setLoadingAuth(true);
+    setError("");
+    const email = authEmail.trim();
+    const password = authPassword;
+    const request =
+      authMode === "login"
+        ? mobileLogin({ email, password, lang })
+        : mobileSignup({
+            display_name: name.trim(),
+            email,
+            password,
+            confirm_password: authConfirmPassword,
+            persona,
+            lang,
+          });
+    request
+      .then((payload) => {
+        if (payload.user) {
+          applyAuthenticatedUser(payload.user);
+          clearAuthForm();
+        }
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoadingAuth(false));
+  }
+
+  function logout() {
+    setLoadingAuth(true);
+    setError("");
+    mobileLogout(lang)
+      .then(() => {
+        setAuthUser(null);
+        setStarted(false);
+        setActiveTab("home");
+        setBootstrap(null);
+        resetLearningFlow();
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoadingAuth(false));
   }
 
   function openDictionaryWithWord(word: string) {
@@ -418,40 +503,102 @@ export default function App() {
       <SafeAreaView style={styles.safe}>
         <ExpoStatusBar style="dark" />
         <ScrollView contentContainerStyle={styles.onboardingWrap}>
-          <Text style={styles.eyebrow}>Mobile App Setup</Text>
-          <Text style={styles.title}>Welcome to VocabLab AI</Text>
+          <Text style={styles.eyebrow}>VocabLab Mobile</Text>
+          <Text style={styles.title}>{authMode === "login" ? "Log in to continue" : "Create your student account"}</Text>
           <Text style={styles.subtitle}>
-            Let&apos;s make your mobile learning experience personal before we open the dashboard.
+            Use the same VocabLab AI account as the web app so your learning records, notes, and results stay together.
           </Text>
 
           <View style={styles.panel}>
-            <Text style={styles.label}>First name</Text>
+            {checkingAuth ? (
+              <View style={styles.authLoadingBox}>
+                <ActivityIndicator color={colors.navSoft} />
+                <Text style={styles.cardNote}>Checking your saved login...</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.authModeRow}>
+              {[
+                ["login", "Login"],
+                ["signup", "Sign up"],
+              ].map(([key, label]) => (
+                <Pressable
+                  key={key}
+                  onPress={() => {
+                    setAuthMode(key as AuthMode);
+                    setError("");
+                  }}
+                  style={[styles.authModeButton, authMode === key && styles.authModeButtonActive]}
+                >
+                  <Text style={[styles.authModeText, authMode === key && styles.authModeTextActive]}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {authMode === "signup" ? (
+              <>
+                <Text style={styles.label}>Name</Text>
+                <TextInput
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Wah"
+                  placeholderTextColor="#9d9488"
+                  style={styles.input}
+                  autoCapitalize="words"
+                />
+              </>
+            ) : null}
+
+            <Text style={styles.label}>Email</Text>
             <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="Wah"
+              value={authEmail}
+              onChangeText={setAuthEmail}
+              placeholder="student@example.com"
               placeholderTextColor="#9d9488"
               style={styles.input}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
 
-            <Text style={[styles.label, styles.sectionLabel]}>Who are you?</Text>
-            {personaOptions.map((option) => (
-              <Pressable
-                key={option.key}
-                onPress={() => setPersona(option.key)}
-                style={[
-                  styles.personaCard,
-                  persona === option.key && styles.personaCardActive,
-                  option.featured && styles.personaFeatured,
-                ]}
-              >
-                <View style={styles.personaHead}>
-                  <Text style={styles.personaTitle}>{option.label}</Text>
-                  {option.featured ? <Text style={styles.featuredTag}>Best fit</Text> : null}
-                </View>
-                <Text style={styles.personaDesc}>{option.description}</Text>
-              </Pressable>
-            ))}
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              value={authPassword}
+              onChangeText={setAuthPassword}
+              placeholder="At least 8 characters"
+              placeholderTextColor="#9d9488"
+              style={styles.input}
+              secureTextEntry
+            />
+
+            {authMode === "signup" ? (
+              <>
+                <Text style={styles.label}>Confirm password</Text>
+                <TextInput
+                  value={authConfirmPassword}
+                  onChangeText={setAuthConfirmPassword}
+                  placeholder="Type the password again"
+                  placeholderTextColor="#9d9488"
+                  style={styles.input}
+                  secureTextEntry
+                />
+
+                <Text style={[styles.label, styles.sectionLabel]}>Account type</Text>
+                {personaOptions
+                  .filter((option) => option.key === "student" || option.key === "teacher")
+                  .map((option) => (
+                    <Pressable
+                      key={option.key}
+                      onPress={() => setPersona(option.key)}
+                      style={[styles.personaCard, persona === option.key && styles.personaCardActive]}
+                    >
+                      <View style={styles.personaHead}>
+                        <Text style={styles.personaTitle}>{option.label}</Text>
+                      </View>
+                      <Text style={styles.personaDesc}>{option.description}</Text>
+                    </Pressable>
+                  ))}
+              </>
+            ) : null}
 
             <Text style={[styles.label, styles.sectionLabel]}>Language</Text>
             <View style={styles.langRow}>
@@ -470,8 +617,24 @@ export default function App() {
               ))}
             </View>
 
-            <Pressable style={styles.primaryButton} onPress={openDashboard}>
-              <Text style={styles.primaryButtonText}>Continue to mobile dashboard</Text>
+            {error ? <Text style={styles.authErrorText}>{error}</Text> : null}
+
+            <Pressable style={[styles.primaryButton, loadingAuth && styles.primaryButtonDisabled]} onPress={submitAuthForm} disabled={loadingAuth}>
+              <Text style={styles.primaryButtonText}>
+                {loadingAuth ? "Please wait..." : authMode === "login" ? "Login" : "Create account"}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.authSwitchLink}
+              onPress={() => {
+                setAuthMode(authMode === "login" ? "signup" : "login");
+                setError("");
+              }}
+            >
+              <Text style={styles.authSwitchText}>
+                {authMode === "login" ? "New here? Create an account" : "Already have an account? Login"}
+              </Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -1155,13 +1318,14 @@ export default function App() {
           <View style={[styles.card, shadows.card]}>
             <Text style={styles.sectionEyebrow}>Profile</Text>
             <Text style={styles.cardTitle}>{greetingName}</Text>
+            <Text style={styles.cardBody}>Email: {authUser?.email || "Signed in on this device"}</Text>
             <Text style={styles.cardBody}>Persona: {persona.replaceAll("_", " ")}</Text>
             <Text style={styles.cardBody}>Language: {lang}</Text>
             <Text style={styles.cardNote}>
-              This mobile app is scaffolded to work with the same FastAPI backend as the web app, so your data stays in one place.
+              Your mobile learning uses the same account system as the web app, so records and notes stay in one place.
             </Text>
             <View style={styles.quickActionRow}>
-              <QuickAction label="Edit onboarding" tone="soft" onPress={() => setStarted(false)} />
+              <QuickAction label={loadingAuth ? "Signing out..." : "Logout"} tone="soft" onPress={logout} disabled={loadingAuth} />
               <QuickAction label="Go to Home" tone="primary" onPress={() => setActiveTab("home")} />
             </View>
             <Text style={styles.footerMeta}>Connected to {API_BASE}</Text>
@@ -1399,12 +1563,57 @@ const styles = StyleSheet.create({
   langChipTextActive: {
     color: "#fff",
   },
+  authLoadingBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 10,
+  },
+  authModeRow: {
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: "#f5efe5",
+    borderRadius: 18,
+    padding: 5,
+  },
+  authModeButton: {
+    flex: 1,
+    borderRadius: 14,
+    paddingVertical: 11,
+    alignItems: "center",
+  },
+  authModeButtonActive: {
+    backgroundColor: colors.navSoft,
+  },
+  authModeText: {
+    color: colors.ink,
+    fontWeight: "800",
+  },
+  authModeTextActive: {
+    color: "#fff",
+  },
+  authErrorText: {
+    color: colors.foundation,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  authSwitchLink: {
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  authSwitchText: {
+    color: colors.navSoft,
+    fontWeight: "800",
+  },
   primaryButton: {
     marginTop: 10,
     backgroundColor: colors.success,
     paddingVertical: 16,
     borderRadius: 18,
     alignItems: "center",
+  },
+  primaryButtonDisabled: {
+    opacity: 0.6,
   },
   primaryButtonText: {
     color: "#fff",

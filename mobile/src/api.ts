@@ -19,9 +19,11 @@ function resolveApiBase() {
 const API_BASE = resolveApiBase();
 
 async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`);
+  const response = await fetch(`${API_BASE}${path}`, {
+    credentials: "include",
+  });
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    throw new Error(await responseErrorMessage(response));
   }
   return response.json() as Promise<T>;
 }
@@ -32,12 +34,25 @@ async function postJson<T>(path: string, body?: Record<string, unknown>): Promis
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    throw new Error(await responseErrorMessage(response));
   }
   return response.json() as Promise<T>;
+}
+
+async function responseErrorMessage(response: Response) {
+  try {
+    const payload = await response.json();
+    if (payload?.detail) {
+      return String(payload.detail);
+    }
+  } catch {
+    // Fall back to the status code below.
+  }
+  return `Request failed: ${response.status}`;
 }
 
 export type MobileProfile = {
@@ -46,6 +61,20 @@ export type MobileProfile = {
   persona: string;
   persona_message: string;
   recommendation_note: string;
+};
+
+export type MobileUser = {
+  id: number;
+  display_name: string;
+  email: string;
+  persona: string;
+  role: string;
+  profile: MobileProfile;
+};
+
+export type AuthStatePayload = {
+  authenticated: boolean;
+  user: MobileUser | null;
 };
 
 export type WordCard = {
@@ -236,6 +265,42 @@ export type NoteSavePayload = {
   notes: string;
   message: string;
 };
+
+export async function fetchMobileMe(lang: string) {
+  const query = new URLSearchParams({ lang }).toString();
+  return getJson<AuthStatePayload>(`/api/mobile/auth/me?${query}`);
+}
+
+export async function mobileLogin(params: { email: string; password: string; lang: string }) {
+  const query = new URLSearchParams({ lang: params.lang }).toString();
+  return postJson<AuthStatePayload>(`/api/mobile/auth/login?${query}`, {
+    email: params.email,
+    password: params.password,
+  });
+}
+
+export async function mobileSignup(params: {
+  display_name: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+  persona: string;
+  lang: string;
+}) {
+  const query = new URLSearchParams({ lang: params.lang }).toString();
+  return postJson<AuthStatePayload>(`/api/mobile/auth/signup?${query}`, {
+    display_name: params.display_name,
+    email: params.email,
+    password: params.password,
+    confirm_password: params.confirm_password,
+    persona: params.persona,
+  });
+}
+
+export async function mobileLogout(lang: string) {
+  const query = new URLSearchParams({ lang }).toString();
+  return postJson<AuthStatePayload>(`/api/mobile/auth/logout?${query}`);
+}
 
 export async function fetchBootstrap(params: {
   lang: string;
