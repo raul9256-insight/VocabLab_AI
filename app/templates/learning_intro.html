@@ -68,6 +68,35 @@
     </div>
   </article>
 
+  {% if assignments %}
+  <article class="panel dashboard-v2-card learning-support-card teacher-assignment-list">
+    <p class="eyebrow">{{ t("assigned_practice") }}</p>
+    <h2>{{ t("assigned_practice") }}</h2>
+    <p class="section-subtle">{{ t("assigned_practice_note") }}</p>
+    <div class="assignment-card-grid">
+      {% for assignment in assignments %}
+      <article class="learning-info-block assignment-card">
+        <div>
+          <strong>{{ assignment.title }}</strong>
+          <p>{{ assignment.class_name }} · {{ assignment.band_label }}</p>
+          {% if assignment.due_date %}
+          <small>{{ t("due_label") }}: {{ assignment.due_date }}</small>
+          {% endif %}
+        </div>
+        {% if assignment.session_status == "completed" %}
+        <span class="risk-pill risk-low">{{ t("session_complete") }}</span>
+        {% else %}
+        <form method="post" action="/learning/start">
+          <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+          <button class="button secondary" type="submit">{{ t("start_assignment") }}</button>
+        </form>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </article>
+  {% endif %}
+
   <section class="learning-support-grid">
     <article class="panel dashboard-v2-card learning-support-card learning-band-choice-card">
       <p class="eyebrow">{{ t("choose_learning_band") }}</p>

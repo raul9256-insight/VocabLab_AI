@@ -190,6 +190,17 @@ CREATE TABLE IF NOT EXISTS class_memberships (
     joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(class_id, student_user_id)
 );
+
+CREATE TABLE IF NOT EXISTS class_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    class_id INTEGER NOT NULL REFERENCES teacher_classes(id) ON DELETE CASCADE,
+    teacher_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    band_rank INTEGER NOT NULL,
+    band_label TEXT NOT NULL,
+    due_date TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 
@@ -252,6 +263,7 @@ def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
     ensure_column(conn, "assessment_sessions", "weighted_percent", "INTEGER")
     ensure_column(conn, "learning_sessions", "band_rank", "INTEGER")
     ensure_column(conn, "learning_sessions", "band_label", "TEXT")
+    ensure_column(conn, "learning_sessions", "assignment_id", "INTEGER")
     ensure_column(conn, "users", "email", "TEXT")
     ensure_column(conn, "users", "password_hash", "TEXT NOT NULL DEFAULT ''")
     ensure_column(conn, "users", "display_name", "TEXT NOT NULL DEFAULT ''")

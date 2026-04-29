@@ -53,6 +53,81 @@
       </article>
     </div>
 
+    <article class="learning-info-block teacher-assignment-create">
+      <div class="card-head tight">
+        <div>
+          <p class="eyebrow">{{ t("teacher_create_assignment") }}</p>
+          <h2>{{ t("teacher_create_assignment") }}</h2>
+        </div>
+      </div>
+      <form class="teacher-assignment-form" method="post" action="/teacher/assignments{% if lang != 'en' %}?lang={{ lang }}{% endif %}">
+        <label>
+          <span>{{ t("teacher_assignment_class") }}</span>
+          <select name="class_id" required>
+            {% for item in classes %}
+            <option value="{{ item.row.id }}">{{ item.row.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>{{ t("teacher_assignment_title") }}</span>
+          <input type="text" name="title" placeholder="{{ t('teacher_assignment_title_placeholder') }}" maxlength="100" required>
+        </label>
+        <label>
+          <span>{{ t("teacher_assignment_band") }}</span>
+          <select name="band_rank">
+            {% for band in bands %}
+            <option value="{{ band.best_band_rank }}">{{ band.display_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>{{ t("teacher_assignment_due") }}</span>
+          <input type="date" name="due_date">
+        </label>
+        <button class="button" type="submit" {% if not classes %}disabled{% endif %}>{{ t("teacher_create_assignment_submit") }}</button>
+      </form>
+    </article>
+
+    <article class="learning-info-block teacher-assignment-list">
+      <div class="card-head tight">
+        <div>
+          <p class="eyebrow">{{ t("teacher_assignments") }}</p>
+          <h2>{{ t("teacher_assignments") }}</h2>
+        </div>
+      </div>
+      {% if assignments %}
+      <div class="test-report-table-wrap">
+        <table class="result-table teacher-roster-table">
+          <thead>
+            <tr>
+              <th>{{ t("teacher_assignment_title") }}</th>
+              <th>{{ t("teacher_assignment_class") }}</th>
+              <th>{{ t("teacher_assignment_band") }}</th>
+              <th>{{ t("teacher_assignment_due") }}</th>
+              <th>{{ t("teacher_assignment_completion") }}</th>
+              <th>{{ t("teacher_assignment_avg_score") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for assignment in assignments %}
+            <tr>
+              <td>{{ assignment.row.title }}</td>
+              <td>{{ assignment.row.class_name }}</td>
+              <td>{{ assignment.row.band_label }}</td>
+              <td>{{ assignment.row.due_date or "--" }}</td>
+              <td>{{ assignment.completed_count }} / {{ assignment.student_count }} ({{ assignment.completion_percent }}%)</td>
+              <td>{% if assignment.avg_score is not none %}{{ assignment.avg_score }}{% else %}--{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="section-subtle">{{ t("teacher_no_assignments") }}</p>
+      {% endif %}
+    </article>
+
     <div class="teacher-class-list">
       {% for item in classes %}
       <article class="learning-info-block teacher-class-card">

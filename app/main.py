@@ -767,6 +767,22 @@ TRANSLATIONS = {
         "teacher_recommend_inactive": "{count} students have not been active recently. Send a reminder or assign a short review.",
         "teacher_recommend_accuracy": "{count} students are below 60% accuracy. Assign a lower-band revision set.",
         "teacher_recommend_weak_type": "The class is weakest in {question_type}. Create focused practice for this layer.",
+        "teacher_create_assignment": "Create Assignment",
+        "teacher_assignment_title": "Assignment title",
+        "teacher_assignment_title_placeholder": "This week's Band 3 revision",
+        "teacher_assignment_class": "Class",
+        "teacher_assignment_band": "Vocabulary band",
+        "teacher_assignment_due": "Due date",
+        "teacher_create_assignment_submit": "Create assignment",
+        "teacher_assignments": "Assignments",
+        "teacher_no_assignments": "No assignments yet.",
+        "teacher_assignment_completion": "Completion",
+        "teacher_assignment_avg_score": "Avg. score",
+        "teacher_assignment_created": "Assignment created.",
+        "assigned_practice": "Assigned Practice",
+        "assigned_practice_note": "These tasks were assigned by your teacher.",
+        "start_assignment": "Start assignment",
+        "due_label": "Due",
         "risk_low": "Low",
         "risk_medium": "Medium",
         "risk_high": "High",
@@ -978,6 +994,22 @@ TRANSLATIONS = {
         "teacher_recommend_inactive": "{count} 位學生近期沒有活躍。建議發提醒或派一份短複習。",
         "teacher_recommend_accuracy": "{count} 位學生準確率低於 60%。建議派較低 band 的 revision set。",
         "teacher_recommend_weak_type": "全班最弱題型是 {question_type}。建議建立針對這一層的練習。",
+        "teacher_create_assignment": "指派練習",
+        "teacher_assignment_title": "練習標題",
+        "teacher_assignment_title_placeholder": "本週 Band 3 revision",
+        "teacher_assignment_class": "班級",
+        "teacher_assignment_band": "詞彙 Band",
+        "teacher_assignment_due": "截止日期",
+        "teacher_create_assignment_submit": "建立指派",
+        "teacher_assignments": "已派練習",
+        "teacher_no_assignments": "目前還沒有指派練習。",
+        "teacher_assignment_completion": "完成率",
+        "teacher_assignment_avg_score": "平均分",
+        "teacher_assignment_created": "已建立指派練習。",
+        "assigned_practice": "老師指派練習",
+        "assigned_practice_note": "以下是老師指派給你的練習。",
+        "start_assignment": "開始練習",
+        "due_label": "截止",
         "risk_low": "低",
         "risk_medium": "中",
         "risk_high": "高",
@@ -2061,6 +2093,22 @@ TRANSLATIONS["zh-Hans"].update(
         "teacher_recommend_inactive": "{count} 位学生近期没有活跃。建议发提醒或派一份短复习。",
         "teacher_recommend_accuracy": "{count} 位学生准确率低于 60%。建议派较低 band 的 revision set。",
         "teacher_recommend_weak_type": "全班最弱题型是 {question_type}。建议建立针对这一层的练习。",
+        "teacher_create_assignment": "指派练习",
+        "teacher_assignment_title": "练习标题",
+        "teacher_assignment_title_placeholder": "本周 Band 3 revision",
+        "teacher_assignment_class": "班级",
+        "teacher_assignment_band": "词汇 Band",
+        "teacher_assignment_due": "截止日期",
+        "teacher_create_assignment_submit": "建立指派",
+        "teacher_assignments": "已派练习",
+        "teacher_no_assignments": "目前还没有指派练习。",
+        "teacher_assignment_completion": "完成率",
+        "teacher_assignment_avg_score": "平均分",
+        "teacher_assignment_created": "已建立指派练习。",
+        "assigned_practice": "老师指派练习",
+        "assigned_practice_note": "以下是老师指派给你的练习。",
+        "start_assignment": "开始练习",
+        "due_label": "截止",
         "risk_low": "低",
         "risk_medium": "中",
         "risk_high": "高",
@@ -5039,7 +5087,7 @@ def learning_band_cards(conn: sqlite3.Connection, lang: str = "en", user_id: int
     return cards
 
 
-def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = None, user_id: int = USER_ID) -> int:
+def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = None, user_id: int = USER_ID, assignment_id: int | None = None) -> int:
     selected_rank = band_rank if band_rank in TEST_BAND_EASIEST_TO_HARDEST else recommended_learning_band_rank(conn, user_id)
     band = conn.execute(
         """
@@ -5077,10 +5125,10 @@ def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = No
     )
     cursor = conn.execute(
         """
-        INSERT INTO learning_sessions (user_id, band_rank, band_label)
-        VALUES (?, ?, ?)
+        INSERT INTO learning_sessions (user_id, band_rank, band_label, assignment_id)
+        VALUES (?, ?, ?, ?)
         """,
-        (user_id, band["best_band_rank"], band["best_band_label"]),
+        (user_id, band["best_band_rank"], band["best_band_label"], assignment_id),
     )
     session_id = cursor.lastrowid
     words = conn.execute(
@@ -5763,6 +5811,67 @@ def teacher_recommendation_rows(snapshot: dict, student_rows: list[dict], lang: 
     return recommendations
 
 
+def teacher_assignment_rows(conn: sqlite3.Connection, teacher_user_id: int) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT class_assignments.*,
+               teacher_classes.name AS class_name,
+               COUNT(DISTINCT class_memberships.student_user_id) AS student_count,
+               COUNT(DISTINCT CASE WHEN learning_sessions.status = 'completed' THEN learning_sessions.user_id END) AS completed_count,
+               AVG(CASE WHEN learning_sessions.status = 'completed' THEN learning_sessions.score END) AS avg_score
+        FROM class_assignments
+        JOIN teacher_classes ON teacher_classes.id = class_assignments.class_id
+        LEFT JOIN class_memberships ON class_memberships.class_id = class_assignments.class_id
+        LEFT JOIN learning_sessions ON learning_sessions.assignment_id = class_assignments.id
+        WHERE class_assignments.teacher_user_id = ?
+        GROUP BY class_assignments.id
+        ORDER BY class_assignments.created_at DESC, class_assignments.id DESC
+        """,
+        (teacher_user_id,),
+    ).fetchall()
+    assignments: list[dict] = []
+    for row in rows:
+        student_count = int(row["student_count"] or 0)
+        completed_count = int(row["completed_count"] or 0)
+        assignments.append(
+            {
+                "row": row,
+                "student_count": student_count,
+                "completed_count": completed_count,
+                "completion_percent": round((completed_count / student_count) * 100) if student_count else 0,
+                "avg_score": round(float(row["avg_score"])) if row["avg_score"] is not None else None,
+            }
+        )
+    return assignments
+
+
+def student_assignment_rows(conn: sqlite3.Connection, user_id: int) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT class_assignments.*,
+               teacher_classes.name AS class_name,
+               teacher.display_name AS teacher_name,
+               latest.session_id,
+               latest.status AS session_status,
+               latest.score AS session_score
+        FROM class_memberships
+        JOIN teacher_classes ON teacher_classes.id = class_memberships.class_id
+        JOIN users AS teacher ON teacher.id = teacher_classes.teacher_user_id
+        JOIN class_assignments ON class_assignments.class_id = teacher_classes.id
+        LEFT JOIN (
+            SELECT assignment_id, user_id, MAX(id) AS session_id, status, score
+            FROM learning_sessions
+            WHERE user_id = ? AND assignment_id IS NOT NULL
+            GROUP BY assignment_id, user_id
+        ) AS latest ON latest.assignment_id = class_assignments.id
+        WHERE class_memberships.student_user_id = ?
+        ORDER BY class_assignments.created_at DESC, class_assignments.id DESC
+        """,
+        (user_id, user_id),
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
 def teacher_class_rows(conn: sqlite3.Connection, teacher_user_id: int, lang: str = "en") -> list[dict]:
     rows = conn.execute(
         """
@@ -5891,12 +6000,15 @@ def teacher_dashboard(request: Request, message: str = Query("")) -> HTMLRespons
         return RedirectResponse(url=auth_redirect_url(lang, error_key="account_login_required"), status_code=303)
     if not is_teacher_user(user):
         return render(request, "teacher_dashboard.html", user=user, classes=[], message_key="teacher_only")
-    allowed_messages = {"account_profile_saved"}
+    allowed_messages = {"account_profile_saved", "teacher_assignment_created"}
+    conn = db_conn()
     return render(
         request,
         "teacher_dashboard.html",
         user=user,
-        classes=teacher_class_rows(db_conn(), int(user["id"]), lang),
+        classes=teacher_class_rows(conn, int(user["id"]), lang),
+        assignments=teacher_assignment_rows(conn, int(user["id"])),
+        bands=decorate_band_rows(band_summary(conn)),
         message_key=message if message in allowed_messages else "",
     )
 
@@ -5922,6 +6034,42 @@ def teacher_class_create(request: Request, name: str = Form("")) -> RedirectResp
     )
     conn.commit()
     return RedirectResponse(url=teacher_redirect_url(lang), status_code=303)
+
+
+@app.post("/teacher/assignments")
+def teacher_assignment_create(
+    request: Request,
+    class_id: int = Form(...),
+    title: str = Form(""),
+    band_rank: int = Form(2000),
+    due_date: str = Form(""),
+) -> RedirectResponse:
+    user = registered_user_row(request)
+    lang = getattr(request.state, "lang", get_lang(request))
+    if user is None:
+        return RedirectResponse(url=auth_redirect_url(lang, error_key="account_login_required"), status_code=303)
+    if not is_teacher_user(user):
+        return RedirectResponse(url=teacher_redirect_url(lang), status_code=303)
+    conn = db_conn()
+    class_row = conn.execute(
+        "SELECT id FROM teacher_classes WHERE id = ? AND teacher_user_id = ?",
+        (class_id, user["id"]),
+    ).fetchone()
+    if class_row is None:
+        return RedirectResponse(url=teacher_redirect_url(lang), status_code=303)
+    selected_rank = band_rank if band_rank in TEST_BAND_EASIEST_TO_HARDEST else 2000
+    band_label = TEST_BAND_LABELS.get(selected_rank, TEST_BAND_LABELS[2000])
+    safe_title = (title or "").strip()[:100] or f"{band_label} Practice"
+    safe_due = (due_date or "").strip()[:20]
+    conn.execute(
+        """
+        INSERT INTO class_assignments (class_id, teacher_user_id, title, band_rank, band_label, due_date)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (class_id, user["id"], safe_title, selected_rank, band_label, safe_due),
+    )
+    conn.commit()
+    return RedirectResponse(url=teacher_redirect_url(lang, "teacher_assignment_created"), status_code=303)
 
 
 @app.post("/classes/join")
@@ -6467,6 +6615,7 @@ def learning_intro(request: Request) -> HTMLResponse:
         stats=fetch_stats(conn, user_id),
         enrichment=enrichment,
         latest_learning=latest_learning,
+        assignments=student_assignment_rows(conn, user_id),
         bands=learning_band_cards(conn, lang, user_id),
         recommended_band_rank=recommended_rank,
         recommended_band_identity=recommended_identity,
@@ -6477,9 +6626,26 @@ def learning_intro(request: Request) -> HTMLResponse:
 
 
 @app.post("/learning/start")
-def learning_start(request: Request, band_rank: int | None = Form(None)) -> RedirectResponse:
+def learning_start(request: Request, band_rank: int | None = Form(None), assignment_id: int | None = Form(None)) -> RedirectResponse:
     conn = db_conn()
-    session_id = create_learning_session(conn, band_rank, current_user_id(request))
+    user_id = current_user_id(request)
+    selected_band_rank = band_rank
+    selected_assignment_id = None
+    if assignment_id:
+        assignment = conn.execute(
+            """
+            SELECT class_assignments.*
+            FROM class_assignments
+            JOIN class_memberships ON class_memberships.class_id = class_assignments.class_id
+            WHERE class_assignments.id = ?
+              AND class_memberships.student_user_id = ?
+            """,
+            (assignment_id, user_id),
+        ).fetchone()
+        if assignment is not None:
+            selected_assignment_id = int(assignment["id"])
+            selected_band_rank = int(assignment["band_rank"])
+    session_id = create_learning_session(conn, selected_band_rank, user_id, selected_assignment_id)
     return RedirectResponse(url=f"/learning/{session_id}", status_code=303)
 
 
