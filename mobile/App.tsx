@@ -140,6 +140,7 @@ export default function App() {
   const [lang, setLang] = useState("en");
   const [persona, setPersona] = useState("business_professional");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [showAuthForm, setShowAuthForm] = useState(false);
   const [authUser, setAuthUser] = useState<MobileUser | null>(null);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -195,12 +196,6 @@ export default function App() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoadingHome(false));
   }, [started, lang, name, persona]);
-
-  useEffect(() => {
-    if (authMode === "signup" && persona !== "student" && persona !== "teacher") {
-      setPersona("student");
-    }
-  }, [authMode, persona]);
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -265,8 +260,22 @@ export default function App() {
     setAuthUser(user);
     setName(user.display_name || "");
     setPersona(user.persona || "student");
+    setShowAuthForm(false);
     setStarted(true);
     setActiveTab("home");
+  }
+
+  function continueAsGuest() {
+    setAuthUser(null);
+    setShowAuthForm(false);
+    setStarted(true);
+    setActiveTab("home");
+  }
+
+  function openAuthForm(mode: AuthMode = "login") {
+    setAuthMode(mode);
+    setShowAuthForm(true);
+    setError("");
   }
 
   function clearAuthForm() {
@@ -309,6 +318,7 @@ export default function App() {
       .then(() => {
         setAuthUser(null);
         setStarted(false);
+        setShowAuthForm(false);
         setActiveTab("home");
         setBootstrap(null);
         resetLearningFlow();
@@ -498,15 +508,93 @@ export default function App() {
     setPronunciationNotice("Pronunciation is currently available in web preview first.");
   }
 
-  if (!started) {
+  if (!started && !showAuthForm) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ExpoStatusBar style="dark" />
+        <ScrollView contentContainerStyle={styles.onboardingWrap}>
+          <Text style={styles.eyebrow}>Mobile App Setup</Text>
+          <Text style={styles.title}>Welcome to VocabLab AI</Text>
+          <Text style={styles.subtitle}>
+            Choose how you want to use the app first. You can try it once as a guest, or log in to keep your records across mobile and web.
+          </Text>
+
+          <View style={styles.panel}>
+            {checkingAuth ? (
+              <View style={styles.authLoadingBox}>
+                <ActivityIndicator color={colors.navSoft} />
+                <Text style={styles.cardNote}>Checking your saved login...</Text>
+              </View>
+            ) : null}
+
+            <Text style={styles.label}>First name</Text>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Wah"
+              placeholderTextColor="#9d9488"
+              style={styles.input}
+              autoCapitalize="words"
+            />
+
+            <Text style={[styles.label, styles.sectionLabel]}>Who are you?</Text>
+            {personaOptions.map((option) => (
+              <Pressable
+                key={option.key}
+                onPress={() => setPersona(option.key)}
+                style={[
+                  styles.personaCard,
+                  persona === option.key && styles.personaCardActive,
+                  option.featured && styles.personaFeatured,
+                ]}
+              >
+                <View style={styles.personaHead}>
+                  <Text style={styles.personaTitle}>{option.label}</Text>
+                  {option.featured ? <Text style={styles.featuredTag}>Best fit</Text> : null}
+                </View>
+                <Text style={styles.personaDesc}>{option.description}</Text>
+              </Pressable>
+            ))}
+
+            <Text style={[styles.label, styles.sectionLabel]}>Language</Text>
+            <View style={styles.langRow}>
+              {[
+                ["en", "English"],
+                ["zh-Hant", "繁中"],
+                ["zh-Hans", "简中"],
+              ].map(([key, label]) => (
+                <Pressable
+                  key={key}
+                  onPress={() => setLang(key)}
+                  style={[styles.langChip, lang === key && styles.langChipActive]}
+                >
+                  <Text style={[styles.langChipText, lang === key && styles.langChipTextActive]}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable style={styles.primaryButton} onPress={continueAsGuest}>
+              <Text style={styles.primaryButtonText}>Continue as guest</Text>
+            </Pressable>
+
+            <Pressable style={styles.secondaryButton} onPress={() => openAuthForm("login")}>
+              <Text style={styles.secondaryButtonText}>Login / Sign up to save progress</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (!started && showAuthForm) {
     return (
       <SafeAreaView style={styles.safe}>
         <ExpoStatusBar style="dark" />
         <ScrollView contentContainerStyle={styles.onboardingWrap}>
           <Text style={styles.eyebrow}>VocabLab Mobile</Text>
-          <Text style={styles.title}>{authMode === "login" ? "Log in to continue" : "Create your student account"}</Text>
+          <Text style={styles.title}>{authMode === "login" ? "Log in to continue" : "Create your account"}</Text>
           <Text style={styles.subtitle}>
-            Use the same VocabLab AI account as the web app so your learning records, notes, and results stay together.
+            Use the same VocabLab AI account as the web app so your learning records, notes, and results stay together. You can also go back and continue once as a guest.
           </Text>
 
           <View style={styles.panel}>
@@ -583,20 +671,23 @@ export default function App() {
                 />
 
                 <Text style={[styles.label, styles.sectionLabel]}>Account type</Text>
-                {personaOptions
-                  .filter((option) => option.key === "student" || option.key === "teacher")
-                  .map((option) => (
-                    <Pressable
-                      key={option.key}
-                      onPress={() => setPersona(option.key)}
-                      style={[styles.personaCard, persona === option.key && styles.personaCardActive]}
-                    >
-                      <View style={styles.personaHead}>
-                        <Text style={styles.personaTitle}>{option.label}</Text>
-                      </View>
-                      <Text style={styles.personaDesc}>{option.description}</Text>
-                    </Pressable>
-                  ))}
+                {personaOptions.map((option) => (
+                  <Pressable
+                    key={option.key}
+                    onPress={() => setPersona(option.key)}
+                    style={[
+                      styles.personaCard,
+                      persona === option.key && styles.personaCardActive,
+                      option.featured && styles.personaFeatured,
+                    ]}
+                  >
+                    <View style={styles.personaHead}>
+                      <Text style={styles.personaTitle}>{option.label}</Text>
+                      {option.featured ? <Text style={styles.featuredTag}>Best fit</Text> : null}
+                    </View>
+                    <Text style={styles.personaDesc}>{option.description}</Text>
+                  </Pressable>
+                ))}
               </>
             ) : null}
 
@@ -635,6 +726,10 @@ export default function App() {
               <Text style={styles.authSwitchText}>
                 {authMode === "login" ? "New here? Create an account" : "Already have an account? Login"}
               </Text>
+            </Pressable>
+
+            <Pressable style={styles.authSwitchLink} onPress={() => setShowAuthForm(false)}>
+              <Text style={styles.authSwitchText}>Back to guest setup</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -1322,10 +1417,23 @@ export default function App() {
             <Text style={styles.cardBody}>Persona: {persona.replaceAll("_", " ")}</Text>
             <Text style={styles.cardBody}>Language: {lang}</Text>
             <Text style={styles.cardNote}>
-              Your mobile learning uses the same account system as the web app, so records and notes stay in one place.
+              {authUser
+                ? "Your mobile learning uses the same account system as the web app, so records and notes stay in one place."
+                : "You are using guest mode. Login or sign up when you want to save progress across mobile and web."}
             </Text>
             <View style={styles.quickActionRow}>
-              <QuickAction label={loadingAuth ? "Signing out..." : "Logout"} tone="soft" onPress={logout} disabled={loadingAuth} />
+              {authUser ? (
+                <QuickAction label={loadingAuth ? "Signing out..." : "Logout"} tone="soft" onPress={logout} disabled={loadingAuth} />
+              ) : (
+                <QuickAction
+                  label="Login / Sign up"
+                  tone="soft"
+                  onPress={() => {
+                    setStarted(false);
+                    openAuthForm("login");
+                  }}
+                />
+              )}
               <QuickAction label="Go to Home" tone="primary" onPress={() => setActiveTab("home")} />
             </View>
             <Text style={styles.footerMeta}>Connected to {API_BASE}</Text>
@@ -1619,6 +1727,19 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "800",
     fontSize: 16,
+  },
+  secondaryButton: {
+    backgroundColor: "#fff",
+    paddingVertical: 15,
+    borderRadius: 18,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  secondaryButtonText: {
+    color: colors.ink,
+    fontWeight: "800",
+    fontSize: 15,
   },
   loadingTitle: {
     marginTop: 8,
