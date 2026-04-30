@@ -7282,6 +7282,66 @@ def mobile_learning_active(request: Request, lang: str = Query("en")) -> dict:
     }
 
 
+@app.get("/api/mobile/learning/progress")
+def mobile_learning_progress(request: Request, lang: str = Query("en")) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    user_id = current_user_id(request)
+    summary = learning_summary_for_user(conn, user_id)
+    rows = conn.execute(
+        """
+        SELECT learning_questions.question_type,
+               SUM(CASE WHEN learning_questions.is_correct = 1 THEN 1 ELSE 0 END) AS correct,
+               COUNT(*) AS total
+        FROM learning_questions
+        JOIN learning_sessions ON learning_sessions.id = learning_questions.session_id
+        WHERE learning_sessions.user_id = ?
+          AND learning_questions.is_correct IS NOT NULL
+        GROUP BY learning_questions.question_type
+        HAVING total > 0
+        """,
+        (user_id,),
+    ).fetchall()
+    type_breakdown = [
+        {
+            "question_type": row["question_type"],
+            "question_type_label": translate_question_type(row["question_type"], safe_lang),
+            "correct": int(row["correct"] or 0),
+            "total": int(row["total"] or 0),
+            "accuracy": percent_value(int(row["correct"] or 0), int(row["total"] or 0)),
+        }
+        for row in rows
+    ]
+    weakest = min(
+        type_breakdown,
+        key=lambda item: ((item["correct"] / max(item["total"], 1)), -item["total"]),
+        default=None,
+    )
+    history = learning_history_rows(conn, limit=5, user_id=user_id)
+    missed = missed_words(conn, limit=5, lang=safe_lang)
+    return {
+        "summary": {
+            "completed_sessions": summary["completed_sessions"],
+            "correct": summary["correct"],
+            "total": summary["total"],
+            "accuracy": summary["accuracy"],
+            "missed_words_count": len(missed_words(conn, limit=50, lang=safe_lang)),
+        },
+        "weakest_question_type": weakest,
+        "type_breakdown": type_breakdown,
+        "recent_sessions": history,
+        "missed_words": [
+            {
+                "id": item["id"],
+                "lemma": item["lemma"],
+                "band_label": item["best_band_label"],
+                "chinese_headword": (item.get("chinese_preview") or [""])[0],
+            }
+            for item in missed
+        ],
+    }
+
+
 @app.post("/api/mobile/learning/start")
 def mobile_learning_start(request: Request, lang: str = Query("en"), band_rank: int | None = Query(None)) -> dict:
     conn = db_conn()

@@ -278,6 +278,44 @@ export type ActiveLearningPayload = {
     resume_label: string;
   };
 };
+export type LearningProgressPayload = {
+  summary: {
+    completed_sessions: number;
+    correct: number;
+    total: number;
+    accuracy: number | null;
+    missed_words_count: number;
+  };
+  weakest_question_type: null | {
+    question_type: string;
+    question_type_label: string;
+    correct: number;
+    total: number;
+    accuracy: number | null;
+  };
+  type_breakdown: Array<{
+    question_type: string;
+    question_type_label: string;
+    correct: number;
+    total: number;
+    accuracy: number | null;
+  }>;
+  recent_sessions: Array<{
+    id: number;
+    started_at: string;
+    completed_at: string;
+    score: number;
+    total_questions: number;
+    correct_answers: number;
+    accuracy_percent: number | null;
+  }>;
+  missed_words: Array<{
+    id: number;
+    lemma: string;
+    band_label: string;
+    chinese_headword: string;
+  }>;
+};
 export type NoteSavePayload = {
   word_id: number;
   notes: string;
@@ -355,6 +393,11 @@ export async function fetchLearningStart(lang: string, bandRank?: number) {
 export async function fetchActiveLearning(lang: string) {
   const query = new URLSearchParams({ lang }).toString();
   return getJson<ActiveLearningPayload>(`/api/mobile/learning/active?${query}`);
+}
+
+export async function fetchLearningProgress(lang: string) {
+  const query = new URLSearchParams({ lang }).toString();
+  return getJson<LearningProgressPayload>(`/api/mobile/learning/progress?${query}`);
 }
 
 export async function fetchLearningState(sessionId: number, lang: string) {

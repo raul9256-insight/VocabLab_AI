@@ -21,6 +21,7 @@ import {
   DictionaryPayload,
   DictionaryWordDetail,
   LearningCompletedState,
+  LearningProgressPayload,
   LearningQuestionState,
   LearningReviewState,
   MobileUser,
@@ -31,6 +32,7 @@ import {
   fetchDictionaryWordDetail,
   fetchMobileMe,
   fetchLearningStart,
+  fetchLearningProgress,
   fetchLearningState,
   mobileLogin,
   mobileLogout,
@@ -131,6 +133,14 @@ const mobileCopy = {
     continueSessionBody: "Pick up from where you stopped. Your answers so far are already saved.",
     continueNow: "Continue now",
     completedLabel: "completed",
+    progressTitle: "Learning progress",
+    progressBody: "Learning-session results only, separated from level-test results.",
+    completedSessions: "Completed sessions",
+    avgAccuracy: "Average accuracy",
+    weakType: "Weakest question type",
+    missedWords: "Missed words",
+    recentSessions: "Recent sessions",
+    noProgress: "No completed learning sessions yet.",
     personas: {
       student: ["Student", "Academic growth, reading, and stronger vocabulary foundations."],
       teacher: ["Teacher / Educator", "Teaching, explaining, and building useful learning materials."],
@@ -186,6 +196,14 @@ const mobileCopy = {
     continueSessionBody: "由上次離開的位置繼續。你已完成的答案已經保存。",
     continueNow: "立即繼續",
     completedLabel: "已完成",
+    progressTitle: "學習進度",
+    progressBody: "只顯示 learning session 結果，和程度測驗結果分開。",
+    completedSessions: "已完成練習",
+    avgAccuracy: "平均正確率",
+    weakType: "最弱題型",
+    missedWords: "錯題詞彙",
+    recentSessions: "最近練習",
+    noProgress: "暫時未有已完成的 learning session。",
     personas: {
       student: ["學生", "提升學術閱讀能力，建立更穩固的詞彙基礎。"],
       teacher: ["老師 / 教育工作者", "用於教學、解釋詞彙，以及建立實用學習材料。"],
@@ -241,6 +259,14 @@ const mobileCopy = {
     continueSessionBody: "从上次离开的位置继续。你已完成的答案已经保存。",
     continueNow: "立即继续",
     completedLabel: "已完成",
+    progressTitle: "学习进度",
+    progressBody: "只显示 learning session 结果，和程度测试结果分开。",
+    completedSessions: "已完成练习",
+    avgAccuracy: "平均正确率",
+    weakType: "最弱题型",
+    missedWords: "错题词汇",
+    recentSessions: "最近练习",
+    noProgress: "暂时没有已完成的 learning session。",
     personas: {
       student: ["学生", "提升学术阅读能力，建立更稳固的词汇基础。"],
       teacher: ["老师 / 教育工作者", "用于教学、解释词汇，以及建立实用学习材料。"],
@@ -344,12 +370,14 @@ export default function App() {
   const [selectedLearningAnswer, setSelectedLearningAnswer] = useState("");
   const [selectedLearningBandRank, setSelectedLearningBandRank] = useState<number | null>(null);
   const [activeLearning, setActiveLearning] = useState<ActiveLearningPayload["session"]>(null);
+  const [learningProgress, setLearningProgress] = useState<LearningProgressPayload | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
   const [loadingHome, setLoadingHome] = useState(false);
   const [loadingDictionary, setLoadingDictionary] = useState(false);
   const [loadingWordDetail, setLoadingWordDetail] = useState(false);
   const [loadingAi, setLoadingAi] = useState(false);
   const [loadingLearning, setLoadingLearning] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
   const [savingDictionaryNote, setSavingDictionaryNote] = useState(false);
   const [error, setError] = useState("");
@@ -389,6 +417,13 @@ export default function App() {
     }
     refreshActiveLearning();
   }, [started, lang]);
+
+  useEffect(() => {
+    if (!started || activeTab !== "profile") {
+      return;
+    }
+    refreshLearningProgress();
+  }, [started, activeTab, lang]);
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -569,6 +604,14 @@ export default function App() {
     fetchActiveLearning(lang)
       .then((payload) => setActiveLearning(payload.active ? payload.session : null))
       .catch(() => setActiveLearning(null));
+  }
+
+  function refreshLearningProgress() {
+    setLoadingProgress(true);
+    fetchLearningProgress(lang)
+      .then(setLearningProgress)
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoadingProgress(false));
   }
 
   function startLearningFlow(bandRank?: number) {
@@ -1745,34 +1788,90 @@ export default function App() {
         )}
 
         {activeTab === "profile" && (
-          <View style={[styles.card, shadows.card]}>
-            <Text style={styles.sectionEyebrow}>Profile</Text>
-            <Text style={styles.cardTitle}>{greetingName}</Text>
-            <Text style={styles.cardBody}>Email: {authUser?.email || "Signed in on this device"}</Text>
-            <Text style={styles.cardBody}>Persona: {persona.replaceAll("_", " ")}</Text>
-            <Text style={styles.cardBody}>Language: {lang}</Text>
-            <Text style={styles.cardNote}>
-              {authUser
-                ? "Your mobile learning uses the same account system as the web app, so records and notes stay in one place."
-                : "You are using guest mode. Login or sign up when you want to save progress across mobile and web."}
-            </Text>
-            <View style={styles.quickActionRow}>
-              {authUser ? (
-                <QuickAction label={loadingAuth ? "Signing out..." : "Logout"} tone="soft" onPress={logout} disabled={loadingAuth} />
-              ) : (
-                <QuickAction
-                  label="Login / Sign up"
-                  tone="soft"
-                  onPress={() => {
-                    setStarted(false);
-                    openAuthForm("login");
-                  }}
-                />
-              )}
-              <QuickAction label="Go to Home" tone="primary" onPress={() => setActiveTab("home")} />
+          <>
+            <View style={[styles.card, shadows.card]}>
+              <Text style={styles.sectionEyebrow}>Profile</Text>
+              <Text style={styles.cardTitle}>{greetingName}</Text>
+              <Text style={styles.cardBody}>Email: {authUser?.email || "Signed in on this device"}</Text>
+              <Text style={styles.cardBody}>Persona: {selectedPersonaLabel}</Text>
+              <Text style={styles.cardBody}>Language: {lang}</Text>
+              <Text style={styles.cardNote}>
+                {authUser
+                  ? "Your mobile learning uses the same account system as the web app, so records and notes stay in one place."
+                  : "You are using guest mode. Login or sign up when you want to save progress across mobile and web."}
+              </Text>
+              <View style={styles.quickActionRow}>
+                {authUser ? (
+                  <QuickAction label={loadingAuth ? "Signing out..." : "Logout"} tone="soft" onPress={logout} disabled={loadingAuth} />
+                ) : (
+                  <QuickAction
+                    label="Login / Sign up"
+                    tone="soft"
+                    onPress={() => {
+                      setStarted(false);
+                      openAuthForm("login");
+                    }}
+                  />
+                )}
+                <QuickAction label="Go to Home" tone="primary" onPress={() => setActiveTab("home")} />
+              </View>
+              <Text style={styles.footerMeta}>Connected to {API_BASE}</Text>
             </View>
-            <Text style={styles.footerMeta}>Connected to {API_BASE}</Text>
-          </View>
+
+            <View style={[styles.card, shadows.card]}>
+              <Text style={styles.sectionEyebrow}>Progress</Text>
+              <Text style={styles.cardTitle}>{copy.progressTitle}</Text>
+              <Text style={styles.cardNote}>{copy.progressBody}</Text>
+              {loadingProgress ? <ActivityIndicator color={colors.navSoft} /> : null}
+              {learningProgress ? (
+                <>
+                  <View style={styles.metricGrid}>
+                    <MetricCard label={copy.completedSessions} value={String(learningProgress.summary.completed_sessions)} />
+                    <MetricCard
+                      label={copy.avgAccuracy}
+                      value={learningProgress.summary.accuracy === null ? "-" : `${learningProgress.summary.accuracy}%`}
+                    />
+                    <MetricCard
+                      label={copy.weakType}
+                      value={learningProgress.weakest_question_type?.question_type_label || "-"}
+                    />
+                    <MetricCard label={copy.missedWords} value={String(learningProgress.summary.missed_words_count)} />
+                  </View>
+
+                  {learningProgress.recent_sessions.length ? (
+                    <View style={styles.detailSection}>
+                      <Text style={styles.detailLabel}>{copy.recentSessions}</Text>
+                      {learningProgress.recent_sessions.map((session) => (
+                        <View key={session.id} style={styles.breakdownRow}>
+                          <Text style={styles.detailBody}>Session #{session.id}</Text>
+                          <Text style={styles.resultMeta}>
+                            {session.accuracy_percent ?? 0}% • {session.correct_answers}/{session.total_questions}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={styles.cardNote}>{copy.noProgress}</Text>
+                  )}
+
+                  {learningProgress.missed_words.length ? (
+                    <View style={styles.detailSection}>
+                      <Text style={styles.detailLabel}>{copy.missedWords}</Text>
+                      {learningProgress.missed_words.map((word) => (
+                        <Pressable key={word.id} style={styles.wordRow} onPress={() => openDictionaryWithWord(word.lemma)}>
+                          <View style={styles.wordMeta}>
+                            <Text style={styles.wordLemma}>{word.lemma}</Text>
+                            <Text style={styles.wordChinese}>{word.chinese_headword}</Text>
+                          </View>
+                          <Text style={styles.resultBand}>{word.band_label}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  ) : null}
+                </>
+              ) : null}
+            </View>
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
