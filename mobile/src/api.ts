@@ -390,6 +390,11 @@ export async function fetchLearningStart(lang: string, bandRank?: number) {
   return postJson<LearningState>(`/api/mobile/learning/start?${query}`);
 }
 
+export async function fetchWeakWordsReviewStart(lang: string) {
+  const query = new URLSearchParams({ lang }).toString();
+  return postJson<LearningState>(`/api/mobile/learning/review-weak?${query}`);
+}
+
 export async function fetchActiveLearning(lang: string) {
   const query = new URLSearchParams({ lang }).toString();
   return getJson<ActiveLearningPayload>(`/api/mobile/learning/active?${query}`);

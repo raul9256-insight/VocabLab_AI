@@ -34,6 +34,7 @@ import {
   fetchLearningStart,
   fetchLearningProgress,
   fetchLearningState,
+  fetchWeakWordsReviewStart,
   mobileLogin,
   mobileLogout,
   mobileSignup,
@@ -141,6 +142,8 @@ const mobileCopy = {
     missedWords: "Missed words",
     recentSessions: "Recent sessions",
     noProgress: "No completed learning sessions yet.",
+    reviewWeakWords: "Review weak words",
+    reviewWeakWordsBody: "Start a focused session from the words you missed recently.",
     personas: {
       student: ["Student", "Academic growth, reading, and stronger vocabulary foundations."],
       teacher: ["Teacher / Educator", "Teaching, explaining, and building useful learning materials."],
@@ -204,6 +207,8 @@ const mobileCopy = {
     missedWords: "錯題詞彙",
     recentSessions: "最近練習",
     noProgress: "暫時未有已完成的 learning session。",
+    reviewWeakWords: "重溫錯詞",
+    reviewWeakWordsBody: "用你最近答錯的詞彙開始一個集中重溫練習。",
     personas: {
       student: ["學生", "提升學術閱讀能力，建立更穩固的詞彙基礎。"],
       teacher: ["老師 / 教育工作者", "用於教學、解釋詞彙，以及建立實用學習材料。"],
@@ -267,6 +272,8 @@ const mobileCopy = {
     missedWords: "错题词汇",
     recentSessions: "最近练习",
     noProgress: "暂时没有已完成的 learning session。",
+    reviewWeakWords: "重温错词",
+    reviewWeakWordsBody: "用你最近答错的词汇开始一个集中重温练习。",
     personas: {
       student: ["学生", "提升学术阅读能力，建立更稳固的词汇基础。"],
       teacher: ["老师 / 教育工作者", "用于教学、解释词汇，以及建立实用学习材料。"],
@@ -633,6 +640,20 @@ export default function App() {
     setSelectedLearningBandRank(bandRank);
     setActiveTab("learning");
     startLearningFlow(bandRank);
+  }
+
+  function startWeakWordsReview() {
+    setLoadingLearning(true);
+    setError("");
+    resetLearningFlow();
+    setActiveTab("learning");
+    fetchWeakWordsReviewStart(lang)
+      .then((payload) => {
+        applyLearningState(payload);
+        refreshActiveLearning();
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoadingLearning(false));
   }
 
   function resumeActiveLearning() {
@@ -1857,6 +1878,15 @@ export default function App() {
                   {learningProgress.missed_words.length ? (
                     <View style={styles.detailSection}>
                       <Text style={styles.detailLabel}>{copy.missedWords}</Text>
+                      <Text style={styles.detailBodyMuted}>{copy.reviewWeakWordsBody}</Text>
+                      <View style={styles.quickActionRow}>
+                        <QuickAction
+                          label={loadingLearning ? copy.pleaseWait : copy.reviewWeakWords}
+                          tone="primary"
+                          onPress={startWeakWordsReview}
+                          disabled={loadingLearning}
+                        />
+                      </View>
                       {learningProgress.missed_words.map((word) => (
                         <Pressable key={word.id} style={styles.wordRow} onPress={() => openDictionaryWithWord(word.lemma)}>
                           <View style={styles.wordMeta}>

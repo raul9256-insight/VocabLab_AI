@@ -5217,6 +5217,45 @@ def populate_learning_session(conn: sqlite3.Connection, session_id: int, words: 
     conn.commit()
 
 
+def create_weak_words_learning_session(conn: sqlite3.Connection, user_id: int, lang: str = "en") -> int:
+    missed = missed_words(conn, limit=LEARNING_WORD_COUNT * 3, lang=lang, user_id=user_id)
+    word_ids = [item["id"] for item in missed]
+    if not word_ids:
+        raise HTTPException(status_code=400, detail="No missed words are ready for review yet")
+    placeholders = ",".join("?" for _ in word_ids)
+    rows = conn.execute(
+        f"""
+        SELECT DISTINCT words.*
+        FROM words
+        WHERE words.id IN ({placeholders})
+        ORDER BY CASE words.id
+            {" ".join(f"WHEN ? THEN {index}" for index, _ in enumerate(word_ids))}
+            ELSE {len(word_ids)}
+        END
+        """,
+        (*word_ids, *word_ids),
+    ).fetchall()
+    primary = rows[0]
+    cursor = conn.execute(
+        """
+        INSERT INTO learning_sessions (user_id, band_rank, band_label)
+        VALUES (?, ?, ?)
+        """,
+        (user_id, primary["best_band_rank"], primary["best_band_label"]),
+    )
+    session_id = cursor.lastrowid
+    populate_learning_session(conn, session_id, rows)
+    total_questions = conn.execute(
+        "SELECT COUNT(*) FROM learning_questions WHERE session_id = ?",
+        (session_id,),
+    ).fetchone()[0]
+    if total_questions == 0:
+        conn.execute("DELETE FROM learning_sessions WHERE id = ?", (session_id,))
+        conn.commit()
+        raise HTTPException(status_code=400, detail="No missed words are ready for review yet")
+    return session_id
+
+
 def create_learning_retry_session(conn: sqlite3.Connection, source_session_id: int) -> int:
     source_session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (source_session_id,)).fetchone()
     cursor = conn.execute(
@@ -7348,6 +7387,24 @@ def mobile_learning_start(request: Request, lang: str = Query("en"), band_rank: 
     safe_lang = lang if lang in SUPPORTED_LANGS else "en"
     user_id = current_user_id(request)
     session_id = create_learning_session(conn, band_rank, user_id=user_id)
+    question = current_learning_question(conn, session_id)
+    if question is None:
+        return mobile_learning_result_payload(conn, session_id, safe_lang)
+    session = conn.execute("SELECT * FROM learning_sessions WHERE id = ?", (session_id,)).fetchone()
+    return {
+        "session_id": session_id,
+        "status": "question",
+        "progress": learning_progress(conn, session),
+        "question": mobile_learning_question_payload(conn, question, safe_lang, user_id),
+    }
+
+
+@app.post("/api/mobile/learning/review-weak")
+def mobile_learning_review_weak(request: Request, lang: str = Query("en")) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    user_id = current_user_id(request)
+    session_id = create_weak_words_learning_session(conn, user_id, safe_lang)
     question = current_learning_question(conn, session_id)
     if question is None:
         return mobile_learning_result_payload(conn, session_id, safe_lang)
