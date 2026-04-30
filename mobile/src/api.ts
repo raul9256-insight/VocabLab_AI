@@ -261,6 +261,23 @@ export type LearningCompletedState = {
 };
 
 export type LearningState = LearningQuestionState | LearningCompletedState;
+export type ActiveLearningPayload = {
+  active: boolean;
+  session: null | {
+    session_id: number;
+    band_rank: number | null;
+    band_label: string;
+    status: string;
+    started_at: string;
+    progress: {
+      current: number;
+      answered: number;
+      total: number;
+      percent: number;
+    };
+    resume_label: string;
+  };
+};
 export type NoteSavePayload = {
   word_id: number;
   notes: string;
@@ -333,6 +350,11 @@ export async function fetchLearningStart(lang: string, bandRank?: number) {
     ...(bandRank ? { band_rank: String(bandRank) } : {}),
   }).toString();
   return postJson<LearningState>(`/api/mobile/learning/start?${query}`);
+}
+
+export async function fetchActiveLearning(lang: string) {
+  const query = new URLSearchParams({ lang }).toString();
+  return getJson<ActiveLearningPayload>(`/api/mobile/learning/active?${query}`);
 }
 
 export async function fetchLearningState(sessionId: number, lang: string) {

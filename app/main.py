@@ -7242,6 +7242,46 @@ def mobile_learning_result_payload(conn: sqlite3.Connection, session_id: int, la
     }
 
 
+def mobile_active_learning_payload(conn: sqlite3.Connection, session: sqlite3.Row, lang: str) -> dict:
+    progress = learning_progress(conn, session)
+    return {
+        "session_id": session["id"],
+        "band_rank": session["band_rank"],
+        "band_label": session["band_label"] or "",
+        "status": session["status"],
+        "started_at": session["started_at"],
+        "progress": progress,
+        "resume_label": f"{progress['answered']} / {progress['total']}",
+    }
+
+
+@app.get("/api/mobile/learning/active")
+def mobile_learning_active(request: Request, lang: str = Query("en")) -> dict:
+    conn = db_conn()
+    safe_lang = lang if lang in SUPPORTED_LANGS else "en"
+    user_id = current_user_id(request)
+    session = conn.execute(
+        """
+        SELECT *
+        FROM learning_sessions
+        WHERE user_id = ?
+          AND status <> 'completed'
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (user_id,),
+    ).fetchone()
+    if session is None:
+        return {"active": False, "session": None}
+    question = current_learning_question(conn, session["id"])
+    if question is None:
+        return {"active": False, "session": None}
+    return {
+        "active": True,
+        "session": mobile_active_learning_payload(conn, session, safe_lang),
+    }
+
+
 @app.post("/api/mobile/learning/start")
 def mobile_learning_start(request: Request, lang: str = Query("en"), band_rank: int | None = Query(None)) -> dict:
     conn = db_conn()

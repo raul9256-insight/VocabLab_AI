@@ -15,6 +15,7 @@ import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 
 import {
   API_BASE,
+  ActiveLearningPayload,
   AiPowerCategoriesPayload,
   BootstrapPayload,
   DictionaryPayload,
@@ -24,6 +25,7 @@ import {
   LearningReviewState,
   MobileUser,
   fetchAiPowerCategories,
+  fetchActiveLearning,
   fetchBootstrap,
   fetchDictionarySearch,
   fetchDictionaryWordDetail,
@@ -125,6 +127,10 @@ const mobileCopy = {
       "Each session gives you 10 vocabulary items from one band, tested through the same five layers.",
     startRecommended: "Start recommended band",
     noBands: "Band choices are loading.",
+    continueSession: "Continue unfinished session",
+    continueSessionBody: "Pick up from where you stopped. Your answers so far are already saved.",
+    continueNow: "Continue now",
+    completedLabel: "completed",
     personas: {
       student: ["Student", "Academic growth, reading, and stronger vocabulary foundations."],
       teacher: ["Teacher / Educator", "Teaching, explaining, and building useful learning materials."],
@@ -176,6 +182,10 @@ const mobileCopy = {
     learningFlowBody: "每次練習會從同一個 band 抽出 10 個詞彙，並用相同五層題型測試。",
     startRecommended: "開始建議 band",
     noBands: "正在載入 band 選項。",
+    continueSession: "繼續未完成練習",
+    continueSessionBody: "由上次離開的位置繼續。你已完成的答案已經保存。",
+    continueNow: "立即繼續",
+    completedLabel: "已完成",
     personas: {
       student: ["學生", "提升學術閱讀能力，建立更穩固的詞彙基礎。"],
       teacher: ["老師 / 教育工作者", "用於教學、解釋詞彙，以及建立實用學習材料。"],
@@ -227,6 +237,10 @@ const mobileCopy = {
     learningFlowBody: "每次练习会从同一个 band 抽出 10 个词汇，并用相同五层题型测试。",
     startRecommended: "开始建议 band",
     noBands: "正在加载 band 选项。",
+    continueSession: "继续未完成练习",
+    continueSessionBody: "从上次离开的位置继续。你已完成的答案已经保存。",
+    continueNow: "立即继续",
+    completedLabel: "已完成",
     personas: {
       student: ["学生", "提升学术阅读能力，建立更稳固的词汇基础。"],
       teacher: ["老师 / 教育工作者", "用于教学、解释词汇，以及建立实用学习材料。"],
@@ -329,6 +343,7 @@ export default function App() {
   const [learningResult, setLearningResult] = useState<LearningCompletedState | null>(null);
   const [selectedLearningAnswer, setSelectedLearningAnswer] = useState("");
   const [selectedLearningBandRank, setSelectedLearningBandRank] = useState<number | null>(null);
+  const [activeLearning, setActiveLearning] = useState<ActiveLearningPayload["session"]>(null);
   const [noteDraft, setNoteDraft] = useState("");
   const [loadingHome, setLoadingHome] = useState(false);
   const [loadingDictionary, setLoadingDictionary] = useState(false);
@@ -367,6 +382,13 @@ export default function App() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoadingHome(false));
   }, [started, lang, name, persona]);
+
+  useEffect(() => {
+    if (!started) {
+      return;
+    }
+    refreshActiveLearning();
+  }, [started, lang]);
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -536,10 +558,17 @@ export default function App() {
     if (payload.status === "completed") {
       setLearningQuestion(null);
       setLearningResult(payload);
+      setActiveLearning(null);
       return;
     }
     setLearningResult(null);
     setLearningQuestion(payload);
+  }
+
+  function refreshActiveLearning() {
+    fetchActiveLearning(lang)
+      .then((payload) => setActiveLearning(payload.active ? payload.session : null))
+      .catch(() => setActiveLearning(null));
   }
 
   function startLearningFlow(bandRank?: number) {
@@ -551,6 +580,7 @@ export default function App() {
     fetchLearningStart(lang, resolvedBandRank)
       .then((payload) => {
         applyLearningState(payload);
+        refreshActiveLearning();
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoadingLearning(false));
@@ -560,6 +590,24 @@ export default function App() {
     setSelectedLearningBandRank(bandRank);
     setActiveTab("learning");
     startLearningFlow(bandRank);
+  }
+
+  function resumeActiveLearning() {
+    if (!activeLearning?.session_id) {
+      setActiveTab("learning");
+      return;
+    }
+    setSelectedLearningBandRank(activeLearning.band_rank ?? null);
+    setLoadingLearning(true);
+    setError("");
+    setActiveTab("learning");
+    fetchLearningState(activeLearning.session_id, lang)
+      .then((payload) => {
+        applyLearningState(payload);
+        refreshActiveLearning();
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoadingLearning(false));
   }
 
   function continueLearningFlow() {
@@ -573,6 +621,7 @@ export default function App() {
     fetchLearningState(sessionId, lang)
       .then((payload) => {
         applyLearningState(payload);
+        refreshActiveLearning();
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoadingLearning(false));
@@ -591,6 +640,7 @@ export default function App() {
         setLearningReview(payload);
         setNoteDraft(payload.review.word.notes || "");
         setNoteNotice("");
+        refreshActiveLearning();
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoadingLearning(false));
@@ -1005,6 +1055,21 @@ export default function App() {
                       <Text style={styles.recommendedPillValue}>{bootstrap.recommended_band}</Text>
                     </View>
                   </View>
+
+                  {activeLearning ? (
+                    <View style={styles.continueSessionCard}>
+                      <View style={styles.continueSessionMain}>
+                        <Text style={styles.continueSessionTitle}>{copy.continueSession}</Text>
+                        <Text style={styles.cardNote}>{copy.continueSessionBody}</Text>
+                        <Text style={styles.continueSessionMeta}>
+                          {activeLearning.band_label} • {activeLearning.resume_label} {copy.completedLabel}
+                        </Text>
+                      </View>
+                      <Pressable style={styles.continueSessionButton} onPress={resumeActiveLearning}>
+                        <Text style={styles.continueSessionButtonText}>{copy.continueNow}</Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
 
                   <Text style={styles.detailLabel}>{copy.chooseBand}</Text>
                   <View style={styles.bandChoiceGrid}>
@@ -1476,7 +1541,20 @@ export default function App() {
                   <>
                     <View style={styles.quickActionRow}>
                       <QuickAction label={copy.startRecommended} tone="primary" onPress={() => startLearningFlow()} />
+                      {activeLearning ? (
+                        <QuickAction label={copy.continueNow} tone="soft" onPress={resumeActiveLearning} />
+                      ) : null}
                     </View>
+                    {activeLearning ? (
+                      <View style={styles.continueSessionCard}>
+                        <View style={styles.continueSessionMain}>
+                          <Text style={styles.continueSessionTitle}>{copy.continueSession}</Text>
+                          <Text style={styles.continueSessionMeta}>
+                            {activeLearning.band_label} • {activeLearning.resume_label} {copy.completedLabel}
+                          </Text>
+                        </View>
+                      </View>
+                    ) : null}
                     <View style={styles.bandChoiceGrid}>
                       {bootstrap.hero_band_chart.map((band) => {
                         const recommended = band.rank === recommendedBandRank;
@@ -2105,6 +2183,42 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontWeight: "900",
     fontSize: 18,
+  },
+  continueSessionCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#cdded5",
+    backgroundColor: "#eef8f2",
+    padding: 16,
+    gap: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  continueSessionMain: {
+    flex: 1,
+    minWidth: 210,
+    gap: 6,
+  },
+  continueSessionTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  continueSessionMeta: {
+    color: colors.success,
+    fontWeight: "800",
+  },
+  continueSessionButton: {
+    borderRadius: 999,
+    backgroundColor: colors.success,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  continueSessionButtonText: {
+    color: "#fff",
+    fontWeight: "900",
   },
   bandChoiceGrid: {
     flexDirection: "row",
