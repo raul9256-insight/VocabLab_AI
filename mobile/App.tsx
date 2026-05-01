@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Platform,
   Pressable,
   SafeAreaView,
@@ -165,6 +166,15 @@ const mobileCopy = {
     newHere: "New here? Create an account",
     alreadyHaveAccount: "Already have an account? Login",
     backToGuest: "Back to guest setup",
+    placementEyebrow: "Level Test",
+    placementTitle: "Check your level first",
+    placementBody:
+      "Start with the full level test, then use the complete report to guide your daily learning band.",
+    latestScore: "Latest score",
+    estimatedBand: "Estimated band",
+    startLevelTest: "Start level test",
+    viewCompleteReport: "View complete report",
+    retakeLevelTest: "Retake level test",
     dailyEyebrow: "Daily Learning",
     dailyTitle: "Start today’s 10-word session",
     dailyBody:
@@ -232,6 +242,14 @@ const mobileCopy = {
     newHere: "第一次使用？建立帳戶",
     alreadyHaveAccount: "已有帳戶？登入",
     backToGuest: "返回訪客設定",
+    placementEyebrow: "程度測驗",
+    placementTitle: "先確認你的詞彙程度",
+    placementBody: "先完成完整程度測驗，再用完整報告決定每日學習應該由哪個 band 開始。",
+    latestScore: "最近分數",
+    estimatedBand: "推算 band",
+    startLevelTest: "開始程度測驗",
+    viewCompleteReport: "查看完整報告",
+    retakeLevelTest: "重新測驗",
     dailyEyebrow: "每日學習",
     dailyTitle: "開始今日 10 個詞彙練習",
     dailyBody: "系統會根據你最近的程度測驗建議 band，但你仍可自行選擇任何一個 band 開始。",
@@ -297,6 +315,14 @@ const mobileCopy = {
     newHere: "第一次使用？建立账户",
     alreadyHaveAccount: "已有账户？登录",
     backToGuest: "返回访客设置",
+    placementEyebrow: "程度测试",
+    placementTitle: "先确认你的词汇程度",
+    placementBody: "先完成完整程度测试，再用完整报告决定每日学习应该从哪个 band 开始。",
+    latestScore: "最近分数",
+    estimatedBand: "推算 band",
+    startLevelTest: "开始程度测试",
+    viewCompleteReport: "查看完整报告",
+    retakeLevelTest: "重新测试",
     dailyEyebrow: "每日学习",
     dailyTitle: "开始今日 10 个词汇练习",
     dailyBody: "系统会根据你最近的程度测试建议 band，但你仍可自行选择任何一个 band 开始。",
@@ -611,6 +637,12 @@ export default function App() {
     setDictionaryQuery(word);
     setSelectedWord(null);
     setActiveTab("dictionary");
+  }
+
+  function openWebPath(path: string) {
+    const separator = path.includes("?") ? "&" : "?";
+    const localizedPath = lang === "en" ? path : `${path}${separator}lang=${encodeURIComponent(lang)}`;
+    Linking.openURL(`${API_BASE}${localizedPath}`).catch((err: Error) => setError(err.message));
   }
 
   function openWordDetail(wordId: number) {
@@ -1151,6 +1183,42 @@ export default function App() {
                   <View style={styles.quickActionRow}>
                     <QuickAction label="Open Dictionary" tone="soft" onPress={() => setActiveTab("dictionary")} />
                     <QuickAction label="Open AI Track" tone="primary" onPress={() => setActiveTab("ai")} />
+                  </View>
+                </View>
+
+                <View style={[styles.card, shadows.card]}>
+                  <Text style={styles.sectionEyebrow}>{copy.placementEyebrow}</Text>
+                  <Text style={styles.cardTitle}>{copy.placementTitle}</Text>
+                  <Text style={styles.cardNote}>{copy.placementBody}</Text>
+                  {bootstrap.latest_test ? (
+                    <View style={styles.detailGrid}>
+                      <View style={[styles.detailSection, styles.detailGridItem]}>
+                        <Text style={styles.detailLabel}>{copy.latestScore}</Text>
+                        <Text style={styles.detailBody}>{bootstrap.latest_test.score} / 100</Text>
+                      </View>
+                      <View style={[styles.detailSection, styles.detailGridItem]}>
+                        <Text style={styles.detailLabel}>{copy.estimatedBand}</Text>
+                        <Text style={styles.detailBody}>{bootstrap.latest_test.estimated_band_label}</Text>
+                      </View>
+                    </View>
+                  ) : null}
+                  <View style={styles.quickActionRow}>
+                    {bootstrap.latest_test ? (
+                      <>
+                        <QuickAction
+                          label={copy.viewCompleteReport}
+                          tone="primary"
+                          onPress={() => {
+                            if (bootstrap.latest_test) {
+                              openWebPath(`/test/${bootstrap.latest_test.session_id}/result`);
+                            }
+                          }}
+                        />
+                        <QuickAction label={copy.retakeLevelTest} tone="soft" onPress={() => openWebPath("/test")} />
+                      </>
+                    ) : (
+                      <QuickAction label={copy.startLevelTest} tone="primary" onPress={() => openWebPath("/test")} />
+                    )}
                   </View>
                 </View>
 

@@ -7080,6 +7080,7 @@ def mobile_bootstrap(
         "recommended_band": latest_test["estimated_band_label"] if latest_test else "2000~ (2330)",
         "latest_test": (
             {
+                "session_id": latest_test["id"],
                 "score": latest_test["score"],
                 "estimated_band_label": latest_test["estimated_band_label"],
             }

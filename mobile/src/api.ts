@@ -109,7 +109,7 @@ export type BootstrapPayload = {
     learning_runs: number;
   };
   recommended_band: string;
-  latest_test: null | { score: number; estimated_band_label: string };
+  latest_test: null | { session_id: number; score: number; estimated_band_label: string };
   latest_learning: null | { score: number; session_id: number };
   hero_band_chart: Array<{
     rank: number;
