@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}{{ t("admin_dashboard_title") }} | VocabLab AI{% endblock %}
+{% block content %}
+<section class="learning-shell account-shell admin-shell">
+  <article class="panel dashboard-v2-card learning-hero account-hero">
+    <div class="learning-hero-top">
+      <div>
+        <p class="eyebrow">{{ t("nav_admin") }}</p>
+        <h1>{{ t("admin_dashboard_title") }}</h1>
+        <p class="lede">{{ t("admin_dashboard_lede") }}</p>
+      </div>
+      <div class="topbar-user account-user-card">
+        <span class="user-badge">{{ profile_initials }}</span>
+        <div>
+          <strong>{{ profile_name }}</strong>
+          <small>{{ user.email }}</small>
+        </div>
+      </div>
+    </div>
+
+    {% if not allowed %}
+    <div class="landing-auth-error account-message">{{ t("admin_only") }}</div>
+    {% else %}
+    <section class="teacher-snapshot-grid admin-snapshot-grid" aria-label="{{ t('admin_system_snapshot') }}">
+      <div class="learning-stat-card">
+        <span>{{ t("admin_total_users") }}</span>
+        <strong>{{ snapshot.total_users }}</strong>
+      </div>
+      <div class="learning-stat-card">
+        <span>{{ t("admin_students") }}</span>
+        <strong>{{ snapshot.students }}</strong>
+      </div>
+      <div class="learning-stat-card">
+        <span>{{ t("admin_teachers") }}</span>
+        <strong>{{ snapshot.teachers }}</strong>
+      </div>
+      <div class="learning-stat-card">
+        <span>{{ t("admin_total_classes") }}</span>
+        <strong>{{ snapshot.classes }}</strong>
+      </div>
+      <div class="learning-stat-card">
+        <span>{{ t("admin_today_active_users") }}</span>
+        <strong>{{ snapshot.active_today }}</strong>
+      </div>
+      <div class="learning-stat-card">
+        <span>{{ t("admin_7day_active_users") }}</span>
+        <strong>{{ snapshot.active_7day }}</strong>
+      </div>
+      <div class="learning-stat-card">
+        <span>{{ t("admin_today_tests") }}</span>
+        <strong>{{ snapshot.tests_today }}</strong>
+      </div>
+      <div class="learning-stat-card">
+        <span>{{ t("admin_today_learning") }}</span>
+        <strong>{{ snapshot.learning_today }}</strong>
+      </div>
+      <div class="learning-stat-card">
+        <span>{{ t("admin_today_deep_learning") }}</span>
+        <strong>{{ snapshot.deep_learning_today }}</strong>
+      </div>
+    </section>
+
+    <article class="learning-info-block admin-usage-card">
+      <div class="card-head tight">
+        <div>
+          <p class="eyebrow">{{ t("admin_daily_usage") }}</p>
+          <h2>{{ t("admin_daily_usage") }}</h2>
+        </div>
+      </div>
+      <div class="test-report-table-wrap">
+        <table class="result-table teacher-roster-table">
+          <thead>
+            <tr>
+              <th>{{ t("admin_date") }}</th>
+              <th>{{ t("admin_active_users") }}</th>
+              <th>{{ t("admin_level_tests") }}</th>
+              <th>{{ t("admin_learning_sessions") }}</th>
+              <th>{{ t("admin_mastery_attempts") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in daily_usage %}
+            <tr>
+              <td>{{ row.date }}</td>
+              <td>{{ row.active_users }}</td>
+              <td>{{ row.level_tests }}</td>
+              <td>{{ row.learning_sessions }}</td>
+              <td>{{ row.mastery_attempts }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="learning-info-block admin-users-card">
+      <div class="card-head tight">
+        <div>
+          <p class="eyebrow">{{ t("admin_user_overview") }}</p>
+          <h2>{{ t("admin_user_overview") }}</h2>
+        </div>
+      </div>
+      {% if users %}
+      <div class="test-report-table-wrap">
+        <table class="result-table teacher-roster-table admin-user-table">
+          <thead>
+            <tr>
+              <th>{{ t("admin_user") }}</th>
+              <th>{{ t("admin_role") }}</th>
+              <th>{{ t("admin_joined") }}</th>
+              <th>{{ t("admin_last_active") }}</th>
+              <th>{{ t("admin_tests") }}</th>
+              <th>{{ t("admin_learning") }}</th>
+              <th>{{ t("admin_deep_learning") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in users %}
+            <tr>
+              <td>
+                <strong>{{ item.display_name }}</strong>
+                <small>{{ item.email }}</small>
+              </td>
+              <td>{{ item.role }}</td>
+              <td>{{ item.created_at }}</td>
+              <td>
+                {% if item.last_active_days is not none %}
+                {{ item.last_active_days }}d
+                {% else %}
+                --
+                {% endif %}
+              </td>
+              <td>{{ item.tests }}</td>
+              <td>{{ item.learning_sessions }}</td>
+              <td>{{ item.deep_learning_attempts }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="section-subtle">{{ t("admin_no_users") }}</p>
+      {% endif %}
+    </article>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}

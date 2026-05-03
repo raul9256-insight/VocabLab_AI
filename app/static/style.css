@@ -3273,6 +3273,20 @@ input[type="file"] {
   gap: 0.75rem;
 }
 
+.admin-snapshot-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.admin-usage-card,
+.admin-users-card {
+  margin-top: 1rem;
+}
+
+.admin-user-table {
+  min-width: 1120px;
+}
+
 .teacher-small-metric {
   font-size: 1rem;
   line-height: 1.25;

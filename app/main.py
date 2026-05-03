@@ -652,6 +652,7 @@ TRANSLATIONS = {
         "nav_bulk": "Bulk Import",
         "nav_statistics": "Statistics",
         "nav_teacher": "Teacher",
+        "nav_admin": "Admin",
         "sidebar_flow_label": "Study Flow",
         "sidebar_flow_title": "Test, learn, review.",
         "sidebar_flow_text": "Use the level test to find your band, then build richer word cards over time.",
@@ -780,6 +781,34 @@ TRANSLATIONS = {
         "teacher_assignment_completion": "Completion",
         "teacher_assignment_avg_score": "Avg. score",
         "teacher_assignment_created": "Assignment created.",
+        "admin_dashboard_title": "Admin Dashboard",
+        "admin_dashboard_lede": "Overlook the whole VocabLab AI system: users, daily usage, tests, learning sessions, and Deep Learning activity.",
+        "admin_only": "This dashboard is only available to system administrators.",
+        "admin_system_snapshot": "System Snapshot",
+        "admin_total_users": "Total Users",
+        "admin_students": "Students",
+        "admin_teachers": "Teachers",
+        "admin_total_classes": "Classes",
+        "admin_today_active_users": "Active Today",
+        "admin_7day_active_users": "7-Day Active",
+        "admin_today_tests": "Tests Today",
+        "admin_today_learning": "Learning Today",
+        "admin_today_deep_learning": "Deep Learning Today",
+        "admin_daily_usage": "Daily Usage",
+        "admin_user_overview": "User Overview",
+        "admin_user": "User",
+        "admin_role": "Role",
+        "admin_joined": "Joined",
+        "admin_last_active": "Last Active",
+        "admin_tests": "Tests",
+        "admin_learning": "Learning",
+        "admin_deep_learning": "Deep Learning",
+        "admin_no_users": "No registered users yet.",
+        "admin_date": "Date",
+        "admin_active_users": "Active users",
+        "admin_level_tests": "Level tests",
+        "admin_learning_sessions": "Learning sessions",
+        "admin_mastery_attempts": "Deep Learning attempts",
         "assigned_practice": "Assigned Practice",
         "assigned_practice_note": "These tasks were assigned by your teacher.",
         "start_assignment": "Start assignment",
@@ -879,6 +908,7 @@ TRANSLATIONS = {
         "nav_bulk": "批次匯入",
         "nav_statistics": "統計數據",
         "nav_teacher": "教師",
+        "nav_admin": "Admin",
         "sidebar_flow_label": "學習流程",
         "sidebar_flow_title": "先測驗，再學習，再複習。",
         "sidebar_flow_text": "先用程度檢測找出適合的詞彙範圍，再逐步補齊每張詞彙卡的內容。",
@@ -1007,6 +1037,34 @@ TRANSLATIONS = {
         "teacher_assignment_completion": "完成率",
         "teacher_assignment_avg_score": "平均分",
         "teacher_assignment_created": "已建立指派練習。",
+        "admin_dashboard_title": "Admin Dashboard",
+        "admin_dashboard_lede": "總覽整個 VocabLab AI 系統：用戶、每日使用量、程度測驗、學習練習和深度學習活動。",
+        "admin_only": "這個 dashboard 只供系統管理員使用。",
+        "admin_system_snapshot": "系統總覽",
+        "admin_total_users": "總用戶",
+        "admin_students": "學生",
+        "admin_teachers": "老師",
+        "admin_total_classes": "班級",
+        "admin_today_active_users": "今日活躍",
+        "admin_7day_active_users": "7 日活躍",
+        "admin_today_tests": "今日測驗",
+        "admin_today_learning": "今日學習",
+        "admin_today_deep_learning": "今日深度學習",
+        "admin_daily_usage": "每日使用量",
+        "admin_user_overview": "用戶總覽",
+        "admin_user": "用戶",
+        "admin_role": "角色",
+        "admin_joined": "加入",
+        "admin_last_active": "最後活躍",
+        "admin_tests": "測驗",
+        "admin_learning": "學習",
+        "admin_deep_learning": "深度學習",
+        "admin_no_users": "暫時未有註冊用戶。",
+        "admin_date": "日期",
+        "admin_active_users": "活躍用戶",
+        "admin_level_tests": "程度測驗",
+        "admin_learning_sessions": "學習練習",
+        "admin_mastery_attempts": "深度學習次數",
         "assigned_practice": "老師指派練習",
         "assigned_practice_note": "以下是老師指派給你的練習。",
         "start_assignment": "開始練習",
@@ -2048,6 +2106,7 @@ TRANSLATIONS["zh-Hans"].update(
         "nav_bulk": "批量导入",
         "nav_statistics": "统计数据",
         "nav_teacher": "教师",
+        "nav_admin": "Admin",
         "sidebar_flow_label": "学习流程",
         "sidebar_flow_title": "先检测，再练习，再复习。",
         "sidebar_flow_text": "先用程度检测找出适合的词汇范围，再逐步补齐每张词汇卡的内容。",
@@ -2176,6 +2235,34 @@ TRANSLATIONS["zh-Hans"].update(
         "teacher_assignment_completion": "完成率",
         "teacher_assignment_avg_score": "平均分",
         "teacher_assignment_created": "已建立指派练习。",
+        "admin_dashboard_title": "Admin Dashboard",
+        "admin_dashboard_lede": "总览整个 VocabLab AI 系统：用户、每日使用量、程度测试、学习练习和深度学习活动。",
+        "admin_only": "这个 dashboard 只供系统管理员使用。",
+        "admin_system_snapshot": "系统总览",
+        "admin_total_users": "总用户",
+        "admin_students": "学生",
+        "admin_teachers": "老师",
+        "admin_total_classes": "班级",
+        "admin_today_active_users": "今日活跃",
+        "admin_7day_active_users": "7 日活跃",
+        "admin_today_tests": "今日检测",
+        "admin_today_learning": "今日学习",
+        "admin_today_deep_learning": "今日深度学习",
+        "admin_daily_usage": "每日使用量",
+        "admin_user_overview": "用户总览",
+        "admin_user": "用户",
+        "admin_role": "角色",
+        "admin_joined": "加入",
+        "admin_last_active": "最后活跃",
+        "admin_tests": "检测",
+        "admin_learning": "学习",
+        "admin_deep_learning": "深度学习",
+        "admin_no_users": "暂时没有注册用户。",
+        "admin_date": "日期",
+        "admin_active_users": "活跃用户",
+        "admin_level_tests": "程度检测",
+        "admin_learning_sessions": "学习练习",
+        "admin_mastery_attempts": "深度学习次数",
         "assigned_practice": "老师指派练习",
         "assigned_practice_note": "以下是老师指派给你的练习。",
         "start_assignment": "开始练习",
@@ -2814,6 +2901,23 @@ def is_teacher_user(user: sqlite3.Row | None) -> bool:
     return bool(user and ((user["role"] if "role" in user.keys() else "") == "teacher" or (user["persona"] or "") == "teacher"))
 
 
+def is_admin_user(user: sqlite3.Row | None) -> bool:
+    if user is None:
+        return False
+    role = (user["role"] if "role" in user.keys() else "") or ""
+    if role == "admin":
+        return True
+    email = ((user["email"] if "email" in user.keys() else "") or "").strip().lower()
+    admin_emails = {
+        item.strip().lower()
+        for item in os.environ.get("ADMIN_EMAILS", "").split(",")
+        if item.strip()
+    }
+    if email and email in admin_emails:
+        return True
+    return int(user["id"]) == USER_ID
+
+
 def generate_invite_code(conn: sqlite3.Connection) -> str:
     alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
     while True:
@@ -3272,6 +3376,7 @@ def render(request: Request, template_name: str, **context) -> HTMLResponse:
             "profile_persona": get_profile_persona(request),
             "registered_user": user,
             "is_teacher": is_teacher_user(user),
+            "is_admin": is_admin_user(user),
             "static_version": STATIC_ASSET_VERSION,
             "t": lambda key, **kwargs: translate(lang, key, **kwargs),
             "lang_url": lambda target_lang: build_lang_url(request, target_lang),
@@ -6012,9 +6117,10 @@ def latest_activity_at(conn: sqlite3.Connection, user_id: int) -> str:
             FROM learning_questions
             JOIN learning_sessions ON learning_sessions.id = learning_questions.session_id
             WHERE learning_sessions.user_id = ? AND learning_questions.answered_at IS NOT NULL
+            UNION ALL SELECT created_at FROM word_mastery_attempts WHERE user_id = ?
         )
         """,
-        (user_id, user_id, user_id, user_id, user_id, user_id),
+        (user_id, user_id, user_id, user_id, user_id, user_id, user_id),
     ).fetchone()
     return row["last_active"] if row and row["last_active"] else ""
 
@@ -6082,6 +6188,155 @@ def learning_summary_for_user(conn: sqlite3.Connection, user_id: int) -> dict:
         "total": total,
         "accuracy": percent_value(correct, total),
     }
+
+
+def admin_activity_union_sql() -> str:
+    return """
+        SELECT user_id, started_at AS activity_at, 'level_test' AS activity_type
+        FROM assessment_sessions
+        WHERE started_at IS NOT NULL
+        UNION ALL
+        SELECT user_id, completed_at AS activity_at, 'level_test_completed' AS activity_type
+        FROM assessment_sessions
+        WHERE completed_at IS NOT NULL
+        UNION ALL
+        SELECT assessment_sessions.user_id, assessment_questions.answered_at AS activity_at, 'level_test_answer' AS activity_type
+        FROM assessment_questions
+        JOIN assessment_sessions ON assessment_sessions.id = assessment_questions.session_id
+        WHERE assessment_questions.answered_at IS NOT NULL
+        UNION ALL
+        SELECT user_id, started_at AS activity_at, 'learning' AS activity_type
+        FROM learning_sessions
+        WHERE started_at IS NOT NULL
+        UNION ALL
+        SELECT user_id, completed_at AS activity_at, 'learning_completed' AS activity_type
+        FROM learning_sessions
+        WHERE completed_at IS NOT NULL
+        UNION ALL
+        SELECT learning_sessions.user_id, learning_questions.answered_at AS activity_at, 'learning_answer' AS activity_type
+        FROM learning_questions
+        JOIN learning_sessions ON learning_sessions.id = learning_questions.session_id
+        WHERE learning_questions.answered_at IS NOT NULL
+        UNION ALL
+        SELECT user_id, created_at AS activity_at, 'deep_learning' AS activity_type
+        FROM word_mastery_attempts
+        WHERE created_at IS NOT NULL
+    """
+
+
+def admin_snapshot(conn: sqlite3.Connection) -> dict:
+    users = conn.execute(
+        """
+        SELECT
+            COUNT(*) AS total_users,
+            SUM(CASE WHEN role = 'teacher' OR persona = 'teacher' THEN 1 ELSE 0 END) AS teachers,
+            SUM(CASE WHEN role = 'student' OR role = '' OR role IS NULL THEN 1 ELSE 0 END) AS students
+        FROM users
+        """
+    ).fetchone()
+    classes = conn.execute("SELECT COUNT(*) AS total FROM teacher_classes").fetchone()
+    today = datetime.now(timezone.utc).date().isoformat()
+    active_today = conn.execute(
+        f"""
+        SELECT COUNT(DISTINCT user_id) AS total
+        FROM ({admin_activity_union_sql()})
+        WHERE DATE(activity_at) = DATE(?)
+        """,
+        (today,),
+    ).fetchone()
+    active_7day = conn.execute(
+        f"""
+        SELECT COUNT(DISTINCT user_id) AS total
+        FROM ({admin_activity_union_sql()})
+        WHERE DATE(activity_at) >= DATE(?, '-6 day')
+        """,
+        (today,),
+    ).fetchone()
+    tests_today = conn.execute("SELECT COUNT(*) AS total FROM assessment_sessions WHERE DATE(started_at) = DATE(?)", (today,)).fetchone()
+    learning_today = conn.execute("SELECT COUNT(*) AS total FROM learning_sessions WHERE DATE(started_at) = DATE(?)", (today,)).fetchone()
+    mastery_today = conn.execute("SELECT COUNT(*) AS total FROM word_mastery_attempts WHERE DATE(created_at) = DATE(?)", (today,)).fetchone()
+    return {
+        "total_users": int(users["total_users"] or 0),
+        "teachers": int(users["teachers"] or 0),
+        "students": int(users["students"] or 0),
+        "classes": int(classes["total"] or 0),
+        "active_today": int(active_today["total"] or 0),
+        "active_7day": int(active_7day["total"] or 0),
+        "tests_today": int(tests_today["total"] or 0),
+        "learning_today": int(learning_today["total"] or 0),
+        "deep_learning_today": int(mastery_today["total"] or 0),
+    }
+
+
+def admin_daily_usage_rows(conn: sqlite3.Connection, days: int = 14) -> list[dict]:
+    rows = conn.execute(
+        f"""
+        SELECT DATE(activity_at) AS activity_date,
+               COUNT(DISTINCT user_id) AS active_users,
+               SUM(CASE WHEN activity_type = 'level_test' THEN 1 ELSE 0 END) AS level_tests,
+               SUM(CASE WHEN activity_type = 'learning' THEN 1 ELSE 0 END) AS learning_sessions,
+               SUM(CASE WHEN activity_type = 'deep_learning' THEN 1 ELSE 0 END) AS mastery_attempts
+        FROM ({admin_activity_union_sql()})
+        WHERE DATE(activity_at) >= DATE('now', ?)
+        GROUP BY DATE(activity_at)
+        ORDER BY activity_date DESC
+        """,
+        (f"-{max(1, days) - 1} day",),
+    ).fetchall()
+    by_date = {row["activity_date"]: row for row in rows}
+    today = datetime.now(timezone.utc).date()
+    result = []
+    for offset in range(days):
+        day = (today - timedelta(days=offset)).isoformat()
+        row = by_date.get(day)
+        result.append(
+            {
+                "date": day,
+                "active_users": int(row["active_users"] or 0) if row else 0,
+                "level_tests": int(row["level_tests"] or 0) if row else 0,
+                "learning_sessions": int(row["learning_sessions"] or 0) if row else 0,
+                "mastery_attempts": int(row["mastery_attempts"] or 0) if row else 0,
+            }
+        )
+    return result
+
+
+def admin_user_overview_rows(conn: sqlite3.Connection, limit: int = 100) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT users.id, users.username, users.email, users.display_name, users.persona, users.role, users.created_at,
+               COUNT(DISTINCT assessment_sessions.id) AS tests,
+               COUNT(DISTINCT learning_sessions.id) AS learning_sessions,
+               COUNT(DISTINCT word_mastery_attempts.id) AS deep_learning_attempts
+        FROM users
+        LEFT JOIN assessment_sessions ON assessment_sessions.user_id = users.id
+        LEFT JOIN learning_sessions ON learning_sessions.user_id = users.id
+        LEFT JOIN word_mastery_attempts ON word_mastery_attempts.user_id = users.id
+        GROUP BY users.id
+        ORDER BY users.created_at DESC, users.id DESC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    result = []
+    for row in rows:
+        last_active = latest_activity_at(conn, int(row["id"]))
+        result.append(
+            {
+                "id": int(row["id"]),
+                "display_name": row["display_name"] or row["username"] or f"User {row['id']}",
+                "email": row["email"] or "",
+                "role": row["role"] or role_for_persona(row["persona"] or "student"),
+                "persona": row["persona"] or "",
+                "created_at": row["created_at"],
+                "last_active": last_active,
+                "last_active_days": days_since_db_datetime(last_active),
+                "tests": int(row["tests"] or 0),
+                "learning_sessions": int(row["learning_sessions"] or 0),
+                "deep_learning_attempts": int(row["deep_learning_attempts"] or 0),
+            }
+        )
+    return result
 
 
 def risk_status_for_student(latest_score: int | None, learning_accuracy: int | None, last_active: str) -> str:
@@ -6349,6 +6604,26 @@ def account_password_update(
     )
     conn.commit()
     return RedirectResponse(url=account_redirect_url(lang, "account_password_saved"), status_code=303)
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def admin_dashboard(request: Request) -> HTMLResponse:
+    user = registered_user_row(request)
+    lang = getattr(request.state, "lang", get_lang(request))
+    if user is None:
+        return RedirectResponse(url=auth_redirect_url(lang, error_key="account_login_required"), status_code=303)
+    if not is_admin_user(user):
+        return render(request, "admin_dashboard.html", user=user, allowed=False)
+    conn = db_conn()
+    return render(
+        request,
+        "admin_dashboard.html",
+        user=user,
+        allowed=True,
+        snapshot=admin_snapshot(conn),
+        daily_usage=admin_daily_usage_rows(conn),
+        users=admin_user_overview_rows(conn),
+    )
 
 
 @app.get("/teacher", response_class=HTMLResponse)
