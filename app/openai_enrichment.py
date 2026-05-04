@@ -130,13 +130,79 @@ def gemini_sentence_usage_check(payload: dict[str, object], lang: str) -> dict[s
     return normalize_sentence_usage_result(extract_json_object(text))
 
 
+def gemini_enrichment_batch(payload: list[dict]) -> dict[str, object]:
+    load_env_file()
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY is not set.")
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite").strip() or "gemini-2.5-flash-lite"
+    prompt = (
+        f"{SYSTEM_PROMPT}\n\n"
+        "Return one valid JSON object only. Do not use markdown. "
+        "The object must contain one key named items. Each item must contain these exact keys: "
+        "lemma, chinese_definition_traditional, chinese_definition_simplified, english_definition, "
+        "example_sentence, synonyms, antonyms, sentence_distractors.\n\n"
+        f"Payload:\n{json.dumps({'items': payload}, ensure_ascii=False)}"
+    )
+    body = json.dumps(
+        {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.2,
+                "responseMimeType": "application/json",
+            },
+        },
+        ensure_ascii=False,
+    ).encode("utf-8")
+    req = urlrequest.Request(
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlrequest.urlopen(req, timeout=60) as response:
+            response_payload = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Gemini enrichment failed: {detail}") from exc
+    except URLError as exc:
+        raise RuntimeError(f"Gemini enrichment failed: {exc}") from exc
+    candidates = response_payload.get("candidates", [])
+    text = ""
+    if candidates:
+        parts = candidates[0].get("content", {}).get("parts", [])
+        text = "".join(str(part.get("text", "")) for part in parts)
+    if not text:
+        raise RuntimeError("Gemini enrichment returned no text.")
+    return extract_json_object(text)
+
+
 def words_for_generation(conn: sqlite3.Connection, limit: int, band_rank: int | None = None) -> list[sqlite3.Row]:
     clauses = [
-        "(word_enrichment.word_id IS NULL OR word_enrichment.english_definition = '' OR word_enrichment.example_sentence = '' OR word_enrichment.synonyms_json = '[]')"
+        """(
+            word_enrichment.word_id IS NULL
+            OR word_enrichment.english_definition = ''
+            OR word_enrichment.example_sentence = ''
+            OR word_enrichment.synonyms_json = '[]'
+            OR word_enrichment.antonyms_json = '[]'
+            OR word_enrichment.sentence_distractors_json = '[]'
+            OR NOT EXISTS (
+                SELECT 1
+                FROM source_entries
+                WHERE source_entries.word_id = words.id
+                  AND source_entries.meanings_json <> '[]'
+            )
+        )"""
     ]
     params: list[object] = []
     if band_rank is not None:
-        clauses.append("words.best_band_rank = ?")
+        if band_rank in {1, 2, 3, 4, 5}:
+            clauses.append(
+                "EXISTS (SELECT 1 FROM student_dse_vocab WHERE student_dse_vocab.word_id = words.id AND student_dse_vocab.dse_band_rank = ?)"
+            )
+        else:
+            clauses.append("words.best_band_rank = ?")
         params.append(band_rank)
     sql = f"""
         SELECT words.id, words.lemma, words.best_band_label, words.best_band_rank
@@ -153,12 +219,25 @@ def words_for_generation(conn: sqlite3.Connection, limit: int, band_rank: int | 
 def prompt_payload(conn: sqlite3.Connection, rows: list[sqlite3.Row]) -> list[dict]:
     payload = []
     for row in rows:
+        dse_row = conn.execute(
+            """
+            SELECT dse_band_label, dse_target, product_band_name, category, priority_tier, suggested_use
+            FROM student_dse_vocab
+            WHERE word_id = ?
+            """,
+            (row["id"],),
+        ).fetchone()
         payload.append(
             {
                 "lemma": row["lemma"],
                 "band_label": row["best_band_label"],
                 "parts_of_speech": parts_of_speech_for_word(conn, row["id"]),
                 "chinese_definitions": definitions_for_word(conn, row["id"])[:5],
+                "dse_band_label": dse_row["dse_band_label"] if dse_row else "",
+                "dse_target": dse_row["dse_target"] if dse_row else "",
+                "dse_category": dse_row["category"] if dse_row else "",
+                "priority_tier": dse_row["priority_tier"] if dse_row else "",
+                "suggested_use": dse_row["suggested_use"] if dse_row else "",
             }
         )
     return payload
@@ -177,14 +256,33 @@ RESPONSE_SCHEMA = {
                     "type": "object",
                     "properties": {
                         "lemma": {"type": "string"},
+                        "chinese_definition_traditional": {"type": "string"},
+                        "chinese_definition_simplified": {"type": "string"},
                         "english_definition": {"type": "string"},
                         "example_sentence": {"type": "string"},
                         "synonyms": {
                             "type": "array",
                             "items": {"type": "string"},
                         },
+                        "antonyms": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "sentence_distractors": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
                     },
-                    "required": ["lemma", "english_definition", "example_sentence", "synonyms"],
+                    "required": [
+                        "lemma",
+                        "chinese_definition_traditional",
+                        "chinese_definition_simplified",
+                        "english_definition",
+                        "example_sentence",
+                        "synonyms",
+                        "antonyms",
+                        "sentence_distractors",
+                    ],
                     "additionalProperties": False,
                 },
             }
@@ -271,9 +369,14 @@ SENTENCE_USAGE_RESPONSE_SCHEMA = {
 
 
 SYSTEM_PROMPT = (
-    "You are enriching an English vocabulary database for a learner. "
-    "For each word, produce a concise learner-friendly English definition, one natural example sentence, "
-    "and 2 to 4 clear synonyms. Keep the meaning aligned with the provided Chinese definitions and part of speech. "
+    "You are enriching an English vocabulary database for Hong Kong DSE students. "
+    "For each word, produce one concise Traditional Chinese definition, one Simplified Chinese definition, "
+    "a learner-friendly English definition, one natural DSE-useful example sentence, 2 to 4 clear synonyms, "
+    "2 to 4 non-obvious antonyms, and 3 sentence distractors. "
+    "The sentence distractors must include the target word but use it in an unnatural, wrong, or contextually weak way; "
+    "they will be blanked later for multiple-choice application questions. "
+    "Avoid antonyms that are simply the same word with obvious prefixes such as un-, in-, im-, dis-, non-, or anti-. "
+    "Keep the meaning aligned with the provided DSE band, category, Chinese definitions, and part of speech. "
     "Prefer contemporary, neutral English. The example sentence should use the target word naturally and clearly. "
     "Return structured JSON only."
 )
@@ -308,15 +411,22 @@ def generate_enrichment_batch(conn: sqlite3.Connection, *, limit: int, band_rank
     rows = words_for_generation(conn, limit=limit, band_rank=band_rank)
     if not rows:
         return {"selected": 0, "updated": 0}
-    client = openai_client()
     payload = prompt_payload(conn, rows)
-    response = client.responses.create(
-        model=openai_model(),
-        instructions=SYSTEM_PROMPT,
-        input=json.dumps({"items": payload}, ensure_ascii=False),
-        text={"format": RESPONSE_SCHEMA},
-    )
-    parsed = json.loads(response.output_text)
+    try:
+        client = openai_client()
+        response = client.responses.create(
+            model=openai_model(),
+            instructions=SYSTEM_PROMPT,
+            input=json.dumps({"items": payload}, ensure_ascii=False),
+            text={"format": RESPONSE_SCHEMA},
+        )
+        parsed = json.loads(response.output_text)
+    except Exception as exc:
+        can_use_gemini = bool(os.environ.get("GEMINI_API_KEY", "").strip())
+        openai_unavailable = "openai_api_key is not set" in str(exc).lower()
+        if not can_use_gemini or not (is_openai_quota_error(exc) or openai_unavailable):
+            raise
+        parsed = gemini_enrichment_batch(payload)
     by_lemma = {item["lemma"].strip().lower(): item for item in parsed.get("items", [])}
     updated = 0
     for row in rows:
@@ -324,25 +434,66 @@ def generate_enrichment_batch(conn: sqlite3.Connection, *, limit: int, band_rank
         if not item:
             continue
         synonyms = [syn.strip() for syn in item.get("synonyms", []) if syn.strip()]
+        antonyms = [ant.strip() for ant in item.get("antonyms", []) if ant.strip()]
+        sentence_distractors = [sentence.strip() for sentence in item.get("sentence_distractors", []) if sentence.strip()]
+        chinese_definition_traditional = str(item.get("chinese_definition_traditional", "")).strip()
+        chinese_definition_simplified = str(item.get("chinese_definition_simplified", "")).strip()
         conn.execute(
             """
             INSERT INTO word_enrichment (
-                word_id, english_definition, synonyms_json, example_sentence, sentence_distractors_json
+                word_id, english_definition, synonyms_json, antonyms_json, example_sentence, sentence_distractors_json
             )
-            VALUES (?, ?, ?, ?, '[]')
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(word_id) DO UPDATE SET
                 english_definition = excluded.english_definition,
                 synonyms_json = excluded.synonyms_json,
+                antonyms_json = excluded.antonyms_json,
                 example_sentence = excluded.example_sentence,
+                sentence_distractors_json = excluded.sentence_distractors_json,
                 updated_at = CURRENT_TIMESTAMP
             """,
             (
                 row["id"],
                 item.get("english_definition", "").strip(),
                 json.dumps(synonyms, ensure_ascii=False),
+                json.dumps(antonyms, ensure_ascii=False),
                 item.get("example_sentence", "").strip(),
+                json.dumps(sentence_distractors, ensure_ascii=False),
             ),
         )
+        if chinese_definition_traditional:
+            source_row = conn.execute(
+                """
+                SELECT id, extra_json
+                FROM source_entries
+                WHERE word_id = ?
+                ORDER BY CASE WHEN source_signature LIKE 'student-dse|%' THEN 0 ELSE 1 END, id
+                LIMIT 1
+                """,
+                (row["id"],),
+            ).fetchone()
+            extra = {}
+            if source_row is not None and source_row["extra_json"]:
+                try:
+                    extra = json.loads(source_row["extra_json"])
+                except json.JSONDecodeError:
+                    extra = {}
+            extra["simplified_chinese_definition"] = chinese_definition_simplified
+            extra["generated_by"] = "ai_enrichment"
+            if source_row is not None:
+                conn.execute(
+                    """
+                    UPDATE source_entries
+                    SET meanings_json = ?,
+                        extra_json = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        json.dumps([chinese_definition_traditional], ensure_ascii=False),
+                        json.dumps(extra, ensure_ascii=False),
+                        source_row["id"],
+                    ),
+                )
         updated += 1
     conn.commit()
     return {"selected": len(rows), "updated": updated}

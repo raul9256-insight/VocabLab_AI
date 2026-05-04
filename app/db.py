@@ -217,6 +217,25 @@ CREATE TABLE IF NOT EXISTS word_mastery_attempts (
     payload_json TEXT NOT NULL DEFAULT '{}',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS student_dse_vocab (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT NOT NULL UNIQUE,
+    word TEXT NOT NULL,
+    normalized_word TEXT NOT NULL,
+    word_id INTEGER REFERENCES words(id) ON DELETE SET NULL,
+    dse_band_rank INTEGER NOT NULL,
+    dse_band_label TEXT NOT NULL,
+    dse_target TEXT NOT NULL DEFAULT '',
+    product_band_name TEXT NOT NULL DEFAULT '',
+    category TEXT NOT NULL DEFAULT '',
+    part_of_speech TEXT NOT NULL DEFAULT '',
+    priority_tier TEXT NOT NULL DEFAULT '',
+    suggested_use TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    source_file TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 
@@ -257,6 +276,124 @@ def prepare_database_file(db_path: Path) -> None:
                 pass
     if should_seed:
         shutil.copy2(DEFAULT_DB_PATH, db_path)
+
+
+def seed_student_dse_vocab(conn: sqlite3.Connection) -> None:
+    data_path = Path(__file__).resolve().parent.parent / "data" / "student_dse_vocab.json"
+    if not data_path.exists():
+        return
+    try:
+        items = json.loads(data_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    if not isinstance(items, list):
+        return
+    existing_total = conn.execute("SELECT COUNT(*) FROM student_dse_vocab").fetchone()[0]
+    missing_links = conn.execute(
+        "SELECT COUNT(*) FROM student_dse_vocab WHERE word_id IS NULL"
+    ).fetchone()[0]
+    dse_source_entries = conn.execute(
+        "SELECT COUNT(*) FROM source_entries WHERE source_signature LIKE 'student-dse|%'"
+    ).fetchone()[0]
+    if existing_total == len(items) and missing_links == 0 and dse_source_entries >= len(items):
+        return
+    conn.execute("DELETE FROM student_dse_vocab")
+    for item in items:
+        normalized_word = str(item.get("normalized_word") or item.get("word") or "").strip().lower()
+        if not normalized_word:
+            continue
+        student_id = str(item.get("student_id") or "")
+        word_text = str(item.get("word") or "").strip()
+        band_rank = int(item.get("dse_band_rank") or 0)
+        band_label = str(item.get("dse_band_label") or "")
+        word = conn.execute(
+            "SELECT id FROM words WHERE normalized_lemma = ?",
+            (normalized_word,),
+        ).fetchone()
+        if word is None and word_text and band_rank and band_label:
+            cursor = conn.execute(
+                """
+                INSERT INTO words (lemma, normalized_lemma, best_band_label, best_band_rank)
+                VALUES (?, ?, ?, ?)
+                """,
+                (word_text, normalized_word, band_label, band_rank),
+            )
+            word_id = cursor.lastrowid
+            conn.execute(
+                "INSERT INTO study_cards (word_id) VALUES (?) ON CONFLICT(word_id) DO NOTHING",
+                (word_id,),
+            )
+        else:
+            word_id = word["id"] if word else None
+        if word_id is not None and student_id:
+            conn.execute(
+                """
+                INSERT INTO source_entries (
+                    word_id, workbook_name, sheet_name, row_number, band_label, band_rank,
+                    pos, meanings_json, extra_json, source_signature
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source_signature) DO UPDATE SET
+                    word_id = excluded.word_id,
+                    workbook_name = excluded.workbook_name,
+                    sheet_name = excluded.sheet_name,
+                    row_number = excluded.row_number,
+                    band_label = excluded.band_label,
+                    band_rank = excluded.band_rank,
+                    pos = excluded.pos,
+                    meanings_json = excluded.meanings_json,
+                    extra_json = excluded.extra_json
+                """,
+                (
+                    word_id,
+                    str(item.get("source_file") or "student_dse_vocab.json"),
+                    band_label,
+                    int(student_id.rsplit("-", 1)[-1]) if "-" in student_id and student_id.rsplit("-", 1)[-1].isdigit() else 0,
+                    band_label,
+                    band_rank,
+                    str(item.get("part_of_speech") or ""),
+                    "[]",
+                    json.dumps(
+                        {
+                            "student_dse_id": student_id,
+                            "dse_target": str(item.get("dse_target") or ""),
+                            "product_band_name": str(item.get("product_band_name") or ""),
+                            "category": str(item.get("category") or ""),
+                            "priority_tier": str(item.get("priority_tier") or ""),
+                            "suggested_use": str(item.get("suggested_use") or ""),
+                            "notes": str(item.get("notes") or ""),
+                        },
+                        ensure_ascii=False,
+                    ),
+                    f"student-dse|{student_id}|{normalized_word}",
+                ),
+            )
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO student_dse_vocab (
+                student_id, word, normalized_word, word_id, dse_band_rank, dse_band_label,
+                dse_target, product_band_name, category, part_of_speech, priority_tier,
+                suggested_use, notes, source_file, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """,
+            (
+                student_id,
+                word_text,
+                normalized_word,
+                word_id,
+                band_rank,
+                band_label,
+                str(item.get("dse_target") or ""),
+                str(item.get("product_band_name") or ""),
+                str(item.get("category") or ""),
+                str(item.get("part_of_speech") or ""),
+                str(item.get("priority_tier") or ""),
+                str(item.get("suggested_use") or ""),
+                str(item.get("notes") or ""),
+                str(item.get("source_file") or ""),
+            ),
+        )
 
 
 def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
@@ -316,6 +453,7 @@ def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
             FROM study_cards
             """
         )
+    seed_student_dse_vocab(conn)
     conn.commit()
     return conn
 
@@ -343,6 +481,7 @@ def band_summary(conn: sqlite3.Connection) -> list[sqlite3.Row]:
         """
         SELECT best_band_rank, best_band_label, COUNT(*) AS total
         FROM words
+        WHERE best_band_rank IN (50, 100, 200, 500, 2000)
         GROUP BY best_band_rank, best_band_label
         ORDER BY best_band_rank
         """

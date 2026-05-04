@@ -6,11 +6,11 @@
   <h1>Import English Definitions, IPA, And Example Sentences In Batches</h1>
   <p>Export a spreadsheet template, fill it in with IPA, English definitions, and example sentences in Excel, then upload it back here to update many words at once.</p>
   <div class="callout">
-    <strong>OpenAI API status:</strong>
+    <strong>AI API status:</strong>
     {% if api_key_ready %}
-    API key detected. You can use automatic AI generation below.
+    API key detected. Automatic generation can use OpenAI{% if gemini_key_ready %} with Gemini fallback{% endif %}.
     {% else %}
-    No API key detected yet. Add <code>OPENAI_API_KEY</code> to <code>/Users/lawrencecheng/Documents/New project/.env</code> first.
+    No API key detected yet. Add <code>OPENAI_API_KEY</code> or <code>GEMINI_API_KEY</code> to Render / <code>.env</code> first.
     {% endif %}
   </div>
   {% if request.query_params.get('exported') %}
@@ -48,10 +48,10 @@
 <section class="panel-grid">
   <article class="panel">
     <h2>0. Generate With AI</h2>
-    <p>Use the OpenAI API to generate English definitions, example sentences, and synonyms for missing words automatically.</p>
+    <p>Use AI to generate Chinese meanings, English definitions, examples, synonyms, antonyms, and sentence distractors for missing DSE words automatically.</p>
     <form method="post" action="/bulk-import/generate-ai" class="stack-form">
       <label>
-        <span>Frequency Band</span>
+        <span>DSE Student Band</span>
         <select name="band_rank">
           <option value="">All bands</option>
           {% for band in bands %}
@@ -63,7 +63,7 @@
         <span>How many words per run</span>
         <input type="number" name="limit" value="20" min="1" max="200">
       </label>
-      <button class="button" type="submit">Generate With OpenAI</button>
+      <button class="button" type="submit">Generate With AI</button>
     </form>
   </article>
 

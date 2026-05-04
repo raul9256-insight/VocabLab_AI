@@ -3126,6 +3126,11 @@ def hero_band_identity(range_label: str) -> dict[str, str]:
         "200~499": {"title": "精準修辭", "subtitle": "Precision", "tone": "precision"},
         "100~199": {"title": "智識擴張", "subtitle": "Intellectual", "tone": "intellectual"},
         "50~99": {"title": "菁英語庫", "subtitle": "The Elite Lexicon", "tone": "elite"},
+        "Core DSE Survival": {"title": "核心求生詞庫", "subtitle": "Core DSE Survival", "tone": "foundation"},
+        "DSE Standard": {"title": "DSE 標準詞庫", "subtitle": "DSE Standard", "tone": "insight"},
+        "DSE High Score": {"title": "DSE 高分詞庫", "subtitle": "DSE High Score", "tone": "precision"},
+        "5*/5** Advanced": {"title": "5*/5** 進階詞庫", "subtitle": "5*/5** Advanced", "tone": "intellectual"},
+        "Academic Extension": {"title": "學術延伸詞庫", "subtitle": "Academic Extension", "tone": "elite"},
     }
     return identities.get(range_label, {"title": range_label, "subtitle": "", "tone": "default"})
 
@@ -3143,6 +3148,11 @@ def band_display_identity(label: str | None, lang: str = "en") -> dict[str, str]
         "精準修辭": "精准修辞",
         "智識擴張": "智识扩张",
         "菁英語庫": "菁英语库",
+        "核心求生詞庫": "核心求生词库",
+        "DSE 標準詞庫": "DSE 标准词库",
+        "DSE 高分詞庫": "DSE 高分词库",
+        "5*/5** 進階詞庫": "5*/5** 进阶词库",
+        "學術延伸詞庫": "学术延伸词库",
     }
     title = simplified_titles.get(identity["title"], identity["title"]) if lang == "zh-Hans" else identity["title"]
     display_label = f"{identity['subtitle']} / {title}" if identity["subtitle"] else title or (label or "")
@@ -3554,6 +3564,22 @@ TEST_BAND_LABELS = {
 }
 
 TEST_BAND_EASIEST_TO_HARDEST = [2000, 500, 200, 100, 50]
+
+STUDENT_DSE_BANDS = {
+    1: {"label": "Core DSE Survival", "count": 1226, "target": "Level 2-3"},
+    2: {"label": "DSE Standard", "count": 1008, "target": "Level 3-4"},
+    3: {"label": "DSE High Score", "count": 1285, "target": "Level 4-5"},
+    4: {"label": "5*/5** Advanced", "count": 1805, "target": "Level 5-5*"},
+    5: {"label": "Academic Extension", "count": 2000, "target": "Level 5* / 5** extension"},
+}
+
+ECONOMIST_TO_STUDENT_DSE_RANK = {
+    2000: 1,
+    500: 2,
+    200: 3,
+    100: 4,
+    50: 5,
+}
 
 
 def band_level_label(band_rank: int | None, lang: str = "en") -> str:
@@ -4537,6 +4563,68 @@ def decorate_band_rows(rows: list[sqlite3.Row]) -> list[dict]:
             }
         )
     return sorted(decorated, key=lambda band: band["best_band_rank"], reverse=True)
+
+
+def student_dse_band_rows(conn: sqlite3.Connection, lang: str = "en", user_id: int = USER_ID) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT
+            dse_band_rank,
+            dse_band_label,
+            COUNT(*) AS total,
+            COUNT(word_id) AS matched_total
+        FROM student_dse_vocab
+        GROUP BY dse_band_rank, dse_band_label
+        ORDER BY dse_band_rank
+        """
+    ).fetchall()
+    row_map = {int(row["dse_band_rank"]): row for row in rows}
+    recommended_rank = recommended_student_dse_band_rank(conn, user_id)
+    cards = []
+    for rank, config in STUDENT_DSE_BANDS.items():
+        row = row_map.get(rank)
+        total = int(row["total"] if row else config["count"])
+        matched_total = int(row["matched_total"] if row else 0)
+        identity = band_display_identity(config["label"], lang)
+        cards.append(
+            {
+                "best_band_rank": rank,
+                "best_band_label": config["label"],
+                "range_label": config["label"],
+                "title": identity["title"],
+                "subtitle": identity["subtitle"],
+                "display_label": identity["display_label"],
+                "tone": identity["tone"],
+                "total": total,
+                "workbook_total": total,
+                "matched_total": matched_total,
+                "target": config["target"],
+                "recommended": rank == recommended_rank,
+            }
+        )
+    return cards
+
+
+def recommended_student_dse_band_rank(conn: sqlite3.Connection, user_id: int = USER_ID) -> int:
+    latest_test = latest_test_result(conn, user_id=user_id)
+    if latest_test is not None and latest_test["estimated_band_rank"] in STUDENT_DSE_BANDS:
+        return int(latest_test["estimated_band_rank"])
+    economist_rank = recommended_learning_band_rank(conn, user_id)
+    return ECONOMIST_TO_STUDENT_DSE_RANK.get(economist_rank, 1)
+
+
+def student_dse_letters_for_band(conn: sqlite3.Connection, band_rank: int) -> list[str]:
+    rows = conn.execute(
+        """
+        SELECT DISTINCT UPPER(SUBSTR(words.lemma, 1, 1)) AS letter
+        FROM student_dse_vocab
+        JOIN words ON words.id = student_dse_vocab.word_id
+        WHERE student_dse_vocab.dse_band_rank = ?
+        ORDER BY letter
+        """,
+        (band_rank,),
+    ).fetchall()
+    return [row["letter"] for row in rows if row["letter"]]
 
 
 def dashboard_spotlight_words(conn: sqlite3.Connection, limit: int = 4, lang: str = "en") -> list[dict]:
@@ -5911,19 +5999,29 @@ def level_test_candidate_words(conn: sqlite3.Connection, band_rank: int, limit: 
     seeded_lemmas = sorted(set(LEVEL_TEST_SYNONYMS).intersection(LEVEL_TEST_ANTONYMS))
     seeded_clause = ""
     params: list[object] = [band_rank]
+    if band_rank in STUDENT_DSE_BANDS:
+        dse_to_economist = {value: key for key, value in ECONOMIST_TO_STUDENT_DSE_RANK.items()}
+        params.append(dse_to_economist.get(band_rank, 2000))
     if seeded_lemmas:
         placeholders = ",".join("?" for _ in seeded_lemmas)
         seeded_clause = f"OR lower(words.lemma) IN ({placeholders})"
         params.extend(seeded_lemmas)
     params.append(limit)
+    if band_rank in STUDENT_DSE_BANDS:
+        source_clause = "(student_dse_vocab.dse_band_rank = ? OR words.best_band_rank = ?)"
+        source_join = "LEFT JOIN student_dse_vocab ON student_dse_vocab.word_id = words.id"
+    else:
+        source_clause = "words.best_band_rank = ?"
+        source_join = ""
     return conn.execute(
         f"""
         SELECT words.*, COUNT(assessment_questions.id) AS test_use_count
         FROM words
+        {source_join}
         JOIN source_entries ON source_entries.word_id = words.id
         LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
         LEFT JOIN assessment_questions ON assessment_questions.word_id = words.id
-        WHERE words.best_band_rank = ?
+        WHERE {source_clause}
           AND source_entries.meanings_json <> '[]'
           AND (
             (
@@ -5941,7 +6039,7 @@ def level_test_candidate_words(conn: sqlite3.Connection, band_rank: int, limit: 
 
 
 def create_test_session(conn: sqlite3.Connection, user_id: int = USER_ID) -> int:
-    band_rows = band_summary(conn)
+    band_rows = student_dse_band_rows(conn, user_id=user_id)
     questions: list[dict] = []
     position = 1
     used_word_ids: set[int] = set()
@@ -5959,6 +6057,8 @@ def create_test_session(conn: sqlite3.Connection, user_id: int = USER_ID) -> int
                 if question is None:
                     word_questions = []
                     break
+                question["band_rank"] = band["best_band_rank"]
+                question["band_label"] = band["best_band_label"]
                 word_questions.append(question)
             if len(word_questions) != TEST_LAYERS_PER_WORD:
                 continue
@@ -6012,40 +6112,30 @@ def create_test_session(conn: sqlite3.Connection, user_id: int = USER_ID) -> int
 
 def recommended_learning_band_rank(conn: sqlite3.Connection, user_id: int = USER_ID) -> int:
     latest_test = latest_test_result(conn, user_id=user_id)
+    if latest_test is not None and latest_test["estimated_band_rank"] in STUDENT_DSE_BANDS:
+        reverse_map = {value: key for key, value in ECONOMIST_TO_STUDENT_DSE_RANK.items()}
+        return reverse_map.get(int(latest_test["estimated_band_rank"]), 2000)
     if latest_test is not None and latest_test["estimated_band_rank"] in TEST_BAND_EASIEST_TO_HARDEST:
         return int(latest_test["estimated_band_rank"])
     return 2000
 
 
 def learning_band_cards(conn: sqlite3.Connection, lang: str = "en", user_id: int = USER_ID) -> list[dict]:
-    recommended_rank = recommended_learning_band_rank(conn, user_id)
-    cards = []
-    for band in decorate_band_rows(band_summary(conn)):
-        identity = band_display_identity(band["best_band_label"], lang)
-        cards.append(
-            {
-                **band,
-                "display_label": identity["display_label"],
-                "tone": identity["tone"],
-                "recommended": band["best_band_rank"] == recommended_rank,
-            }
-        )
-    return cards
+    return student_dse_band_rows(conn, lang, user_id)
 
 
 def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = None, user_id: int = USER_ID, assignment_id: int | None = None) -> int:
-    selected_rank = band_rank if band_rank in TEST_BAND_EASIEST_TO_HARDEST else recommended_learning_band_rank(conn, user_id)
-    band = conn.execute(
-        """
-        SELECT best_band_rank, best_band_label
-        FROM words
-        WHERE best_band_rank = ?
-        GROUP BY best_band_rank, best_band_label
-        """,
-        (selected_rank,),
-    ).fetchone()
-    if band is None:
-        raise HTTPException(status_code=400, detail="Selected learning band was not found")
+    if band_rank in STUDENT_DSE_BANDS:
+        selected_rank = int(band_rank)
+    elif band_rank in ECONOMIST_TO_STUDENT_DSE_RANK:
+        selected_rank = ECONOMIST_TO_STUDENT_DSE_RANK[int(band_rank)]
+    else:
+        selected_rank = recommended_student_dse_band_rank(conn, user_id)
+    band_config = STUDENT_DSE_BANDS.get(selected_rank)
+    if band_config is None:
+        raise HTTPException(status_code=400, detail="Selected DSE learning band was not found")
+    dse_to_economist = {value: key for key, value in ECONOMIST_TO_STUDENT_DSE_RANK.items()}
+    fallback_economist_rank = dse_to_economist.get(selected_rank, 2000)
     conn.execute(
         """
         INSERT OR IGNORE INTO user_study_cards (
@@ -6065,16 +6155,17 @@ def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = No
             study_cards.next_review_at
         FROM words
         LEFT JOIN study_cards ON study_cards.word_id = words.id
-        WHERE words.best_band_rank = ?
+        LEFT JOIN student_dse_vocab ON student_dse_vocab.word_id = words.id
+        WHERE student_dse_vocab.dse_band_rank = ? OR words.best_band_rank = ?
         """,
-        (user_id, band["best_band_rank"]),
+        (user_id, selected_rank, fallback_economist_rank),
     )
     cursor = conn.execute(
         """
         INSERT INTO learning_sessions (user_id, band_rank, band_label, assignment_id)
         VALUES (?, ?, ?, ?)
         """,
-        (user_id, band["best_band_rank"], band["best_band_label"], assignment_id),
+        (user_id, selected_rank, band_config["label"], assignment_id),
     )
     session_id = cursor.lastrowid
     words = conn.execute(
@@ -6082,12 +6173,14 @@ def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = No
         SELECT DISTINCT words.*, COUNT(learning_questions.id) AS learning_use_count
         FROM words
         JOIN user_study_cards ON user_study_cards.word_id = words.id AND user_study_cards.user_id = ?
+        LEFT JOIN student_dse_vocab ON student_dse_vocab.word_id = words.id
         JOIN source_entries ON source_entries.word_id = words.id
         LEFT JOIN learning_questions ON learning_questions.word_id = words.id
         WHERE source_entries.meanings_json <> '[]'
-          AND words.best_band_rank = ?
+          AND (student_dse_vocab.dse_band_rank = ? OR words.best_band_rank = ?)
         GROUP BY words.id
         ORDER BY
+            CASE WHEN student_dse_vocab.dse_band_rank = ? THEN 0 ELSE 1 END,
             CASE
                 WHEN user_study_cards.next_review_at IS NOT NULL AND user_study_cards.next_review_at <= ? THEN 0
                 WHEN user_study_cards.wrong_count > 0 THEN 1
@@ -6100,7 +6193,7 @@ def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = No
             learning_use_count ASC,
             RANDOM()
         """,
-        (user_id, band["best_band_rank"], utc_now_iso()),
+        (user_id, selected_rank, fallback_economist_rank, selected_rank, utc_now_iso()),
     ).fetchall()
     populate_learning_session(conn, session_id, words)
     total_questions = conn.execute(
@@ -6113,7 +6206,7 @@ def create_learning_session(conn: sqlite3.Connection, band_rank: int | None = No
         conn.commit()
         raise HTTPException(
             status_code=400,
-            detail=f"Not enough learning-ready words in band {band['best_band_label']}",
+            detail=f"Not enough learning-ready words in band {band_config['label']}",
         )
     return session_id
 
@@ -6337,7 +6430,8 @@ def summarize_test_session(conn: sqlite3.Connection, session_id: int) -> dict:
     estimated_label = "Getting Started"
     weighted_score = 0
     weighted_total = 0
-    ordered_ranks = [rank for rank in TEST_BAND_EASIEST_TO_HARDEST if rank in band_scores]
+    ordered_source = list(STUDENT_DSE_BANDS) if any(rank in STUDENT_DSE_BANDS for rank in band_scores) else TEST_BAND_EASIEST_TO_HARDEST
+    ordered_ranks = [rank for rank in ordered_source if rank in band_scores]
     for band_rank in ordered_ranks:
         answers = band_scores[band_rank]
         weight = 1 + ordered_ranks.index(band_rank)
@@ -6405,8 +6499,8 @@ def home(request: Request) -> HTMLResponse:
         stats = fetch_stats(conn, user_id)
         latest_test = latest_test_result(conn, user_id=user_id)
         latest_learning = latest_learning_result(conn, user_id)
-        recommended_band = latest_test["estimated_band_label"] if latest_test else "50~99 (3924)"
-        bands = decorate_band_rows(band_summary(conn))
+        recommended_band = latest_test["estimated_band_label"] if latest_test else "Core DSE Survival"
+        bands = student_dse_band_rows(conn, lang, user_id) if profile_persona == "student" else decorate_band_rows(band_summary(conn))
         max_band_total = max((band["workbook_total"] for band in bands), default=1)
         hero_band_chart = [
             {
@@ -7163,7 +7257,7 @@ def teacher_dashboard(request: Request, message: str = Query("")) -> HTMLRespons
         user=user,
         classes=teacher_class_rows(conn, int(user["id"]), lang),
         assignments=teacher_assignment_rows(conn, int(user["id"])),
-        bands=decorate_band_rows(band_summary(conn)),
+        bands=student_dse_band_rows(conn, lang, int(user["id"])),
         message_key=message if message in allowed_messages else "",
     )
 
@@ -7212,8 +7306,8 @@ def teacher_assignment_create(
     ).fetchone()
     if class_row is None:
         return RedirectResponse(url=teacher_redirect_url(lang), status_code=303)
-    selected_rank = band_rank if band_rank in TEST_BAND_EASIEST_TO_HARDEST else 2000
-    band_label = TEST_BAND_LABELS.get(selected_rank, TEST_BAND_LABELS[2000])
+    selected_rank = band_rank if band_rank in STUDENT_DSE_BANDS else 1
+    band_label = STUDENT_DSE_BANDS.get(selected_rank, STUDENT_DSE_BANDS[1])["label"]
     safe_title = (title or "").strip()[:100] or f"{band_label} Practice"
     safe_due = (due_date or "").strip()[:20]
     conn.execute(
@@ -7253,11 +7347,12 @@ def class_join(request: Request, invite_code: str = Form("")) -> RedirectRespons
 def test_intro(request: Request) -> HTMLResponse:
     conn = db_conn()
     user_id = current_user_id(request)
+    lang = getattr(request.state, "lang", get_lang(request))
     active_test = active_test_session(conn, user_id=user_id)
     return render(
         request,
         "test_intro.html",
-        bands=decorate_band_rows(band_summary(conn)),
+        bands=student_dse_band_rows(conn, lang, user_id),
         question_count=TEST_QUESTION_COUNT,
         vocab_count=TEST_VOCAB_COUNT,
         words_per_band=TEST_WORDS_PER_BAND,
@@ -7761,8 +7856,8 @@ def learning_intro(request: Request) -> HTMLResponse:
         """
     ).fetchone()
     latest_learning = latest_learning_result(conn, user_id)
-    recommended_rank = recommended_learning_band_rank(conn, user_id)
-    recommended_band = TEST_BAND_LABELS.get(recommended_rank, "2000~ (2330)")
+    recommended_rank = recommended_student_dse_band_rank(conn, user_id)
+    recommended_band = STUDENT_DSE_BANDS.get(recommended_rank, STUDENT_DSE_BANDS[1])["label"]
     recommended_identity = band_display_identity(recommended_band, lang)
     return render(
         request,
@@ -7950,13 +8045,14 @@ def learning_result(request: Request, session_id: int) -> HTMLResponse:
 @app.get("/dictionary", response_class=HTMLResponse)
 def dictionary_home(request: Request) -> HTMLResponse:
     conn = db_conn()
-    bands = decorate_band_rows(band_summary(conn))
+    lang = getattr(request.state, "lang", get_lang(request))
     user_id = current_user_id(request)
+    bands = student_dse_band_rows(conn, lang, user_id)
     return render(
         request,
         "dictionary_home.html",
         bands=bands,
-        missed_count=len(missed_words(conn, limit=10, lang=getattr(request.state, "lang", get_lang(request)), user_id=user_id)),
+        missed_count=len(missed_words(conn, limit=10, lang=lang, user_id=user_id)),
     )
 
 
@@ -8218,7 +8314,7 @@ def mobile_bootstrap(
     stats = fetch_stats(conn, user_id)
     latest_test = latest_test_result(conn, user_id=user_id)
     latest_learning = latest_learning_result(conn, user_id=user_id)
-    bands = decorate_band_rows(band_summary(conn))
+    bands = student_dse_band_rows(conn, safe_lang, user_id)
     max_band_total = max((band["workbook_total"] for band in bands), default=1)
     hero_band_chart = [
         {
@@ -8237,7 +8333,7 @@ def mobile_bootstrap(
     return {
         "profile": profile,
         "stats": stats,
-        "recommended_band": latest_test["estimated_band_label"] if latest_test else "2000~ (2330)",
+        "recommended_band": latest_test["estimated_band_label"] if latest_test else STUDENT_DSE_BANDS[1]["label"],
         "latest_test": (
             {
                 "session_id": latest_test["id"],
@@ -8767,36 +8863,71 @@ def dictionary_band(
     has_example: int = Query(0),
 ) -> HTMLResponse:
     conn = db_conn()
-    band = conn.execute(
-        """
-        SELECT best_band_rank, best_band_label, COUNT(*) AS total
-        FROM words
-        WHERE best_band_rank = ?
-        GROUP BY best_band_rank, best_band_label
-        """,
-        (band_rank,),
-    ).fetchone()
+    lang = getattr(request.state, "lang", get_lang(request))
+    is_student_dse_band = band_rank in STUDENT_DSE_BANDS
+    if is_student_dse_band:
+        config = STUDENT_DSE_BANDS[band_rank]
+        band = {
+            "best_band_rank": band_rank,
+            "best_band_label": config["label"],
+            "total": conn.execute(
+                "SELECT COUNT(*) FROM student_dse_vocab WHERE dse_band_rank = ?",
+                (band_rank,),
+            ).fetchone()[0],
+        }
+        letters = student_dse_letters_for_band(conn, band_rank)
+    else:
+        band = conn.execute(
+            """
+            SELECT best_band_rank, best_band_label, COUNT(*) AS total
+            FROM words
+            WHERE best_band_rank = ?
+            GROUP BY best_band_rank, best_band_label
+            """,
+            (band_rank,),
+        ).fetchone()
+        letters = letters_for_band(conn, band_rank)
     if band is None:
         raise HTTPException(status_code=404, detail="Band not found")
     active_letter = (letter or "A").upper()
-    rows = conn.execute(
-        """
-        SELECT words.id, words.lemma, words.best_band_label,
-               COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
-               COALESCE(word_enrichment.english_definition, '') AS english_definition,
-               COALESCE(word_enrichment.example_sentence, '') AS example_sentence
-        FROM words
-        LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
-        WHERE best_band_rank = ? AND UPPER(SUBSTR(lemma, 1, 1)) = ?
-          AND (? = 0 OR COALESCE(word_enrichment.english_definition, '') <> '')
-          AND (? = 0 OR COALESCE(word_enrichment.example_sentence, '') <> '')
-        ORDER BY lemma
-        LIMIT 500
-        """,
-        (band_rank, active_letter, has_english, has_example),
-    ).fetchall()
+    if is_student_dse_band:
+        rows = conn.execute(
+            """
+            SELECT words.id, words.lemma, words.best_band_label,
+                   student_dse_vocab.dse_band_label,
+                   COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
+                   COALESCE(word_enrichment.english_definition, '') AS english_definition,
+                   COALESCE(word_enrichment.example_sentence, '') AS example_sentence
+            FROM student_dse_vocab
+            JOIN words ON words.id = student_dse_vocab.word_id
+            LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
+            WHERE student_dse_vocab.dse_band_rank = ?
+              AND UPPER(SUBSTR(words.lemma, 1, 1)) = ?
+              AND (? = 0 OR COALESCE(word_enrichment.english_definition, '') <> '')
+              AND (? = 0 OR COALESCE(word_enrichment.example_sentence, '') <> '')
+            ORDER BY words.lemma
+            LIMIT 500
+            """,
+            (band_rank, active_letter, has_english, has_example),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT words.id, words.lemma, words.best_band_label,
+                   COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
+                   COALESCE(word_enrichment.english_definition, '') AS english_definition,
+                   COALESCE(word_enrichment.example_sentence, '') AS example_sentence
+            FROM words
+            LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
+            WHERE best_band_rank = ? AND UPPER(SUBSTR(lemma, 1, 1)) = ?
+              AND (? = 0 OR COALESCE(word_enrichment.english_definition, '') <> '')
+              AND (? = 0 OR COALESCE(word_enrichment.example_sentence, '') <> '')
+            ORDER BY lemma
+            LIMIT 500
+            """,
+            (band_rank, active_letter, has_english, has_example),
+        ).fetchall()
     word_ids = [row["id"] for row in rows]
-    lang = getattr(request.state, "lang", get_lang(request))
     user_id = current_user_id(request)
     definitions_map = definitions_map_for_words(conn, word_ids, lang)
     fallback_map = source_fallbacks_for_words(conn, word_ids)
@@ -8824,7 +8955,7 @@ def dictionary_band(
         request,
         "dictionary_band.html",
         band=band,
-        letters=letters_for_band(conn, band_rank),
+        letters=letters,
         active_letter=active_letter,
         words=words,
         progress_average=progress_average,
@@ -8869,13 +9000,16 @@ def dictionary_search(
 def bulk_import_page(request: Request) -> HTMLResponse:
     conn = db_conn()
     load_env_file()
+    lang = getattr(request.state, "lang", get_lang(request))
     return render(
         request,
         "bulk_import.html",
-        bands=decorate_band_rows(band_summary(conn)),
+        bands=student_dse_band_rows(conn, lang, current_user_id(request)),
         stats=fetch_stats(conn),
         export_dir=str(EXPORT_DIR),
-        api_key_ready=bool(os.environ.get("OPENAI_API_KEY", "").strip()),
+        api_key_ready=bool(os.environ.get("OPENAI_API_KEY", "").strip() or os.environ.get("GEMINI_API_KEY", "").strip()),
+        openai_key_ready=bool(os.environ.get("OPENAI_API_KEY", "").strip()),
+        gemini_key_ready=bool(os.environ.get("GEMINI_API_KEY", "").strip()),
     )
 
 
