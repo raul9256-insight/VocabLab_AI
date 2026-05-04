@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}{{ t("business_vocab_title") }} | VocabLab AI{% endblock %}
+{% block content %}
+<section class="business-vocab-shell">
+  <article class="panel dashboard-v2-card business-vocab-hero">
+    <div class="business-vocab-head">
+      <div>
+        <p class="eyebrow">{{ t("business_vocab_title") }}</p>
+        <h1>{{ t("business_vocab_home_title") }}</h1>
+        <p class="lede">{{ t("business_vocab_home_lede") }}</p>
+      </div>
+      <a class="button secondary" href="/dictionary">{{ t("back_to_dictionary") }}</a>
+    </div>
+
+    <form class="business-filter-form" method="get" action="/business-vocabulary">
+      <input type="search" name="q" placeholder="{{ t('business_vocab_search_placeholder') }}" value="{{ query }}">
+      <select name="band_rank" aria-label="{{ t('economist_band') }}">
+        <option value="">{{ t("all_bands") }}</option>
+        {% for band in bands %}
+        <option value="{{ band.best_band_rank }}" {% if selected_band == band.best_band_rank %}selected{% endif %}>{{ band.best_band_label }}</option>
+        {% endfor %}
+      </select>
+      <select name="sector" aria-label="{{ t('business_sector') }}">
+        <option value="">{{ t("all_sectors") }}</option>
+        {% for sector in sectors %}
+        <option value="{{ sector.slug }}" {% if selected_sector == sector.slug %}selected{% endif %}>{{ sector.label }}</option>
+        {% endfor %}
+      </select>
+      <select name="topic" aria-label="{{ t('business_topic') }}">
+        <option value="">{{ t("all_topics") }}</option>
+        {% for topic in topics %}
+        <option value="{{ topic.slug }}" {% if selected_topic == topic.slug %}selected{% endif %}>{{ topic.label }}</option>
+        {% endfor %}
+      </select>
+      <select name="skill" aria-label="{{ t('business_skill') }}">
+        <option value="">{{ t("all_skills") }}</option>
+        {% for skill in skills %}
+        <option value="{{ skill.slug }}" {% if selected_skill == skill.slug %}selected{% endif %}>{{ skill.label }}</option>
+        {% endfor %}
+      </select>
+      <button class="button" type="submit">{{ t("apply_filters") }}</button>
+    </form>
+  </article>
+
+  <section class="business-vocab-grid">
+    <article class="panel dashboard-v2-card business-path-card">
+      <p class="eyebrow">{{ t("business_featured_path") }}</p>
+      <h2>{{ t("business_featured_path_title") }}</h2>
+      <p>{{ t("business_featured_path_note") }}</p>
+      <a class="button secondary" href="/business-vocabulary?sector=finance-markets">{{ t("start_short_session") }}</a>
+    </article>
+    <article class="panel dashboard-v2-card business-path-card">
+      <p class="eyebrow">{{ t("business_vocab_filters") }}</p>
+      <h2>{{ t("business_results_count", count=result_count) }}</h2>
+      <p>{{ t("bands_note") }}</p>
+    </article>
+  </section>
+
+  <section class="panel dashboard-v2-card business-results-panel">
+    <div class="card-head tight">
+      <div>
+        <p class="eyebrow">{{ t("results") }}</p>
+        <h2>{{ t("business_results_title") }}</h2>
+      </div>
+    </div>
+
+    <div class="business-results-list">
+      <div class="business-results-header">
+        <span>{{ t("words_label") }}</span>
+        <span>{{ t("business_band") }}</span>
+        <span>{{ t("business_context") }}</span>
+        <span>{{ t("business_use") }}</span>
+        <span>{{ t("learn_word") }}</span>
+      </div>
+      {% for word in results %}
+      <a class="business-result-row" href="/word/{{ word.id }}">
+        <span class="business-word-cell">
+          <strong>{{ word.lemma }}</strong>
+          {% if word.chinese_preview %}
+          <small>{{ zh_text(word.chinese_preview[0]) }}</small>
+          {% endif %}
+        </span>
+        <span>
+          <strong class="business-band-name">{{ word.business_band_label }}</strong>
+          <small class="business-muted">{{ word.best_band_label }}</small>
+        </span>
+        <span>
+          <strong>{{ word.sectors|map(attribute="label")|join(" / ") }}</strong>
+          <small class="business-muted">{{ word.topics|map(attribute="label")|join(" / ") }}</small>
+        </span>
+        <span>
+          <strong>{{ word.skills|map(attribute="label")|join(" / ") }}</strong>
+          <small class="business-muted">{{ word.example_sentence or word.english_definition or t("not_added_yet") }}</small>
+        </span>
+        <span class="business-row-action">{{ t("learn_word") }}</span>
+      </a>
+      {% else %}
+      <div class="empty-card dictionary-empty-card">
+        <h3>{{ t("business_no_match") }}</h3>
+        <p>{{ t("business_no_match_note") }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

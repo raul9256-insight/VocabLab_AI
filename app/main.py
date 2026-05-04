@@ -648,6 +648,7 @@ TRANSLATIONS = {
         "nav_learning": "Learning",
         "nav_learning_sidebar": "Learning",
         "nav_dictionary": "Dictionary",
+        "nav_business_vocab": "Business Vocab",
         "nav_missed": "Missed Words",
         "nav_bulk": "Bulk Import",
         "nav_statistics": "Statistics",
@@ -904,6 +905,7 @@ TRANSLATIONS = {
         "nav_learning": "學習練習",
         "nav_learning_sidebar": "學習重溫",
         "nav_dictionary": "詞典查詢",
+        "nav_business_vocab": "商務詞彙",
         "nav_missed": "錯題複習",
         "nav_bulk": "批次匯入",
         "nav_statistics": "統計數據",
@@ -1178,6 +1180,32 @@ TRANSLATIONS["en"].update(
         "open_frequency_band_note": "Best when you want to study words by appearance count.",
         "go_to_missed_words": "Go to missed words",
         "go_to_missed_words_note": "Best when you want a list based on your actual mistakes.",
+        "business_vocab_title": "Business Vocabulary",
+        "business_vocab_home_title": "Economist frequency, filtered by business context.",
+        "business_vocab_home_lede": "Keep the 5-band Economist priority system, then browse by sector, topic, or business skill.",
+        "business_vocab_tag": "Business",
+        "business_vocab_action": "Business vocabulary view",
+        "business_vocab_action_note": "Filter words by finance, technology, strategy, reports, meetings, and more.",
+        "business_vocab_filters": "Business filters",
+        "business_vocab_search_placeholder": "Search business words, e.g. inflation",
+        "business_sector": "Sector",
+        "business_topic": "Topic",
+        "business_skill": "Business skill",
+        "all_sectors": "All sectors",
+        "all_topics": "All topics",
+        "all_skills": "All skills",
+        "business_featured_path": "Featured Path",
+        "business_featured_path_title": "Finance & Markets — Band 1 to Band 3",
+        "business_featured_path_note": "Start with core Economist words, then move into market analysis and sector-specific language.",
+        "business_results_title": "Vocabulary Results",
+        "business_results_count": "{count} business words shown",
+        "business_band": "Business band",
+        "economist_band": "Economist band",
+        "business_context": "Business context",
+        "business_use": "Use",
+        "learn_word": "Learn",
+        "business_no_match": "No business words matched these filters.",
+        "business_no_match_note": "Try removing one filter or searching a broader business keyword.",
         "choose_band_browse": "Choose a band to browse",
         "all_bands": "All bands",
         "english_only": "English only",
@@ -1588,6 +1616,32 @@ TRANSLATIONS["zh-Hant"].update(
         "open_frequency_band_note": "想按常見程度學詞彙時，用這個最方便。",
         "go_to_missed_words": "前往錯題清單",
         "go_to_missed_words_note": "想根據自己真正答錯的詞彙來複習時，就看這裡。",
+        "business_vocab_title": "商務詞彙",
+        "business_vocab_home_title": "以 Economist 詞頻為主軸，再按商務情境篩選。",
+        "business_vocab_home_lede": "保留 5 層 Economist 詞頻優先級，同時可按行業、主題或工作用途瀏覽。",
+        "business_vocab_tag": "商務",
+        "business_vocab_action": "商務詞彙視圖",
+        "business_vocab_action_note": "按 finance、technology、strategy、reports、meetings 等情境篩選詞彙。",
+        "business_vocab_filters": "商務篩選",
+        "business_vocab_search_placeholder": "搜尋商務詞彙，例如 inflation",
+        "business_sector": "行業",
+        "business_topic": "主題",
+        "business_skill": "工作用途",
+        "all_sectors": "全部行業",
+        "all_topics": "全部主題",
+        "all_skills": "全部用途",
+        "business_featured_path": "建議路徑",
+        "business_featured_path_title": "Finance & Markets — Band 1 至 Band 3",
+        "business_featured_path_note": "先學 Economist 核心詞，再進入市場分析與行業精準詞彙。",
+        "business_results_title": "詞彙結果",
+        "business_results_count": "目前顯示 {count} 個商務詞彙",
+        "business_band": "商務 Band",
+        "economist_band": "Economist Band",
+        "business_context": "商務情境",
+        "business_use": "用途",
+        "learn_word": "學習",
+        "business_no_match": "找不到符合這些篩選的商務詞彙。",
+        "business_no_match_note": "可以移除一個篩選條件，或搜尋較寬的商務關鍵字。",
         "choose_band_browse": "選擇想看的詞彙分類",
         "all_bands": "全部分類",
         "english_only": "只看有英文定義",
@@ -2102,6 +2156,7 @@ TRANSLATIONS["zh-Hans"].update(
         "nav_learning": "学习练习",
         "nav_learning_sidebar": "学习练习",
         "nav_dictionary": "词典查询",
+        "nav_business_vocab": "商务词汇",
         "nav_missed": "错题复习",
         "nav_bulk": "批量导入",
         "nav_statistics": "统计数据",
@@ -4602,6 +4657,7 @@ def search_result_cards(
                 "id": row["id"],
                 "lemma": row["lemma"],
                 "best_band_label": row["best_band_label"],
+                "best_band_rank": row["best_band_rank"],
                 "english_definition": english_definition,
                 "example_sentence": example_sentence,
                 "pronunciation": row["pronunciation"] or source_fallback["pronunciation"],
@@ -4610,6 +4666,245 @@ def search_result_cards(
             }
         )
     return cards
+
+
+BUSINESS_SECTORS = [
+    {
+        "slug": "macroeconomics",
+        "label_en": "Macroeconomics",
+        "label_zh_hant": "宏觀經濟",
+        "keywords": ["inflation", "recession", "monetary", "fiscal", "productivity", "growth", "economy", "economic", "central bank", "interest rate", "gdp"],
+    },
+    {
+        "slug": "finance-markets",
+        "label_en": "Finance & Markets",
+        "label_zh_hant": "金融與市場",
+        "keywords": ["equity", "bond", "yield", "liquidity", "valuation", "market", "investor", "stock", "asset", "capital", "volatility", "portfolio"],
+    },
+    {
+        "slug": "banking-fintech",
+        "label_en": "Banking & FinTech",
+        "label_zh_hant": "銀行與金融科技",
+        "keywords": ["bank", "deposit", "lending", "loan", "default", "payment", "credit", "fintech", "mortgage", "balance sheet"],
+    },
+    {
+        "slug": "technology-ai",
+        "label_en": "Technology & AI",
+        "label_zh_hant": "科技與 AI",
+        "keywords": ["algorithm", "automation", "semiconductor", "software", "data", "digital", "platform", "model", "artificial intelligence", "technology", "chip"],
+    },
+    {
+        "slug": "energy-climate",
+        "label_en": "Energy & Climate",
+        "label_zh_hant": "能源與氣候",
+        "keywords": ["carbon", "climate", "emission", "renewable", "energy", "oil", "gas", "green", "transition", "sustainable", "decarbonisation"],
+    },
+    {
+        "slug": "healthcare-biotech",
+        "label_en": "Healthcare & Biotech",
+        "label_zh_hant": "醫療與生物科技",
+        "keywords": ["health", "medical", "trial", "pharmaceutical", "diagnosis", "vaccine", "therapy", "drug", "biotech", "hospital", "patient"],
+    },
+    {
+        "slug": "real-estate-infrastructure",
+        "label_en": "Real Estate & Infrastructure",
+        "label_zh_hant": "房地產與基建",
+        "keywords": ["housing", "property", "construction", "land", "infrastructure", "mortgage", "urban", "building", "transport"],
+    },
+    {
+        "slug": "trade-supply-chain",
+        "label_en": "Trade & Supply Chain",
+        "label_zh_hant": "貿易與供應鏈",
+        "keywords": ["trade", "tariff", "export", "import", "logistics", "supply chain", "shipping", "manufacturer", "factory", "globalisation"],
+    },
+    {
+        "slug": "geopolitics",
+        "label_en": "Geopolitics",
+        "label_zh_hant": "地緣政治",
+        "keywords": ["sanction", "diplomacy", "sovereignty", "alliance", "conflict", "war", "security", "china", "asia", "russia", "government"],
+    },
+    {
+        "slug": "consumer-retail",
+        "label_en": "Consumer & Retail",
+        "label_zh_hant": "消費與零售",
+        "keywords": ["consumer", "retail", "demand", "brand", "subscription", "spending", "e-commerce", "customer", "price", "sales"],
+    },
+    {
+        "slug": "management-strategy",
+        "label_en": "Management & Strategy",
+        "label_zh_hant": "管理與策略",
+        "keywords": ["strategy", "acquisition", "merger", "efficiency", "expansion", "restructuring", "management", "competitive", "operation", "executive"],
+    },
+    {
+        "slug": "law-regulation",
+        "label_en": "Law & Regulation",
+        "label_zh_hant": "法律與監管",
+        "keywords": ["antitrust", "compliance", "litigation", "legislation", "regulation", "regulator", "law", "legal", "oversight", "policy"],
+    },
+]
+
+BUSINESS_TOPICS = [
+    {"slug": "growth-recession", "label_en": "Growth & Recession", "label_zh_hant": "增長與衰退", "keywords": ["growth", "recession", "cycle", "slowdown", "expansion", "productivity", "gdp"]},
+    {"slug": "inflation-interest-rates", "label_en": "Inflation & Interest Rates", "label_zh_hant": "通脹與利率", "keywords": ["inflation", "interest rate", "monetary", "central bank", "tightening", "yield", "price"]},
+    {"slug": "ai-automation", "label_en": "AI & Automation", "label_zh_hant": "AI 與自動化", "keywords": ["ai", "artificial intelligence", "automation", "algorithm", "model", "data", "software"]},
+    {"slug": "climate-esg", "label_en": "Climate & ESG", "label_zh_hant": "氣候與 ESG", "keywords": ["climate", "carbon", "emission", "renewable", "sustainable", "green", "esg"]},
+    {"slug": "global-trade", "label_en": "Global Trade", "label_zh_hant": "全球貿易", "keywords": ["trade", "tariff", "export", "import", "supply chain", "global", "logistics"]},
+    {"slug": "regulation-antitrust", "label_en": "Regulation & Antitrust", "label_zh_hant": "監管與反壟斷", "keywords": ["regulation", "regulator", "antitrust", "compliance", "oversight", "legal", "law"]},
+    {"slug": "inequality-society", "label_en": "Inequality & Society", "label_zh_hant": "不平等與社會", "keywords": ["inequality", "society", "social", "poverty", "income", "education", "welfare"]},
+    {"slug": "innovation-productivity", "label_en": "Innovation & Productivity", "label_zh_hant": "創新與生產力", "keywords": ["innovation", "productivity", "efficiency", "technology", "research", "development"]},
+    {"slug": "risk-crisis", "label_en": "Risk & Crisis", "label_zh_hant": "風險與危機", "keywords": ["risk", "crisis", "shock", "uncertainty", "vulnerability", "exposure", "default"]},
+    {"slug": "china-asia", "label_en": "China & Asia", "label_zh_hant": "中國與亞洲", "keywords": ["china", "asia", "asian", "beijing", "hong kong", "taiwan", "japan", "india"]},
+]
+
+BUSINESS_SKILLS = [
+    {"slug": "business-reports", "label_en": "Business Reports", "label_zh_hant": "商務報告", "keywords": ["indicate", "suggest", "reflect", "imply", "trend", "outlook", "forecast", "estimate"]},
+    {"slug": "market-analysis", "label_en": "Market Analysis", "label_zh_hant": "市場分析", "keywords": ["volatility", "valuation", "sentiment", "momentum", "market", "yield", "liquidity", "equity"]},
+    {"slug": "strategy-discussion", "label_en": "Strategy Discussion", "label_zh_hant": "策略討論", "keywords": ["strategy", "expansion", "acquisition", "partnership", "differentiation", "competitive", "positioning"]},
+    {"slug": "risk-assessment", "label_en": "Risk Assessment", "label_zh_hant": "風險評估", "keywords": ["risk", "exposure", "vulnerability", "downside", "uncertainty", "threat", "crisis"]},
+    {"slug": "presentation-english", "label_en": "Presentation English", "label_zh_hant": "簡報英語", "keywords": ["highlight", "emphasise", "demonstrate", "illustrate", "show", "explain", "present"]},
+    {"slug": "formal-email-writing", "label_en": "Formal Email Writing", "label_zh_hant": "正式電郵寫作", "keywords": ["regarding", "attached", "appreciate", "clarify", "request", "confirm", "proposal"]},
+    {"slug": "negotiation", "label_en": "Negotiation", "label_zh_hant": "談判", "keywords": ["compromise", "concession", "terms", "proposal", "agreement", "deal", "bargain"]},
+    {"slug": "executive-summary", "label_en": "Executive Summary", "label_zh_hant": "高層摘要", "keywords": ["driver", "implication", "forecast", "recommendation", "priority", "decision", "outcome"]},
+]
+
+
+def localized_business_taxonomy(items: list[dict], lang: str) -> list[dict[str, str]]:
+    label_key = "label_zh_hant" if lang in {"zh-Hant", "zh-Hans"} else "label_en"
+    localized = []
+    for item in items:
+        label = item[label_key]
+        localized.append({"slug": item["slug"], "label": localize_chinese_text(label, lang)})
+    return localized
+
+
+def match_business_items(text: str, items: list[dict], lang: str, limit: int = 2) -> list[dict[str, str]]:
+    haystack = text.lower()
+    matches = []
+    for item in items:
+        score = sum(1 for keyword in item["keywords"] if keyword.lower() in haystack)
+        if score:
+            label = item["label_en"] if lang == "en" else localize_chinese_text(item["label_zh_hant"], lang)
+            matches.append({"slug": item["slug"], "label": label, "score": score})
+    matches.sort(key=lambda item: (-item["score"], item["label"]))
+    return [{"slug": item["slug"], "label": item["label"]} for item in matches[:limit]]
+
+
+def business_band_identity(band_rank: int | None, band_label: str | None, lang: str = "en") -> dict[str, str]:
+    names = {
+        1: ("Core Economist Vocabulary", "Economist 核心詞彙"),
+        2: ("Business Insight Vocabulary", "商務洞察詞彙"),
+        3: ("Sector Precision Vocabulary", "行業精準詞彙"),
+        4: ("Executive / Analytical Vocabulary", "高階分析詞彙"),
+        5: ("Elite Editorial Lexicon", "菁英社論詞庫"),
+    }
+    english, chinese = names.get(band_rank or 0, ("Business Economist Vocabulary", "商務 Economist 詞彙"))
+    label = english if lang == "en" else localize_chinese_text(chinese, lang)
+    return {**band_display_identity(band_label, lang), "business_label": label}
+
+
+def business_word_search_text(word: dict) -> str:
+    chinese = " ".join(str(item) for item in word.get("chinese_preview", []))
+    parts = " ".join(str(item) for item in word.get("parts_of_speech", []))
+    return " ".join(
+        [
+            str(word.get("lemma", "")),
+            str(word.get("english_definition", "")),
+            str(word.get("example_sentence", "")),
+            chinese,
+            parts,
+        ]
+    )
+
+
+def attach_business_tags(word: dict, lang: str) -> dict:
+    text = business_word_search_text(word)
+    sectors = match_business_items(text, BUSINESS_SECTORS, lang)
+    topics = match_business_items(text, BUSINESS_TOPICS, lang)
+    skills = match_business_items(text, BUSINESS_SKILLS, lang)
+    if not sectors:
+        sectors = [localized_business_taxonomy(BUSINESS_SECTORS, lang)[0]]
+    if not topics:
+        topics = [localized_business_taxonomy(BUSINESS_TOPICS, lang)[0]]
+    if not skills:
+        skills = [localized_business_taxonomy(BUSINESS_SKILLS, lang)[0]]
+    band_identity = business_band_identity(word.get("best_band_rank"), word.get("best_band_label"), lang)
+    return {
+        **word,
+        "business_band_label": band_identity["business_label"],
+        "band_tone": band_identity["tone"],
+        "sectors": sectors,
+        "topics": topics,
+        "skills": skills,
+    }
+
+
+def business_filter_matches(word: dict, sector: str, topic: str, skill: str) -> bool:
+    return (
+        (not sector or any(item["slug"] == sector for item in word["sectors"]))
+        and (not topic or any(item["slug"] == topic for item in word["topics"]))
+        and (not skill or any(item["slug"] == skill for item in word["skills"]))
+    )
+
+
+def business_vocab_seed_cards(conn: sqlite3.Connection, band_rank: int | None, lang: str) -> list[dict]:
+    clauses = ["1 = 1"]
+    params: list[object] = []
+    if band_rank is not None:
+        clauses.append("words.best_band_rank = ?")
+        params.append(band_rank)
+    rows = conn.execute(
+        f"""
+        SELECT words.id, words.lemma, words.best_band_label, words.best_band_rank,
+               COALESCE(word_enrichment.pronunciation, '') AS pronunciation,
+               COALESCE(word_enrichment.english_definition, '') AS english_definition,
+               COALESCE(word_enrichment.example_sentence, '') AS example_sentence
+        FROM words
+        LEFT JOIN word_enrichment ON word_enrichment.word_id = words.id
+        WHERE {' AND '.join(clauses)}
+        ORDER BY words.best_band_rank, words.lemma
+        LIMIT 450
+        """,
+        params,
+    ).fetchall()
+    word_ids = [row["id"] for row in rows]
+    definitions_map = definitions_map_for_words(conn, word_ids, lang)
+    parts_map = parts_of_speech_map_for_words(conn, word_ids)
+    fallback_map = source_fallbacks_for_words(conn, word_ids)
+    cards = []
+    for row in rows:
+        source_fallback = fallback_map.get(row["id"], {"pronunciation": "", "english_definition": "", "example_sentence": ""})
+        cards.append(
+            {
+                "id": row["id"],
+                "lemma": row["lemma"],
+                "best_band_label": row["best_band_label"],
+                "best_band_rank": row["best_band_rank"],
+                "english_definition": row["english_definition"] or source_fallback["english_definition"],
+                "example_sentence": row["example_sentence"] or source_fallback["example_sentence"],
+                "pronunciation": row["pronunciation"] or source_fallback["pronunciation"],
+                "parts_of_speech": parts_map.get(row["id"], []),
+                "chinese_preview": definitions_map.get(row["id"], [])[:2],
+            }
+        )
+    return cards
+
+
+def business_vocabulary_cards(
+    conn: sqlite3.Connection,
+    *,
+    q: str,
+    band_rank: int | None,
+    sector: str,
+    topic: str,
+    skill: str,
+    lang: str,
+) -> list[dict]:
+    if q.strip():
+        candidates = search_result_cards(conn, q, band_rank=band_rank, require_english=False, require_example=False, lang=lang)
+    else:
+        candidates = business_vocab_seed_cards(conn, band_rank, lang)
+    tagged = [attach_business_tags(word, lang) for word in candidates]
+    return [word for word in tagged if business_filter_matches(word, sector, topic, skill)][:120]
 
 
 def missed_words(conn: sqlite3.Connection, limit: int = 100, lang: str = "en", user_id: int = USER_ID) -> list[sqlite3.Row]:
@@ -7436,6 +7731,50 @@ def dictionary_home(request: Request) -> HTMLResponse:
         "dictionary_home.html",
         bands=bands,
         missed_count=len(missed_words(conn, limit=10, lang=getattr(request.state, "lang", get_lang(request)), user_id=user_id)),
+    )
+
+
+@app.get("/business-vocabulary", response_class=HTMLResponse)
+def business_vocabulary(
+    request: Request,
+    q: str = Query(""),
+    band_rank: str | None = Query(None),
+    sector: str = Query(""),
+    topic: str = Query(""),
+    skill: str = Query(""),
+) -> HTMLResponse:
+    conn = db_conn()
+    lang = getattr(request.state, "lang", get_lang(request))
+    selected_band = int(band_rank) if band_rank and band_rank.strip() else None
+    valid_sectors = {item["slug"] for item in BUSINESS_SECTORS}
+    valid_topics = {item["slug"] for item in BUSINESS_TOPICS}
+    valid_skills = {item["slug"] for item in BUSINESS_SKILLS}
+    selected_sector = sector if sector in valid_sectors else ""
+    selected_topic = topic if topic in valid_topics else ""
+    selected_skill = skill if skill in valid_skills else ""
+    results = business_vocabulary_cards(
+        conn,
+        q=q,
+        band_rank=selected_band,
+        sector=selected_sector,
+        topic=selected_topic,
+        skill=selected_skill,
+        lang=lang,
+    )
+    return render(
+        request,
+        "business_vocabulary.html",
+        query=q,
+        bands=decorate_band_rows(band_summary(conn)),
+        selected_band=selected_band,
+        sectors=localized_business_taxonomy(BUSINESS_SECTORS, lang),
+        topics=localized_business_taxonomy(BUSINESS_TOPICS, lang),
+        skills=localized_business_taxonomy(BUSINESS_SKILLS, lang),
+        selected_sector=selected_sector,
+        selected_topic=selected_topic,
+        selected_skill=selected_skill,
+        results=results,
+        result_count=len(results),
     )
 
 

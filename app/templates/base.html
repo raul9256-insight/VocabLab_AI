@@ -39,6 +39,10 @@
           <span class="nav-icon">字</span>
           <span>{{ t("nav_dictionary") }}</span>
         </a>
+        <a href="/business-vocabulary" class="{% if request.url.path.startswith('/business-vocabulary') %}active{% endif %}">
+          <span class="nav-icon">商</span>
+          <span>{{ t("nav_business_vocab") }}</span>
+        </a>
         <a href="/ai-power-vocabulary" class="{% if request.url.path.startswith('/ai-power-vocabulary') %}active{% endif %}">
           <span class="nav-icon">AI</span>
           <span>{{ t("nav_ai_power") }}</span>
@@ -84,6 +88,7 @@
             </div>
           </div>
           <a class="topbar-action topbar-action-text" href="/test" aria-label="Open level test">Level Test</a>
+          <a class="topbar-action topbar-action-text {% if request.url.path.startswith('/business-vocabulary') %}active{% endif %}" href="/business-vocabulary">{{ t("nav_business_vocab") }}</a>
           <a class="topbar-action topbar-action-text" href="/ai-power-vocabulary" aria-label="Open AI power vocabulary">{{ t("nav_ai_power") }}</a>
           <a class="topbar-action topbar-action-text" href="/statistics" aria-label="Open statistics">{{ t("nav_statistics") }}</a>
           {% if is_teacher %}
